@@ -4,16 +4,14 @@
 
 ## Team
 
-| Number  | Name           | User                                    | E-mail                                 |
-| --------|----------------|-----------------------------------------| ---------------------------------------|
-| 110996  | Diogo Pereira  | <https://github.com/xxxxxxxxx>          | <xxxx@tecnico.ulisboa.pt>              |
-| 110846  | João Matos     | https://github.com/joaorsmatos02        | <joao.silva.matos@tecnico.ulisboa.pt>  |
-| 110947  | João Santos    | https://github.com/joaogoncalosantoss   | <joaogoncalosantos@tecnico.ulisboa.pt> |
+| Number  | Name           | User                                  | E-mail                                        |
+| --------|----------------|---------------------------------------|-----------------------------------------------|
+| 110996  | Diogo Pereira  | https://github.com/diogo02pereira   | <mailto:diogo.m.pereira@tecnico.ulisboa.pt>   |
+| 110846  | João Matos     | https://github.com/joaorsmatos02      | <mailto:joao.silva.matos@tecnico.ulisboa.pt>  |
+| 110947  | João Santos    | https://github.com/joaogoncalosantoss | <mailto:joaogoncalosantos@tecnico.ulisboa.pt> |
 
 
-![Alice](img/alice.png) ![João Matos](img/joao_matos.jpg) ![João Santos](img/joao_santos.png)
-
-*(add face photos with 150px height; faces should have similar size and framing)*
+![Diogo Pereira](img/diogo_pereira.jpeg) ![João Matos](img/joao_matos.jpg) ![João Santos](img/joao_santos.png)
 
 ## Contents
 

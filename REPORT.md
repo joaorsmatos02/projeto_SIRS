@@ -1,4 +1,4 @@
-# CXX GrooveGalaxy / BombAppetit / BlingBank / MediTrack Project Report
+#  BlingBank
 
 ## 1. Introduction
 
