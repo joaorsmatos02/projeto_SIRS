@@ -11,7 +11,7 @@
 | 110947  | João Santos    | https://github.com/joaogoncalosantoss   | <joaogoncalosantos@tecnico.ulisboa.pt> |
 
 
-![Alice](img/alice.png) ![Bob](img/bob.png) ![Charlie](img/joao_santos.png)
+![Alice](img/alice.png) ![João Matos](img/joao_matos.jpg) ![João Santos](img/joao_santos.png)
 
 *(add face photos with 150px height; faces should have similar size and framing)*
 
