@@ -25,7 +25,8 @@ public class SecureDocument {
 
             long timestamp = System.currentTimeMillis();
 
-             HashMap<JsonObject, Long> jsonTimestampMap = new HashMap<JsonObject, Long>();
+             HashMap<JsonObject, Long> jsonTimestampMap = new HashMap<>();
+             jsonTimestampMap.put(encryptedJson, timestamp);
 
             // Sign the map (encrypted_json, timestamp) with privateKey
             String signature = signJsonTimestamp(jsonTimestampMap, privateKey);
