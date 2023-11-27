@@ -1,17 +1,11 @@
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
+import dto.TimestampDTO;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.security.*;
 import java.util.Base64;
-import java.util.HashMap;
 
 public class SecureDocument {
 
@@ -20,31 +14,16 @@ public class SecureDocument {
 
             Gson gson = new Gson();
             JsonObject rootJson = gson.fromJson(fileReader, JsonObject.class);
-
             JsonObject encryptedJson = encryptSensitiveData(rootJson, secretKey);
 
             long timestamp = System.currentTimeMillis();
 
-             HashMap<JsonObject, Long> jsonTimestampMap = new HashMap<>();
-             jsonTimestampMap.put(encryptedJson, timestamp);
-
-            // Sign the map (encrypted_json, timestamp) with privateKey
-            String signature = signJsonTimestamp(jsonTimestampMap, privateKey);
-
-            // Write the map (encrypted_json, timestamp) to the file
-            writeToFile(encryptedJson, timestamp, signature, "encrypted_" + filename);
+            SignedObject signed = signJSONTimestamp(new TimestampDTO(encryptedJson,timestamp), privateKey);
+            writeToFile("encrypted_" + filename, signed);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public boolean check(String filename, SecretKey secretKey, PublicKey publicKey) {
-        return true;
-    }
-
-    public void unprotect(String filename, SecretKey secretKey) {
-
     }
 
     private JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
@@ -68,8 +47,8 @@ public class SecureDocument {
 
         // Encrypt movements
         JsonArray movementsArray = encryptedJson.getAsJsonArray("movements");
-        for (int i = 0; i < movementsArray.size(); i++) {
-            JsonObject movement = movementsArray.get(i).getAsJsonObject();
+        for (JsonElement j : movementsArray) {
+            JsonObject movement = j.getAsJsonObject();
 
             // Encrypt movement value
             double value = movement.getAsJsonPrimitive("value").getAsDouble();
@@ -80,47 +59,105 @@ public class SecureDocument {
         return encryptedJson;
     }
 
-    private String signJsonTimestamp(HashMap<JsonObject, Long> jsonTimestampMap, PrivateKey privateKey) {
-        // Convert the map to a JSON string
-        Gson gson = new Gson();
-        String jsonString = gson.toJson(jsonTimestampMap);
-
+    private SignedObject signJSONTimestamp(TimestampDTO jsonTimestampDTO, PrivateKey privateKey) {
         try {
-            // Get a signature instance
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privateKey);
-
-            // Update the signature with the JSON string
-            signature.update(jsonString.getBytes());
-
-            // Sign the data
-            byte[] signatureBytes = signature.sign();
-
-            //  - verificar este return - Encode the signature as a base64 string
-            return Base64.getEncoder().encodeToString(signatureBytes);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            return new SignedObject(jsonTimestampDTO, privateKey, signature);
+        } catch (Exception e) {
             e.printStackTrace();
-            // Handle exceptions appropriately in your code
             return null;
         }
     }
 
-    private static void writeToFile(JsonObject encryptedJson, long timestamp, String signature, String filename) {
-        try (FileWriter writer = new FileWriter(filename)) {
-            // Create a new JSON object to hold the data (encrypted_json, timestamp, signature)
-            JsonObject dataToWrite = new JsonObject();
-            dataToWrite.add("encrypted_json", encryptedJson);
-            dataToWrite.addProperty("timestamp", timestamp);
-            dataToWrite.addProperty("signature", signature);
+    //------------------------------------------------------------------------------------------------------------------
 
-            // Convert the JSON object to a string and write it to the file
-            Gson gson = new Gson();
-            String jsonString = gson.toJson(dataToWrite);
-            writer.write(jsonString);
-        } catch (IOException e) {
+    public boolean check(String filename, PublicKey publicKey) {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(filename))) {
+
+            SignedObject signedObject = (SignedObject) objectInputStream.readObject();
+            Signature signature = Signature.getInstance("SHA256withRSA");
+
+            if (signedObject.verify(publicKey, signature)) {
+                TimestampDTO content = (TimestampDTO) signedObject.getObject();
+                return verifyTimestamp(content.timestamp());
+            }
+
+        } catch (Exception e) {
             e.printStackTrace();
-            // Handle the exception appropriately for your application
+        }
+
+        return false;
+    }
+
+    private boolean verifyTimestamp(Long timestamp) {
+        return System.currentTimeMillis() - timestamp <= 60000;
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    public void unprotect(String filename, SecretKey secretKey) {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(filename))) {
+
+            SignedObject signedObject = (SignedObject) objectInputStream.readObject();
+            TimestampDTO dto = (TimestampDTO) signedObject.getObject();
+            writeToFile(filename + "_decrypted", decryptSensitiveData(dto.jsonObject(), secretKey));
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
+
+    private JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
+        // Extract encrypted information
+
+        JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
+
+        // Decrypt balance, currency, and movements
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
+        // Decrypt balance
+        String encryptedBalanceBase64 = encryptedJson.getAsJsonPrimitive("encryptedBalance").getAsString();
+        byte[] encryptedBalance = Base64.getDecoder().decode(encryptedBalanceBase64);
+        double balance = Double.parseDouble(new String(cipher.doFinal(encryptedBalance)));
+
+        // Decrypt currency
+        String encryptedCurrencyBase64 = encryptedJson.getAsJsonPrimitive("encryptedCurrency").getAsString();
+        byte[] encryptedCurrency = Base64.getDecoder().decode(encryptedCurrencyBase64);
+        String currency = new String(cipher.doFinal(encryptedCurrency));
+
+        // Decrypt movements
+        JsonArray movementsArray = encryptedJson.getAsJsonArray("movements");
+        for (int i = 0; i < movementsArray.size(); i++) {
+            JsonObject movement = movementsArray.get(i).getAsJsonObject();
+
+            // Decrypt movement value
+            String encryptedValueBase64 = movement.getAsJsonPrimitive("encryptedValue").getAsString();
+            byte[] encryptedValue = Base64.getDecoder().decode(encryptedValueBase64);
+            double value = Double.parseDouble(new String(cipher.doFinal(encryptedValue)));
+            movement.addProperty("value", value);
+        }
+
+        JsonObject decryptedJson = new JsonObject();
+        decryptedJson.add("accountHolder", accountHolderArray);
+        decryptedJson.addProperty("balance", balance);
+        decryptedJson.addProperty("currency", currency);
+        decryptedJson.add("movements", movementsArray);
+
+        return decryptedJson;
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    private static void writeToFile(String filename, Object... objects) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
+            for (Object o : objects) {
+                objectOutputStream.writeObject(o);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 }
