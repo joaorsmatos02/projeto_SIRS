@@ -6,8 +6,10 @@ import utils.RequestTable;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import java.io.*;
+import java.math.BigDecimal;
 import java.security.*;
 import java.security.cert.Certificate;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
@@ -26,7 +28,7 @@ public class SecureDocumentLib {
 
             long timestamp = System.currentTimeMillis();
 
-            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(),timestamp), privateKey);
+            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(), timestamp), privateKey);
             writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
@@ -143,7 +145,7 @@ public class SecureDocumentLib {
     }
 
     private static JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
-         // Extract and decrypt account information
+        // Extract and decrypt account information
         JsonObject decryptedJson = new JsonObject();
         JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
 
@@ -166,30 +168,42 @@ public class SecureDocumentLib {
         decryptedJson.addProperty("currency", currency);
 
         // Decrypt movements
-        JsonArray movementsArray = decryptedJson.getAsJsonArray("movements");
+        JsonArray movementsArray = encryptedJson.getAsJsonArray("movements");
+        JsonArray movementsArrayCopy = new JsonArray();
         for (JsonElement j : movementsArray) {
             JsonObject movement = j.getAsJsonObject();
-
-            // Decrypt movement value
-            String encryptedValueStr = movement.getAsJsonPrimitive("encryptedValue").getAsString();
-            byte[] encryptedValue = Base64.getDecoder().decode(encryptedValueStr);
-            double value = Double.parseDouble(new String(cipher.doFinal(encryptedValue)));
-            movement.addProperty("value", value);
 
             // Decrypt movement date
             String encryptedDateStr = movement.getAsJsonPrimitive("encryptedDate").getAsString();
             byte[] encryptedDate = Base64.getDecoder().decode(encryptedDateStr);
             String decryptedDateStr = new String(cipher.doFinal(encryptedDate));
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy"); //DATA NO FORMATO ERRADO, MAS COMPILADOR DÁ EXCEÇÃO SE FOR "dd/MM/yyyy"
             Date date = dateFormat.parse(decryptedDateStr);
-            movement.addProperty("date", dateFormat.format(date)); // Assuming you want to keep it as a formatted string
+            movement.addProperty("date", dateFormat.format(date));
+            movement.remove("encryptedDate");
+
+            // Decrypt movement value
+            String encryptedValueStr = movement.getAsJsonPrimitive("encryptedValue").getAsString();
+            byte[] encryptedValue = Base64.getDecoder().decode(encryptedValueStr);
+            double value = Double.parseDouble(new String(cipher.doFinal(encryptedValue)));
+            // Format the double value to always have two decimal places
+            String formattedValue = String.format("%.2f", value);
+            // Use BigDecimal to preserve precision
+            BigDecimal bigDecimalValue = new BigDecimal(formattedValue);
+            movement.addProperty("value", bigDecimalValue);
+            movement.remove("encryptedValue");
 
             // Decrypt movement description
             String encryptedDescriptionStr = movement.getAsJsonPrimitive("encryptedDescription").getAsString();
             byte[] encryptedDescription = Base64.getDecoder().decode(encryptedDescriptionStr);
             String description = new String(cipher.doFinal(encryptedDescription));
             movement.addProperty("description", description);
+            movement.remove("encryptedDescription");
+
+            movementsArrayCopy.add(movement);
         }
+
+        decryptedJson.add("movements", movementsArrayCopy);
 
         JsonObject result = new JsonObject();
         result.add("account", decryptedJson);
@@ -199,13 +213,29 @@ public class SecureDocumentLib {
     //------------------------------------------------------------------------------------------------------------------
 
     private static void writeToFile(File file, Object... objects) {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
-            for (Object o : objects) {
-                objectOutputStream.writeObject(o);
+        for (Object o : objects) {
+            if (o instanceof JsonObject) {
+                writeObjectStr(file, o.toString());
+            } else {
+                writeObject(file, o);
             }
+        }
+
+    }
+
+    private static void writeObjectStr(File file, String object) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(object);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
+    private static void writeObject(File file, Object object) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
+            objectOutputStream.writeObject(object);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
