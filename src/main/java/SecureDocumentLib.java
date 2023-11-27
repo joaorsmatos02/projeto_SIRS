@@ -17,8 +17,8 @@ public class SecureDocumentLib {
     private static final long EXPIRATION_TIME_MILLIS = 20000;
 
 
-    public void protect(String filename, SecretKey secretKey, PrivateKey privateKey, Certificate certificate) {
-        try (FileReader fileReader = new FileReader(filename)) {
+    public static void protect(File inputFile, File outputFile, SecretKey secretKey, PrivateKey privateKey, Certificate certificate) {
+        try (FileReader fileReader = new FileReader(inputFile)) {
 
             Gson gson = new Gson();
             JsonObject rootJson = gson.fromJson(fileReader, JsonObject.class);
@@ -27,14 +27,14 @@ public class SecureDocumentLib {
             long timestamp = System.currentTimeMillis();
 
             SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson,timestamp), privateKey);
-            writeToFile("encrypted_" + filename, new SignedObjectDTO(signed, certificate));
+            writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
+    private static JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
         // Extract and encrypt account information
         JsonObject encryptedJson = rootJson.getAsJsonObject("account");
         JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
@@ -80,7 +80,7 @@ public class SecureDocumentLib {
         return encryptedJson;
     }
 
-    private SignedObject signJSONTimestamp(SecureDocumentDTO jsonTimestampDTO, PrivateKey privateKey) {
+    private static SignedObject signJSONTimestamp(SecureDocumentDTO jsonTimestampDTO, PrivateKey privateKey) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             return new SignedObject(jsonTimestampDTO, privateKey, signature);
@@ -92,8 +92,8 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public boolean check(String filename) {
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(filename))) {
+    public static boolean check(File file) {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
 
             Signature signature = Signature.getInstance("SHA256withRSA");
 
@@ -113,19 +113,19 @@ public class SecureDocumentLib {
         return false;
     }
 
-    private boolean verifyTimestamp(SecureDocumentDTO dto) {
+    private static boolean verifyTimestamp(SecureDocumentDTO dto) {
         return System.currentTimeMillis() - dto.timestamp() <= EXPIRATION_TIME_MILLIS &&
                 !RequestTable.hasEntry(dto.jsonObject());
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public void unprotect(String filename, SecretKey secretKey) {
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(filename))) {
+    public static void unprotect(File inputFile, File outputFile, SecretKey secretKey) {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile))) {
 
             SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
             SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
-            writeToFile(filename + "_decrypted", decryptSensitiveData(dto.jsonObject(), secretKey));
+            writeToFile(outputFile, decryptSensitiveData(dto.jsonObject(), secretKey));
 
             RequestTable.addEntry(dto.jsonObject()); // TODO
 
@@ -134,7 +134,7 @@ public class SecureDocumentLib {
         }
     }
 
-    private JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
+    private static JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
          // Extract and decrypt account information
         JsonObject decryptedJson = encryptedJson.getAsJsonObject("account");
         JsonArray accountHolderArray = decryptedJson.getAsJsonArray("accountHolder");
@@ -188,8 +188,8 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private static void writeToFile(String filename, Object... objects) {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
+    private static void writeToFile(File file, Object... objects) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
             for (Object o : objects) {
                 objectOutputStream.writeObject(o);
             }
