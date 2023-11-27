@@ -1,5 +1,6 @@
 import com.google.gson.*;
 import dto.TimestampDTO;
+import utils.RequestTable;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -10,6 +11,9 @@ import java.util.Base64;
 import java.util.Date;
 
 public class SecureDocument {
+
+    private static final long EXPIRATION_TIME_MILLIS = 20000;
+
 
     public void protect(String filename, SecretKey secretKey, PrivateKey privateKey) {
         try (FileReader fileReader = new FileReader(filename)) {
@@ -94,7 +98,7 @@ public class SecureDocument {
 
             if (signedObject.verify(publicKey, signature)) {
                 TimestampDTO content = (TimestampDTO) signedObject.getObject();
-                return verifyTimestamp(content.timestamp());
+                return verifyTimestamp(content);
             }
 
         } catch (Exception e) {
@@ -104,8 +108,9 @@ public class SecureDocument {
         return false;
     }
 
-    private boolean verifyTimestamp(Long timestamp) {
-        return System.currentTimeMillis() - timestamp <= 60000;
+    private boolean verifyTimestamp(TimestampDTO dto) {
+        return System.currentTimeMillis() - dto.timestamp() <= EXPIRATION_TIME_MILLIS &&
+                !RequestTable.hasEntry(dto.jsonObject());
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -116,6 +121,8 @@ public class SecureDocument {
             SignedObject signedObject = (SignedObject) objectInputStream.readObject();
             TimestampDTO dto = (TimestampDTO) signedObject.getObject();
             writeToFile(filename + "_decrypted", decryptSensitiveData(dto.jsonObject(), secretKey));
+
+            RequestTable.addEntry(dto.jsonObject()); // TODO
 
         } catch (Exception e) {
             e.printStackTrace();
