@@ -144,8 +144,8 @@ public class SecureDocumentLib {
 
     private static JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
          // Extract and decrypt account information
-        JsonObject decryptedJson = encryptedJson.getAsJsonObject("account");
-        JsonArray accountHolderArray = decryptedJson.getAsJsonArray("accountHolder");
+        JsonObject decryptedJson = new JsonObject();
+        JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
 
         decryptedJson.add("accountHolder", accountHolderArray);
 
@@ -191,7 +191,9 @@ public class SecureDocumentLib {
             movement.addProperty("description", description);
         }
 
-        return decryptedJson;
+        JsonObject result = new JsonObject();
+        result.add("account", decryptedJson);
+        return result;
     }
 
     //------------------------------------------------------------------------------------------------------------------
