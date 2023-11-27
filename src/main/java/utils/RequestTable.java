@@ -10,7 +10,7 @@ public class RequestTable {
 
     private static final Timer timer = new Timer();
 
-    private static final long EXPIRATION_TIME_MILLIS = 20000;
+    private static final long EXPIRATION_TIME_MILLIS = 1120000;
 
     public static void addEntry(JsonObject value) {
         table.add(value);
@@ -22,6 +22,7 @@ public class RequestTable {
     }
 
     public static boolean hasEntry(JsonObject value) {
+        System.out.println(table.toString());
         return table.contains(value);
     }
 

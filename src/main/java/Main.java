@@ -1,14 +1,9 @@
 import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
 import java.util.Scanner;
 
 public class Main {
@@ -36,7 +31,7 @@ public class Main {
                         break;
                     case "check":
                         try {
-                            prepareCheck(command);
+                            System.out.println(prepareCheck(command));
                         } catch (Exception e) {
                             printInvalidArguments("check");
                         }
@@ -49,11 +44,14 @@ public class Main {
                         }
                         break;
                     default:
-                        System.out.println("Unknown command. Use 'BlingBank help' to see the list of available commands.");                }
+                        System.out.println("Unknown command. Use 'BlingBank help' to see the list of available commands.");
+                }
+                System.out.print("Next command:");
             } else {
                 System.out.println("All requests should start with \"BlingBank\"");
             }
         }
+        sc.close();
     }
 
     private static void printHelp() {
@@ -99,18 +97,18 @@ public class Main {
 
         FileInputStream is = new FileInputStream(args[4]);
         String passwordKeyStore = args[5];
-        KeyStore keyStore = KeyStore.getInstance("JCEKS");
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(is, passwordKeyStore.toCharArray());
 
-        SecretKey secretKey = (SecretKey) keyStore.getKey("secret_key", args[6].toCharArray());
-        Certificate certificate = keyStore.getCertificate("certificate");
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey("private_key", passwordKeyStore.toCharArray());
+        SecretKey secretKey = (SecretKey) keyStore.getKey("secretKey", args[6].toCharArray());
+        Certificate certificate = keyStore.getCertificate("keyrsa");
+        PrivateKey privateKey = (PrivateKey) keyStore.getKey("keyrsa", passwordKeyStore.toCharArray());
 
 
         SecureDocumentLib.protect(inputFile, outputFile, secretKey, privateKey, certificate);
     }
 
-    private static void prepareCheck(String[] args) throws Exception{
+    private static boolean prepareCheck(String[] args) throws Exception{
         if(args.length != 3) {
             throw new IllegalArgumentException();
         }
@@ -120,7 +118,8 @@ public class Main {
             System.out.println("Input file not found");
         }
 
-        SecureDocumentLib.check(inputFile);
+
+        return SecureDocumentLib.check(inputFile);
     }
 
     private static void prepareUnprotect(String[] args) throws Exception{
@@ -142,10 +141,10 @@ public class Main {
 
         FileInputStream is = new FileInputStream(args[4]);
         String passwordKeyStore = args[5];
-        KeyStore keyStore = KeyStore.getInstance("JCEKS");
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
         keyStore.load(is, passwordKeyStore.toCharArray());
 
-        SecretKey secretKey = (SecretKey) keyStore.getKey("secret_key", args[6].toCharArray());
+        SecretKey secretKey = (SecretKey) keyStore.getKey("secretKey", args[6].toCharArray());
 
         SecureDocumentLib.unprotect(inputFile, outputFile, secretKey);
     }

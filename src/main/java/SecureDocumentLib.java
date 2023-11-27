@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class SecureDocumentLib {
 
-    private static final long EXPIRATION_TIME_MILLIS = 20000;
+    private static final long EXPIRATION_TIME_MILLIS = 1120000;
 
 
     public static void protect(File inputFile, File outputFile, SecretKey secretKey, PrivateKey privateKey, Certificate certificate) {
@@ -26,7 +26,7 @@ public class SecureDocumentLib {
 
             long timestamp = System.currentTimeMillis();
 
-            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson,timestamp), privateKey);
+            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(),timestamp), privateKey);
             writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
@@ -38,6 +38,8 @@ public class SecureDocumentLib {
         // Extract and encrypt account information
         JsonObject encryptedJson = rootJson.getAsJsonObject("account");
         JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
+
+        encryptedJson.add("accountHolder", accountHolderArray);
 
         // Encrypt balance, currency, and movements
         double balance = encryptedJson.getAsJsonPrimitive("balance").getAsDouble();
@@ -115,7 +117,7 @@ public class SecureDocumentLib {
 
     private static boolean verifyTimestamp(SecureDocumentDTO dto) {
         return System.currentTimeMillis() - dto.timestamp() <= EXPIRATION_TIME_MILLIS &&
-                !RequestTable.hasEntry(dto.jsonObject());
+                !RequestTable.hasEntry(JsonParser.parseString(dto.jsonObject()).getAsJsonObject());
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -125,9 +127,10 @@ public class SecureDocumentLib {
 
             SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
             SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
-            writeToFile(outputFile, decryptSensitiveData(dto.jsonObject(), secretKey));
+            JsonObject document = JsonParser.parseString(dto.jsonObject()).getAsJsonObject();
+            writeToFile(outputFile, decryptSensitiveData(document, secretKey));
 
-            RequestTable.addEntry(dto.jsonObject()); // TODO
+            RequestTable.addEntry(document); // TODO
 
         } catch (Exception e) {
             e.printStackTrace();
