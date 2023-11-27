@@ -1,21 +1,23 @@
 import com.google.gson.*;
-import dto.TimestampDTO;
+import dto.SecureDocumentDTO;
+import dto.SignedObjectDTO;
 import utils.RequestTable;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import java.io.*;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
 
-public class SecureDocument {
+public class SecureDocumentLib {
 
     private static final long EXPIRATION_TIME_MILLIS = 20000;
 
 
-    public void protect(String filename, SecretKey secretKey, PrivateKey privateKey) {
+    public void protect(String filename, SecretKey secretKey, PrivateKey privateKey, Certificate certificate) {
         try (FileReader fileReader = new FileReader(filename)) {
 
             Gson gson = new Gson();
@@ -24,8 +26,8 @@ public class SecureDocument {
 
             long timestamp = System.currentTimeMillis();
 
-            SignedObject signed = signJSONTimestamp(new TimestampDTO(encryptedJson,timestamp), privateKey);
-            writeToFile("encrypted_" + filename, signed);
+            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson,timestamp), privateKey);
+            writeToFile("encrypted_" + filename, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,7 +80,7 @@ public class SecureDocument {
         return encryptedJson;
     }
 
-    private SignedObject signJSONTimestamp(TimestampDTO jsonTimestampDTO, PrivateKey privateKey) {
+    private SignedObject signJSONTimestamp(SecureDocumentDTO jsonTimestampDTO, PrivateKey privateKey) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             return new SignedObject(jsonTimestampDTO, privateKey, signature);
@@ -90,15 +92,18 @@ public class SecureDocument {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public boolean check(String filename, PublicKey publicKey) {
+    public boolean check(String filename) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(filename))) {
 
-            SignedObject signedObject = (SignedObject) objectInputStream.readObject();
             Signature signature = Signature.getInstance("SHA256withRSA");
 
-            if (signedObject.verify(publicKey, signature)) {
-                TimestampDTO content = (TimestampDTO) signedObject.getObject();
-                return verifyTimestamp(content);
+            SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
+            SignedObject signedObject = signedObjectDTO.signedObject();
+            Certificate certificate = signedObjectDTO.certificate();
+
+            if (signedObject.verify(certificate.getPublicKey(), signature)) {
+                SecureDocumentDTO document = (SecureDocumentDTO) signedObject.getObject();
+                return verifyTimestamp(document);
             }
 
         } catch (Exception e) {
@@ -108,7 +113,7 @@ public class SecureDocument {
         return false;
     }
 
-    private boolean verifyTimestamp(TimestampDTO dto) {
+    private boolean verifyTimestamp(SecureDocumentDTO dto) {
         return System.currentTimeMillis() - dto.timestamp() <= EXPIRATION_TIME_MILLIS &&
                 !RequestTable.hasEntry(dto.jsonObject());
     }
@@ -118,8 +123,8 @@ public class SecureDocument {
     public void unprotect(String filename, SecretKey secretKey) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(filename))) {
 
-            SignedObject signedObject = (SignedObject) objectInputStream.readObject();
-            TimestampDTO dto = (TimestampDTO) signedObject.getObject();
+            SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
+            SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
             writeToFile(filename + "_decrypted", decryptSensitiveData(dto.jsonObject(), secretKey));
 
             RequestTable.addEntry(dto.jsonObject()); // TODO
@@ -192,6 +197,5 @@ public class SecureDocument {
             e.printStackTrace();
         }
     }
-
 
 }
