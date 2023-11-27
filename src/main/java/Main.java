@@ -97,18 +97,15 @@ public class Main {
             return;
         }
 
-        byte[] salt = { (byte) 0xc9, (byte) 0x36, (byte) 0x78, (byte) 0x99, (byte) 0x52, (byte) 0x3e, (byte) 0xea,
-                (byte) 0xf2 };
-        PBEKeySpec keySpec = new PBEKeySpec(args[4].toCharArray(), salt, 20);
-        SecretKeyFactory kf = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
-        SecretKey secretKey = kf.generateSecret(keySpec);
-
-        FileInputStream is = new FileInputStream(args[5]);
-        String passwordKeyStore = args[6];
+        FileInputStream is = new FileInputStream(args[4]);
+        String passwordKeyStore = args[5];
         KeyStore keyStore = KeyStore.getInstance("JCEKS");
         keyStore.load(is, passwordKeyStore.toCharArray());
+
+        SecretKey secretKey = (SecretKey) keyStore.getKey("secret_key", args[6].toCharArray());
         Certificate certificate = keyStore.getCertificate("certificate");
         PrivateKey privateKey = (PrivateKey) keyStore.getKey("private_key", passwordKeyStore.toCharArray());
+
 
         SecureDocumentLib.protect(inputFile, outputFile, secretKey, privateKey, certificate);
     }
@@ -127,7 +124,7 @@ public class Main {
     }
 
     private static void prepareUnprotect(String[] args) throws Exception{
-        if(args.length != 5) {
+        if(args.length != 7) {
             throw new IllegalArgumentException();
         }
 
@@ -143,11 +140,12 @@ public class Main {
             return;
         }
 
-        byte[] salt = { (byte) 0xc9, (byte) 0x36, (byte) 0x78, (byte) 0x99, (byte) 0x52, (byte) 0x3e, (byte) 0xea,
-                (byte) 0xf2 };
-        PBEKeySpec keySpec = new PBEKeySpec(args[4].toCharArray(), salt, 20);
-        SecretKeyFactory kf = SecretKeyFactory.getInstance("PBEWithHmacSHA256AndAES_128");
-        SecretKey secretKey = kf.generateSecret(keySpec);
+        FileInputStream is = new FileInputStream(args[4]);
+        String passwordKeyStore = args[5];
+        KeyStore keyStore = KeyStore.getInstance("JCEKS");
+        keyStore.load(is, passwordKeyStore.toCharArray());
+
+        SecretKey secretKey = (SecretKey) keyStore.getKey("secret_key", args[6].toCharArray());
 
         SecureDocumentLib.unprotect(inputFile, outputFile, secretKey);
     }
