@@ -5,7 +5,9 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import java.io.*;
 import java.security.*;
+import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.Date;
 
 public class SecureDocument {
 
@@ -54,6 +56,19 @@ public class SecureDocument {
             double value = movement.getAsJsonPrimitive("value").getAsDouble();
             byte[] encryptedValue = cipher.doFinal(Double.toString(value).getBytes());
             movement.add("encryptedValue", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedValue)));
+
+            // Encrypt movement date
+            // Adapt "date" to Date type
+            String dateString = movement.getAsJsonPrimitive("date").getAsString();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = dateFormat.parse(dateString);
+            byte[] encryptedDate = cipher.doFinal(date.toString().getBytes());
+            movement.add("encryptedDate", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDate)));
+
+            // Encrypt movement description
+            String description = movement.getAsJsonPrimitive("description").getAsString();
+            byte[] encryptedDescription = cipher.doFinal(description.getBytes());
+            movement.add("encryptedDescription", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDescription)));
         }
 
         return encryptedJson;
@@ -108,41 +123,53 @@ public class SecureDocument {
     }
 
     private JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
-        // Extract encrypted information
+         // Extract and decrypt account information
+        JsonObject decryptedJson = encryptedJson.getAsJsonObject("account");
+        JsonArray accountHolderArray = decryptedJson.getAsJsonArray("accountHolder");
 
-        JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
+        decryptedJson.add("accountHolder", accountHolderArray);
 
         // Decrypt balance, currency, and movements
         Cipher cipher = Cipher.getInstance("AES");
         cipher.init(Cipher.DECRYPT_MODE, secretKey);
 
         // Decrypt balance
-        String encryptedBalanceBase64 = encryptedJson.getAsJsonPrimitive("encryptedBalance").getAsString();
-        byte[] encryptedBalance = Base64.getDecoder().decode(encryptedBalanceBase64);
+        String encryptedBalanceStr = encryptedJson.getAsJsonPrimitive("encryptedBalance").getAsString();
+        byte[] encryptedBalance = Base64.getDecoder().decode(encryptedBalanceStr);
         double balance = Double.parseDouble(new String(cipher.doFinal(encryptedBalance)));
+        decryptedJson.addProperty("balance", balance);
 
         // Decrypt currency
-        String encryptedCurrencyBase64 = encryptedJson.getAsJsonPrimitive("encryptedCurrency").getAsString();
-        byte[] encryptedCurrency = Base64.getDecoder().decode(encryptedCurrencyBase64);
+        String encryptedCurrencyStr = encryptedJson.getAsJsonPrimitive("encryptedCurrency").getAsString();
+        byte[] encryptedCurrency = Base64.getDecoder().decode(encryptedCurrencyStr);
         String currency = new String(cipher.doFinal(encryptedCurrency));
+        decryptedJson.addProperty("currency", currency);
 
         // Decrypt movements
-        JsonArray movementsArray = encryptedJson.getAsJsonArray("movements");
-        for (int i = 0; i < movementsArray.size(); i++) {
-            JsonObject movement = movementsArray.get(i).getAsJsonObject();
+        JsonArray movementsArray = decryptedJson.getAsJsonArray("movements");
+        for (JsonElement j : movementsArray) {
+            JsonObject movement = j.getAsJsonObject();
 
             // Decrypt movement value
-            String encryptedValueBase64 = movement.getAsJsonPrimitive("encryptedValue").getAsString();
-            byte[] encryptedValue = Base64.getDecoder().decode(encryptedValueBase64);
+            String encryptedValueStr = movement.getAsJsonPrimitive("encryptedValue").getAsString();
+            byte[] encryptedValue = Base64.getDecoder().decode(encryptedValueStr);
             double value = Double.parseDouble(new String(cipher.doFinal(encryptedValue)));
             movement.addProperty("value", value);
-        }
 
-        JsonObject decryptedJson = new JsonObject();
-        decryptedJson.add("accountHolder", accountHolderArray);
-        decryptedJson.addProperty("balance", balance);
-        decryptedJson.addProperty("currency", currency);
-        decryptedJson.add("movements", movementsArray);
+            // Decrypt movement date
+            String encryptedDateStr = movement.getAsJsonPrimitive("encryptedDate").getAsString();
+            byte[] encryptedDate = Base64.getDecoder().decode(encryptedDateStr);
+            String decryptedDateStr = new String(cipher.doFinal(encryptedDate));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = dateFormat.parse(decryptedDateStr);
+            movement.addProperty("date", dateFormat.format(date)); // Assuming you want to keep it as a formatted string
+
+            // Decrypt movement description
+            String encryptedDescriptionStr = movement.getAsJsonPrimitive("encryptedDescription").getAsString();
+            byte[] encryptedDescription = Base64.getDecoder().decode(encryptedDescriptionStr);
+            String description = new String(cipher.doFinal(encryptedDescription));
+            movement.addProperty("description", description);
+        }
 
         return decryptedJson;
     }
