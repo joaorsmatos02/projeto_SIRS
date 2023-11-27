@@ -49,11 +49,13 @@ public class SecureDocumentLib {
         // Encrypt balance
         byte[] encryptedBalance = cipher.doFinal(Double.toString(balance).getBytes());
         encryptedJson.add("encryptedBalance", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedBalance)));
+        encryptedJson.remove("balance");
 
         // Encrypt currency
         String currency = encryptedJson.getAsJsonPrimitive("currency").getAsString();
         byte[] encryptedCurrency = cipher.doFinal(currency.getBytes());
         encryptedJson.add("encryptedCurrency", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedCurrency)));
+        encryptedJson.remove("currency");
 
         // Encrypt movements
         JsonArray movementsArray = encryptedJson.getAsJsonArray("movements");
@@ -64,6 +66,7 @@ public class SecureDocumentLib {
             double value = movement.getAsJsonPrimitive("value").getAsDouble();
             byte[] encryptedValue = cipher.doFinal(Double.toString(value).getBytes());
             movement.add("encryptedValue", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedValue)));
+            movement.remove("value");
 
             // Encrypt movement date
             // Adapt "date" to Date type
@@ -72,11 +75,13 @@ public class SecureDocumentLib {
             Date date = dateFormat.parse(dateString);
             byte[] encryptedDate = cipher.doFinal(date.toString().getBytes());
             movement.add("encryptedDate", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDate)));
+            movement.remove("date");
 
             // Encrypt movement description
             String description = movement.getAsJsonPrimitive("description").getAsString();
             byte[] encryptedDescription = cipher.doFinal(description.getBytes());
             movement.add("encryptedDescription", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDescription)));
+            movement.remove("description");
         }
 
         return encryptedJson;
