@@ -177,9 +177,14 @@ public class SecureDocumentLib {
             String encryptedDateStr = movement.getAsJsonPrimitive("encryptedDate").getAsString();
             byte[] encryptedDate = Base64.getDecoder().decode(encryptedDateStr);
             String decryptedDateStr = new String(cipher.doFinal(encryptedDate));
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy"); //DATA NO FORMATO ERRADO, MAS COMPILADOR DÁ EXCEÇÃO SE FOR "dd/MM/yyyy"
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy"); //Error if not formatted like this
             Date date = dateFormat.parse(decryptedDateStr);
-            movement.addProperty("date", dateFormat.format(date));
+
+            SimpleDateFormat wellFormattedDate = new SimpleDateFormat("dd/MM/yyyy");
+            String wellFormattedStr = wellFormattedDate.format(date);
+            Date dateWellFormatted = wellFormattedDate.parse(wellFormattedStr);
+
+            movement.addProperty("date", wellFormattedDate.format(dateWellFormatted));
             movement.remove("encryptedDate");
 
             // Decrypt movement value
