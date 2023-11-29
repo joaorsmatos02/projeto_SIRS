@@ -1,1 +1,0 @@
-{"account":{"accountHolder":["Alice"],"balance":872.22,"currency":"EUR","movements":[{"date":"Thu Nov 09 00:00:00 WET 2023","value":1000.00,"description":"Salary"},{"date":"Wed Nov 15 00:00:00 WET 2023","value":-77.78,"description":"Electricity bill"},{"date":"Wed Nov 22 00:00:00 WET 2023","value":-50.00,"description":"ATM Withdrawal"}]}}
