@@ -5,12 +5,14 @@ import utils.RequestTable;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import java.io.*;
 import java.math.BigDecimal;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 
@@ -43,14 +45,24 @@ public class SecureDocumentLib {
 
         encryptedJson.add("accountHolder", accountHolderArray);
 
+
+        // Generate a random IV
+        SecureRandom random = new SecureRandom();
+        byte[] iv = new byte[16];
+        random.nextBytes(iv);
+
         // Encrypt balance, currency, and movements
         double balance = encryptedJson.getAsJsonPrimitive("balance").getAsDouble();
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
 
         // Encrypt balance
         byte[] encryptedBalance = cipher.doFinal(Double.toString(balance).getBytes());
-        encryptedJson.add("encryptedBalance", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedBalance)));
+        // Concatenate IV and encryptedBalance
+        byte[] ivAndEncryptedBalance = new byte[iv.length + encryptedBalance.length];
+        System.arraycopy(iv, 0, ivAndEncryptedBalance, 0, iv.length);
+        System.arraycopy(encryptedBalance, 0, ivAndEncryptedBalance, iv.length, encryptedBalance.length);
+        encryptedJson.add("encryptedBalance", new JsonPrimitive(Base64.getEncoder().encodeToString(ivAndEncryptedBalance)));
         encryptedJson.remove("balance");
 
         // Encrypt currency
@@ -151,15 +163,23 @@ public class SecureDocumentLib {
 
         decryptedJson.add("accountHolder", accountHolderArray);
 
+        // Retrieve the IV and encrypted data from the JSON file
+        String ivAndEncryptedBalanceStr = encryptedJson.getAsJsonPrimitive("encryptedBalance").getAsString();
+        byte[] ivAndEncryptedBalance = Base64.getDecoder().decode(ivAndEncryptedBalanceStr);
+
+        // Separate IV and encryptedBalance
+        byte[] iv = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
+        byte[] encryptedBalance = Arrays.copyOfRange(ivAndEncryptedBalance, iv.length, ivAndEncryptedBalance.length);
+
         // Decrypt balance, currency, and movements
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
         // Decrypt balance
-        String encryptedBalanceStr = encryptedJson.getAsJsonPrimitive("encryptedBalance").getAsString();
-        byte[] encryptedBalance = Base64.getDecoder().decode(encryptedBalanceStr);
-        double balance = Double.parseDouble(new String(cipher.doFinal(encryptedBalance)));
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+        byte[] decryptedBalance = cipher.doFinal(encryptedBalance);
+        double balance = Double.parseDouble(new String(decryptedBalance));
         decryptedJson.addProperty("balance", balance);
+
 
         // Decrypt currency
         String encryptedCurrencyStr = encryptedJson.getAsJsonPrimitive("encryptedCurrency").getAsString();
