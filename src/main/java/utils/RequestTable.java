@@ -10,7 +10,7 @@ public class RequestTable {
 
     private static final Timer timer = new Timer();
 
-    private static final long EXPIRATION_TIME_MILLIS = 1120000;
+    private static final long EXPIRATION_TIME_MILLIS = 10000;
 
     public static void addEntry(JsonObject value) {
         table.add(value);

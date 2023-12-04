@@ -18,8 +18,7 @@ import java.util.Date;
 
 public class SecureDocumentLib {
 
-    private static final long EXPIRATION_TIME_MILLIS = 1120000;
-
+    private static final long EXPIRATION_TIME_MILLIS = 10000;
 
     public static void protect(File inputFile, File outputFile, SecretKey secretKey, PrivateKey privateKey, Certificate certificate) {
         try (FileReader fileReader = new FileReader(inputFile)) {
