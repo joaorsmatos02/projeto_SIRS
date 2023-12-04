@@ -46,7 +46,7 @@ public class Main {
                     default:
                         System.out.println("Unknown command. Use 'BlingBank help' to see the list of available commands.");
                 }
-                System.out.print("Next command:");
+                /*System.out.print("Next command:");*/
             } else {
                 System.out.println("All requests should start with \"BlingBank\"");
             }
@@ -65,6 +65,7 @@ public class Main {
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
                    - (clientID): Client ID.
+                   
                 BlingBank check (inputFile)
                 Checks the integrity of the specified file containing protected data.
                 Arguments:
@@ -76,6 +77,9 @@ public class Main {
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
                    - (clientID): Client ID.""");
+
+        System.out.print("Insert command: ");
+
     }
 
     private static void prepareProtect(String[] args) throws Exception {
