@@ -1,11 +1,17 @@
+import org.bouncycastle.x509.X509V3CertificateGenerator;
+
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.*;
+import javax.security.auth.x500.X500Principal;
 import java.io.*;
+import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 
 public class SSLServer {
 
@@ -40,7 +46,10 @@ public class SSLServer {
                 char[] password = keyStorePass.toCharArray();
                 ks.load(null, password);
 
-                KeyStore.PrivateKeyEntry privateKeyEntry = new KeyStore.PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{});
+                // Generate a self-signed X.509 certificate
+                X509Certificate selfSignedCert = generateSelfSignedCertificate(keyPair);
+
+                KeyStore.PrivateKeyEntry privateKeyEntry = new KeyStore.PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{selfSignedCert});
                 ks.setEntry(privateKeyAlias, privateKeyEntry, new KeyStore.PasswordProtection(password));
 
                 // Save the KeyStore to a file
@@ -94,6 +103,35 @@ public class SSLServer {
                 st.start();
             }
         }
+    }
+
+    public static X509Certificate generateSelfSignedCertificate(KeyPair keyPair) throws Exception {
+        // Get the current date
+        Date startDate = new Date();
+
+        // Set the validity period of the certificate (e.g., 365 days)
+        Date endDate = new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+        // Generate a self-signed X.509 certificate
+        X509Certificate cert = null;
+        try {
+            X509V3CertificateGenerator certGenerator = new X509V3CertificateGenerator();
+            X500Principal subjectName = new X500Principal("CN=Self-Signed Certificate");
+
+            certGenerator.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
+            certGenerator.setSubjectDN(subjectName);
+            certGenerator.setIssuerDN(subjectName);
+            certGenerator.setNotBefore(startDate);
+            certGenerator.setNotAfter(endDate);
+            certGenerator.setPublicKey(keyPair.getPublic());
+            certGenerator.setSignatureAlgorithm("SHA256withRSA");
+
+            cert = certGenerator.generate(keyPair.getPrivate());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return cert;
     }
 }
 
