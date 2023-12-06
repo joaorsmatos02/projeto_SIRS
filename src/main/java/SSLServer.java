@@ -1,43 +1,105 @@
 import javax.net.ServerSocketFactory;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.SSLSocket;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import javax.net.ssl.*;
+import java.io.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
 
 public class SSLServer {
 
+    private static final int port = 12345;
+
+    private static final String keyStoreName = "serverKeyStore";
+    private static final String keyStorePass = "serverKeyStore";
+    private static final String keyStorePath = "keyStore//" + keyStoreName;
+
+    private static final String privateKeyAlias = "pk";
+
+    private static final String trustStoreName = "serverTrustStore";
+    private static final String trustStorePass = "serverTrustStore";
+    private static final String trustStorePath = "trustStore//" + trustStoreName;
+
     public static void main(String[] args) throws Exception {
-        System.out.println("servidor: main");
-        int port = 12345;
+        System.out.println("Starting server...");
 
-        SSLServerSocket serverSocket = null;
+        // setup keystore
+        SSLContext sc = SSLContext.getInstance("TLS");
+        File keyStore = new File(keyStorePath);
 
-        // criar socket
-        try {
-            System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
+        if(!keyStore.exists()) {
+            try {
+                // Generate a key pair
+                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+                keyPairGenerator.initialize(2048);
+                KeyPair keyPair = keyPairGenerator.generateKeyPair();
 
-            System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-            System.setProperty("javax.net.ssl.keyStorePassword", passwordKeystore);
-            serverSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault()
-                    .createServerSocket(port);
-        } catch (Exception e1) {
-            System.out.println("Erro ao inicializar server");
+                // Create a KeyStore and store the key pair in it
+                KeyStore ks = KeyStore.getInstance("PKCS12");
+                char[] password = keyStorePass.toCharArray();
+                ks.load(null, password);
+
+                KeyStore.PrivateKeyEntry privateKeyEntry = new KeyStore.PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{});
+                ks.setEntry(privateKeyAlias, privateKeyEntry, new KeyStore.PasswordProtection(password));
+
+                // Save the KeyStore to a file
+                try (FileOutputStream fos = new FileOutputStream(keyStorePath)) {
+                    ks.store(fos, password);
+                }
+            } catch (Exception e) {
+                System.out.println("Error creating the KeyStore");
+            }
         }
 
-        while (true) {
-            SSLSocket socket = (SSLSocket) serverSocket.accept();
-            ServerThread st = new ServerThread(socket);
-            st.start();
+        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.keyStore", keyStorePath);
+        System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
+
+        // setup truststore
+        File trustStore = new File(trustStorePath);
+
+        if(!trustStore.exists()) {
+            try {
+                // Create a TrustStore
+                KeyStore ts = KeyStore.getInstance("PKCS12");
+                char[] password = trustStorePass.toCharArray();
+                ts.load(null, password);
+
+                // Save the TrustStore to a file
+                try (FileOutputStream fos = new FileOutputStream(trustStorePath)) {
+                    ts.store(fos, password);
+                }
+            } catch (Exception e) {
+                System.out.println("Error creating the TrustStore");
+            }
+        }
+
+        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.trustStore", trustStorePath);
+        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
+
+        // create socket
+        SSLServerSocket serverSocket = null;
+        try {
+            serverSocket = (SSLServerSocket) sc.getServerSocketFactory().createServerSocket(port);
+        } catch (Exception e1) {
+            System.out.println("Error when initializing server");
+        }
+
+        if(serverSocket != null) {
+            while (true) {
+                SSLSocket socket = (SSLSocket) serverSocket.accept();
+                ServerThread st = new ServerThread(socket);
+                st.start();
+            }
         }
     }
 }
 
 class ServerThread extends Thread {
 
-    private SSLSocket socket;
+    private final SSLSocket socket;
 
     public ServerThread(SSLSocket inSoc) {
         this.socket = inSoc;
@@ -46,24 +108,18 @@ class ServerThread extends Thread {
     @Override
     public void run() {
 
-        System.out.println("Cliente conectado");
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
+        System.out.println("Client connected");
 
-        try {
-            // iniciar streams
-            out = new ObjectOutputStream(socket.getOutputStream());
-            in = new ObjectInputStream(socket.getInputStream());
+        try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+
         } catch (Exception e) {
-            System.out.println("Cliente desconectado");
+            System.out.println("Client disconnected");
         } finally {
             try {
-                // fechar ligacoes
-                in.close();
-                out.close();
                 socket.close();
             } catch (IOException e) {
-                System.out.println("Ocorreu um erro na comunicacao");
+                System.out.println("An error occurred in communication");
             }
         }
     }
