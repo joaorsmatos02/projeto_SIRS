@@ -1,3 +1,4 @@
+import javax.crypto.Mac;
 import javax.net.SocketFactory;
 import javax.net.ssl.*;
 import java.io.*;
@@ -5,9 +6,11 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import javax.crypto.SecretKey;
 import java.security.KeyStore.SecretKeyEntry;
+
 public class Client {
 
     public static void main(String[] args) {
@@ -160,10 +163,31 @@ public class Client {
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
             //send
-            out.writeUTF("AAAAA");
-            out.flush();
+            if(newDevice) {
+                KeyStore clientKS = KeyStore.getInstance("PKCS12");
+                clientKS.load(new FileInputStream(new File(keyStorePath)), passwordStores.toCharArray());
+
+                out.writeUTF(userAlias + "_" + deviceName + " true");
+
+                Certificate clientCertificate = clientKS.getCertificate(userAlias+"rsa");
+                SecretKey secretKey = (SecretKey) clientKS.getKey(userAlias + "_" + deviceName + "_secret", (userAlias + "_" + deviceName).toCharArray());
+
+                //send the certificate and the associated HMAC
+                out.writeObject(clientCertificate);
+                out.writeObject(calculateHMac(secretKey, clientCertificate));
+                out.flush();
+            } else {
+                out.writeUTF(userAlias + "_" + deviceName);
+            }
+
         } catch (Exception e) {
             System.out.println("Error in the server handshake.");
         }
+    }
+
+    public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKey);
+        return mac.doFinal(certificate.getEncoded());
     }
 }
