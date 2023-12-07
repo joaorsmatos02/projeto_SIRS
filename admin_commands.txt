@@ -1,0 +1,48 @@
+SYSADMIN JOB:
+
+SERVER!
+#Gerar Keystore com RSA server
+1. keytool -genkeypair -alias serverRSA -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore serverKeyStore
+  a. keystore pwd: `serverKeyStore`
+
+2. keytool -list -storetype PKCS12 -keystore serverKeyStore
+  - serverrsa, Dec 7, 2023, PrivateKeyEntry,
+    Certificate fingerprint (SHA-256): 71:C2:D9:4F:31:D6:5C:98:B1:21:CD:B8:46:76:19:10:1B:1A:B5:A6:8F:B4:A4:B5:FB:D1:6C:32:46:8D:69:D9
+
+3. Extrair certificado - server
+ - keytool -exportcert -alias serverrsa -storetype PKCS12 -keystore serverKeyStore -file serverCert.cer
+
+4. Gerar TrustStore (necessário iniciar com uma chave, mas é apagada de seguida, apenas para termos a trustore criada, mas vazia)
+ - keytool -genseckey -alias toDeleteKey -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverTrustStore
+ - keytool -delete -alias toDeleteKey -storetype PKCS12 -keystore serverTrustStore
+
+(Assumido)
+5. Gerar secretKeys entre banco<->cliente
+ - keytool -genseckey -alias alice_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias bob_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias alice_computador_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias alcides_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore (Será gestor de alice e bob)
+ - keytool -genseckey -alias mario_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+
+6. Adicionar chave simetrica conhecida entre server <-> dataBase à keystore
+ - keytool -genseckey -alias server_db_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore dataBaseKeyStore
+
+------------------
+DB!
+7. Gerar KeyStore com RSA dataBase
+ - keytool -genkeypair -alias dataBaseRSA -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore dataBaseKeyStore (pwd: `dataBaseKeyStore`)
+
+8. Extrair certificado - dataBase
+ - keytool -exportcert -alias databasersa -storetype PKCS12 -keystore dataBaseKeyStore -file dataBaseCert.cer
+
+9. Copiar chave simetrica server_db_secret para keystore (code on database)
+
+10. Gerar TrustStore (necessário iniciar com uma chave, mas é apagada de seguida, apenas para termos a trustore criada, mas vazia)
+ - keytool -genseckey -alias toDeleteKey -keyalg AES -keysize 256 -storetype PKCS12 -keystore dataBaseTrustStore (pwd: `dataBaseTrustStore`)
+ - keytool -delete -alias toDeleteKey -storetype PKCS12 -keystore dataBaseTrustStore
+
+ 11. Importar certificado da DB para serverTrustStore
+  - keytool -importcert -alias dataBaseCert -file ../../DataBase/dataBaseKeyStore/dataBaseCert.cer -storetype PKCS12 -keystore serverTrustStore
+
+ 12. Importar certificado do server para dataBaseTrustStore
+  - keytool -importcert -alias serverCert -file ../../CAserver/serverCert.cer -storetype PKCS12 -keystore dataBaseTrustStore
