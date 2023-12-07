@@ -29,44 +29,108 @@ public class Client {
         boolean newDevice = "1".equals(args[2]);
         String deviceName = args[3];
 
+        String userStoresFolder = userAlias + "_" + deviceName;
         String keyStoreName = userAlias + "_" + deviceName + "_KeyStore";
-        String keyStorePath = userAlias + "_" + deviceName + "_" + "keyStore//" + keyStoreName;
+        String keyStorePath = userStoresFolder + "//" + keyStoreName;
 
         String privateKeyAlias = "pk";
 
         String trustStoreName = userAlias + "_" + deviceName + "_TrustStore";
-        String trustStorePath = userAlias + "_" + deviceName + "_trustStore//" + trustStoreName;
+        String trustStorePath = userAlias + "_" + deviceName + "//" + trustStoreName;
 
         // setup keystore
-        File keyStore = new File(keyStorePath);
+        File stores = new File(userStoresFolder);
 
-        if (!keyStore.exists() && newDevice) {
+        if (!stores.exists() && newDevice) {
             try {
-                new File(userAlias + "_" + deviceName + "_" + "keyStore").mkdir();
-                // Generate a key pair
-                KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-                keyPairGenerator.initialize(2048);
-                KeyPair keyPair = keyPairGenerator.generateKeyPair();
+                new File(userStoresFolder).mkdir();
 
-                // Create a KeyStore and store the key pair in it
-                KeyStore ks = KeyStore.getInstance("PKCS12");
-                char[] passwordKeyStoreChar = passwordStores.toCharArray();
-                ks.load(null, passwordKeyStoreChar);
+                // Generate RSA keys + keystore
+                try {
+                    ProcessBuilder processBuilder = new ProcessBuilder(
+                            "keytool",
+                            "-genkeypair",
+                            "-alias", userAlias+"RSA",
+                            "-keyalg", "RSA",
+                            "-keysize", "2048",
+                            "-storetype", "PKCS12",
+                            "-keystore", keyStorePath
+                    );
 
-                // Generate a self-signed X.509 certificate
-                X509Certificate selfSignedCert = generateSelfSignedCertificate(keyPair);
+                    // Redirect error stream to output stream
+                    processBuilder.redirectErrorStream(true);
 
-                KeyStore.PrivateKeyEntry privateKeyEntry = new KeyStore.PrivateKeyEntry(keyPair.getPrivate(), new Certificate[]{selfSignedCert});
-                ks.setEntry(privateKeyAlias, privateKeyEntry, new KeyStore.PasswordProtection(passwordKeyStoreChar));
+                    Process process = processBuilder.start();
 
-                // Save the KeyStore to a file
-                try (FileOutputStream fos = new FileOutputStream(keyStorePath)) {
-                    ks.store(fos, passwordKeyStoreChar);
+                    // Send the password to the process (if needed)
+                    try (OutputStream outputStream = process.getOutputStream()) {
+                        outputStream.write((passwordStores + "\n").getBytes());
+                        outputStream.write((passwordStores +"\n").getBytes());
+                        for (int i = 0; i < 6; i++) {
+                            outputStream.write(("\n").getBytes());
+                        }
+                        outputStream.write(("yes" + "\n").getBytes());
+                        outputStream.flush();
+                    }
+
+                    int exitCode = process.waitFor();
+
+                    if (exitCode == 0) {
+                        System.out.println("RSA & keystore generated successfully.");
+                    } else {
+                        System.out.println("Error in RSA & keystore generation. Exit code: " + exitCode);
+                    }
+                } catch (IOException | InterruptedException e) {
+                    System.out.println("Error executing keytool: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                System.out.println("Error creating the KeyStore");
+
+            }  catch (Exception e) {
+                System.out.println(e);
+            }
+
+            // Create a TrustStore with the certificate of the server
+            try {
+                //alterar path para CA
+                String certificateFile = "serverKeyStore/serverCert.cer";
+
+                try {
+                    ProcessBuilder processBuilder = new ProcessBuilder(
+                            "keytool",
+                            "-importcert",
+                            "-alias", "serverrsa",
+                            "-file", certificateFile,
+                            "-storetype", "PKCS12",
+                            "-keystore", trustStorePath
+                    );
+
+                    // Redirect error stream to output stream
+                    processBuilder.redirectErrorStream(true);
+
+                    Process process = processBuilder.start();
+
+                    // Send the password to the process (if needed)
+                    try (OutputStream outputStream = process.getOutputStream()) {
+                        outputStream.write((passwordStores + "\n").getBytes());
+                        outputStream.write((passwordStores + "\n").getBytes());
+                        outputStream.write(("yes" + "\n").getBytes());
+                        outputStream.flush();
+                    }
+
+                    int exitCode = process.waitFor();
+
+                    if (exitCode == 0) {
+                        System.out.println("Certificate added to the truststore successfully.");
+                    } else {
+                        System.out.println("Error adding the certificate to the truststore. Exit code: " + exitCode);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error executing keytool: " + e.getMessage());
+                }
+            } catch (Exception e){
+                System.out.println("Error creating the truststore. " + e.getMessage());
             }
         }
+
 
         System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
         System.setProperty("javax.net.ssl.keyStore", keyStorePath);
@@ -76,20 +140,7 @@ public class Client {
         File trustStore = new File(trustStorePath);
 
         if (!trustStore.exists() && newDevice) {
-            try {
-                new File(userAlias + "_" + deviceName + "_" + "trustStore").mkdir();
-                // Create a TrustStore
-                KeyStore ts = KeyStore.getInstance("PKCS12");
-                char[] passwordTrustStoreChar = passwordStores.toCharArray();
-                ts.load(null, passwordTrustStoreChar);
 
-                // Save the TrustStore to a file
-                try (FileOutputStream fos = new FileOutputStream(trustStorePath)) {
-                    ts.store(fos, passwordTrustStoreChar);
-                }
-            } catch (Exception e) {
-                System.out.println("Error creating the TrustStore");
-            }
         }
 
         System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
