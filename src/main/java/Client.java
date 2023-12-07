@@ -1,17 +1,13 @@
-import org.bouncycastle.x509.X509V3CertificateGenerator;
-
 import javax.net.SocketFactory;
 import javax.net.ssl.*;
-import javax.security.auth.x500.X500Principal;
 import java.io.*;
-import java.math.BigInteger;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-import java.util.Date;
-
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import javax.crypto.SecretKey;
+import java.security.KeyStore.SecretKeyEntry;
 public class Client {
 
     public static void main(String[] args) {
@@ -80,7 +76,29 @@ public class Client {
                     System.out.println("Error in RSA & keystore generation. Exit code: " + exitCode);
                 }
 
-            }  catch (IOException | InterruptedException e) {
+                //Get secretKey between client<->bank
+                KeyStore serverKS = KeyStore.getInstance("PKCS12");
+                serverKS.load(new FileInputStream(new File("Server/serverKeyStore/serverKeyStore")), "serverKeyStore".toCharArray());
+                SecretKey secretKey = (SecretKey) serverKS.getKey(userAlias + "_" + deviceName + "_secret", "serverKeyStore".toCharArray());
+
+                //Import to the client KeyStore
+                KeyStore clientKS = KeyStore.getInstance("PKCS12");
+                clientKS.load(new FileInputStream(new File(keyStorePath)), passwordStores.toCharArray());
+                KeyStore.SecretKeyEntry skEntry = new SecretKeyEntry(secretKey);
+                clientKS.setEntry(userAlias + "_" + deviceName + "_secret", skEntry, new KeyStore.PasswordProtection(passwordStores.toCharArray()));
+
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(keyStorePath);
+                    clientKS.store(fos, passwordStores.toCharArray());
+                } finally {
+                    if (fos != null) {
+                        fos.close();
+                    }
+                }
+
+            }  catch (IOException | InterruptedException | KeyStoreException | NoSuchAlgorithmException |
+                      CertificateException | UnrecoverableKeyException e) {
                 System.out.println("Error creating KeyStore.");
             }
 
@@ -88,42 +106,37 @@ public class Client {
             try {
                 //alterar path para CA
                 String certificateFile = "CAserver/serverCert.cer";
+                ProcessBuilder processBuilder = new ProcessBuilder(
+                        "keytool",
+                        "-importcert",
+                        "-alias", "serverrsa",
+                        "-file", certificateFile,
+                        "-storetype", "PKCS12",
+                        "-keystore", trustStorePath
+                );
 
-                try {
-                    ProcessBuilder processBuilder = new ProcessBuilder(
-                            "keytool",
-                            "-importcert",
-                            "-alias", "serverrsa",
-                            "-file", certificateFile,
-                            "-storetype", "PKCS12",
-                            "-keystore", trustStorePath
-                    );
+                // Redirect error stream to output stream
+                processBuilder.redirectErrorStream(true);
 
-                    // Redirect error stream to output stream
-                    processBuilder.redirectErrorStream(true);
+                Process process = processBuilder.start();
 
-                    Process process = processBuilder.start();
-
-                    // Send the password to the process (if needed)
-                    try (OutputStream outputStream = process.getOutputStream()) {
-                        outputStream.write((passwordStores + "\n").getBytes());
-                        outputStream.write((passwordStores + "\n").getBytes());
-                        outputStream.write(("yes" + "\n").getBytes());
-                        outputStream.flush();
-                    }
-
-                    int exitCode = process.waitFor();
-
-                    if (exitCode == 0) {
-                        System.out.println("Certificate added to the truststore successfully.");
-                    } else {
-                        System.out.println("Error adding the certificate to the truststore. Exit code: " + exitCode);
-                    }
-                } catch (Exception e) {
-                    System.out.println("Error executing keytool: " + e.getMessage());
+                // Send the password to the process (if needed)
+                try (OutputStream outputStream = process.getOutputStream()) {
+                    outputStream.write((passwordStores + "\n").getBytes());
+                    outputStream.write((passwordStores + "\n").getBytes());
+                    outputStream.write(("yes" + "\n").getBytes());
+                    outputStream.flush();
                 }
-            } catch (Exception e){
-                System.out.println("Error creating the truststore. " + e.getMessage());
+
+                int exitCode = process.waitFor();
+
+                if (exitCode == 0) {
+                    System.out.println("Certificate added to the truststore successfully.");
+                } else {
+                    System.out.println("Error adding the certificate to the truststore. Exit code: " + exitCode);
+                }
+            } catch (IOException | InterruptedException e){
+                System.out.println("Error creating TrustStore.");
             }
         }
 
