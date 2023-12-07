@@ -14,7 +14,7 @@ import java.util.Date;
 
 public class Client {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         if (args.length != 4) {
             System.out.println("Wrong args. help command.");
@@ -29,14 +29,14 @@ public class Client {
         boolean newDevice = "1".equals(args[2]);
         String deviceName = args[3];
 
-        String userStoresFolder = userAlias + "_" + deviceName;
+        String userStoresFolder = "Client//" + userAlias + "_" + deviceName;
         String keyStoreName = userAlias + "_" + deviceName + "_KeyStore";
         String keyStorePath = userStoresFolder + "//" + keyStoreName;
 
         String privateKeyAlias = "pk";
 
         String trustStoreName = userAlias + "_" + deviceName + "_TrustStore";
-        String trustStorePath = userAlias + "_" + deviceName + "//" + trustStoreName;
+        String trustStorePath = "Client//" + userAlias + "_" + deviceName + "//" + trustStoreName;
 
         // setup keystore
         File stores = new File(userStoresFolder);
@@ -46,52 +46,48 @@ public class Client {
                 new File(userStoresFolder).mkdir();
 
                 // Generate RSA keys + keystore
-                try {
-                    ProcessBuilder processBuilder = new ProcessBuilder(
-                            "keytool",
-                            "-genkeypair",
-                            "-alias", userAlias+"RSA",
-                            "-keyalg", "RSA",
-                            "-keysize", "2048",
-                            "-storetype", "PKCS12",
-                            "-keystore", keyStorePath
-                    );
+                ProcessBuilder processBuilder = new ProcessBuilder(
+                        "keytool",
+                        "-genkeypair",
+                        "-alias", userAlias+"RSA",
+                        "-keyalg", "RSA",
+                        "-keysize", "2048",
+                        "-storetype", "PKCS12",
+                        "-keystore", keyStorePath
+                );
 
-                    // Redirect error stream to output stream
-                    processBuilder.redirectErrorStream(true);
+                // Redirect error stream to output stream
+                processBuilder.redirectErrorStream(true);
 
-                    Process process = processBuilder.start();
+                Process process = processBuilder.start();
 
-                    // Send the password to the process (if needed)
-                    try (OutputStream outputStream = process.getOutputStream()) {
-                        outputStream.write((passwordStores + "\n").getBytes());
-                        outputStream.write((passwordStores +"\n").getBytes());
-                        for (int i = 0; i < 6; i++) {
-                            outputStream.write(("\n").getBytes());
-                        }
-                        outputStream.write(("yes" + "\n").getBytes());
-                        outputStream.flush();
+                // Send the password to the process (if needed)
+                try (OutputStream outputStream = process.getOutputStream()) {
+                    outputStream.write((passwordStores + "\n").getBytes());
+                    outputStream.write((passwordStores +"\n").getBytes());
+                    for (int i = 0; i < 6; i++) {
+                        outputStream.write(("\n").getBytes());
                     }
-
-                    int exitCode = process.waitFor();
-
-                    if (exitCode == 0) {
-                        System.out.println("RSA & keystore generated successfully.");
-                    } else {
-                        System.out.println("Error in RSA & keystore generation. Exit code: " + exitCode);
-                    }
-                } catch (IOException | InterruptedException e) {
-                    System.out.println("Error executing keytool: " + e.getMessage());
+                    outputStream.write(("yes" + "\n").getBytes());
+                    outputStream.flush();
                 }
 
-            }  catch (Exception e) {
-                System.out.println(e);
+                int exitCode = process.waitFor();
+
+                if (exitCode == 0) {
+                    System.out.println("RSA & keystore generated successfully.");
+                } else {
+                    System.out.println("Error in RSA & keystore generation. Exit code: " + exitCode);
+                }
+
+            }  catch (IOException | InterruptedException e) {
+                System.out.println("Error creating KeyStore.");
             }
 
             // Create a TrustStore with the certificate of the server
             try {
                 //alterar path para CA
-                String certificateFile = "serverKeyStore/serverCert.cer";
+                String certificateFile = "CAserver/serverCert.cer";
 
                 try {
                     ProcessBuilder processBuilder = new ProcessBuilder(
@@ -131,23 +127,17 @@ public class Client {
             }
         }
 
-
+        //keystore
         System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
         System.setProperty("javax.net.ssl.keyStore", keyStorePath);
         System.setProperty("javax.net.ssl.keyStorePassword", passwordStores);
 
-        // setup truststore
-        File trustStore = new File(trustStorePath);
-
-        if (!trustStore.exists() && newDevice) {
-
-        }
-
+        //truststore
         System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
         System.setProperty("javax.net.ssl.trustStore", trustStorePath);
         System.setProperty("javax.net.ssl.trustStorePassword", passwordStores);
 
-        // estabelecer ligacao - novo dispositivo (sem truststore)
+
         SocketFactory sf = SSLSocketFactory.getDefault();
         SSLSocket socket = null;
         try {
@@ -156,38 +146,11 @@ public class Client {
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-            out.writeUTF("First MSG");
+            //send
+            out.writeUTF("AAAAA");
+            out.flush();
         } catch (Exception e) {
             System.out.println("Error in the server handshake.");
         }
-    }
-
-    private static X509Certificate generateSelfSignedCertificate(KeyPair keyPair) throws Exception {
-        // Get the current date
-        Date startDate = new Date();
-
-        // Set the validity period of the certificate (e.g., 365 days)
-        Date endDate = new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
-
-        // Generate a self-signed X.509 certificate
-        X509Certificate cert = null;
-        try {
-            X509V3CertificateGenerator certGenerator = new X509V3CertificateGenerator();
-            X500Principal subjectName = new X500Principal("CN=Self-Signed Certificate");
-
-            certGenerator.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
-            certGenerator.setSubjectDN(subjectName);
-            certGenerator.setIssuerDN(subjectName);
-            certGenerator.setNotBefore(startDate);
-            certGenerator.setNotAfter(endDate);
-            certGenerator.setPublicKey(keyPair.getPublic());
-            certGenerator.setSignatureAlgorithm("SHA256withRSA");
-
-            cert = certGenerator.generate(keyPair.getPrivate());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return cert;
     }
 }

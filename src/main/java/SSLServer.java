@@ -26,13 +26,13 @@ public class SSLServer {
 
     private static final String keyStoreName = "serverKeyStore";
     private static final String keyStorePass = "serverKeyStore";
-    private static final String keyStorePath = "serverKeyStore//" + keyStoreName;
+    private static final String keyStorePath = "Server//serverKeyStore//" + keyStoreName;
 
     private static final String privateKeyAlias = "pk";
 
     private static final String trustStoreName = "serverTrustStore";
     private static final String trustStorePass = "serverTrustStore";
-    private static final String trustStorePath = "serverTrustStore//" + trustStoreName;
+    private static final String trustStorePath = "Server//serverTrustStore//" + trustStoreName;
 
     public static void main(String[] args) throws Exception {
 
@@ -88,7 +88,7 @@ class ServerThread extends Thread {
         } finally {
             try {
                 socket.close();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 System.out.println("An error occurred in communication");
             }
         }
