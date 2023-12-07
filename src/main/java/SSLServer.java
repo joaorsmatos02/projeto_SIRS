@@ -21,7 +21,7 @@ public class SSLServer {
 
     private static final String trustStoreName = "serverTrustStore";
     private static final String trustStorePass = "serverTrustStore";
-    private static final String trustStorePath = "Server//serverTrustStore//" + trustStoreName;
+    private static final String trustStorePath = "Server//serverKeyStore//" + trustStoreName;
 
     public static void main(String[] args) throws Exception {
 
@@ -60,6 +60,10 @@ class ServerThread extends Thread {
     private static final String keyStorePass = "serverKeyStore";
     private static final String keyStorePath = "Server//serverKeyStore//" + keyStoreName;
 
+    private static final String trustStoreName = "serverTrustStore";
+    private static final String trustStorePass = "serverTrustStore";
+    private static final String trustStorePath = "Server//serverKeyStore//" + trustStoreName;
+
     private final SSLSocket socket;
 
     public ServerThread(SSLSocket inSoc) {
@@ -79,6 +83,7 @@ class ServerThread extends Thread {
             String[] clientIdentifierSplitted = clientIdentifier.split(" ");
             String userAndDevice = clientIdentifierSplitted[0];
 
+            //2args == newDevice flag
             if(clientIdentifierSplitted.length == 2){
                 Certificate clientCertificate = (Certificate) in.readObject();
                 byte[] clientCertificateHMAC = (byte[]) in.readObject();
@@ -93,8 +98,7 @@ class ServerThread extends Thread {
                 // Concatenate the byte array of character 'a' to clientCertificateHMAC
                 /*byte[] testBytes = "a".getBytes(StandardCharsets.UTF_8);
                 clientCertificateHMAC = Arrays.copyOf(clientCertificateHMAC, clientCertificateHMAC.length + testBytes.length);
-                System.arraycopy(testBytes, 0, clientCertificateHMAC, clientCertificateHMAC.length - testBytes.length, testBytes.length);
-*/
+                System.arraycopy(testBytes, 0, clientCertificateHMAC, clientCertificateHMAC.length - testBytes.length, testBytes.length);*/
 
                 if(!verifyHMac(secretKey, clientCertificate, clientCertificateHMAC)) {
                     System.out.println("Corrupted Certificate. HMAC verification failed.");
@@ -103,13 +107,27 @@ class ServerThread extends Thread {
                     System.exit(1);
                 }
 
-                System.out.println("bb");
+                //Load the TrustStore and add the certificate if not exists yet
+                KeyStore serverTS = KeyStore.getInstance("PKCS12");
+                serverTS.load(new FileInputStream(new File(trustStorePath)), trustStorePass.toCharArray());
+                serverTS.setCertificateEntry(userAndDevice + "_cert", clientCertificate);
 
+                FileOutputStream fos = null;
+                try {
+                    fos = new FileOutputStream(trustStorePath);
+                    serverTS.store(fos, trustStorePass.toCharArray());
+                } finally {
+                    if (fos != null) {
+                        fos.close();
+                    }
+                }
             }
-
         } catch (Exception e) {
             System.out.println("Client disconnected");
-        } finally {
+        }
+
+
+        finally {
             try {
                 socket.close();
             } catch (Exception e) {
