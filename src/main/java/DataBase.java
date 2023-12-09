@@ -13,13 +13,13 @@ public class DataBase {
 
     private static final String keyStoreName = "dataBaseKeyStore";
     private static final String keyStorePass = "dataBaseKeyStore";
-    private static final String keyStorePath = "main.DataBase//dataBaseKeyStore//" + keyStoreName;
+    private static final String keyStorePath = "DataBase//dataBaseKeyStore//" + keyStoreName;
 
     private static final String privateKeyAlias = "pk";
 
     private static final String trustStoreName = "dataBaseTrustStore";
     private static final String trustStorePass = "dataBaseTrustStore";
-    private static final String trustStorePath = "main.DataBase//dataBaseKeyStore//" + trustStoreName;
+    private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
     public static void main(String[] args) {
         System.out.println("Starting database server...");
@@ -69,7 +69,7 @@ class DataBaseThread extends Thread {
     @Override
     public void run() {
 
-        System.out.println("Server connected");
+        System.out.println("Server connected to DataBase");
 
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
@@ -106,6 +106,7 @@ class DataBaseThread extends Thread {
                     }
                 }
             }
+            System.out.println("CHEGOU AQUI, BRO");
         } catch (Exception e) {
             e.printStackTrace();
         }

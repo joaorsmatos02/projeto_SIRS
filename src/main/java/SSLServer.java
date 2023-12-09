@@ -77,6 +77,32 @@ class ServerThread extends Thread {
 
         System.out.println("Client connected");
 
+        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.keyStore", keyStorePath);
+        System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
+
+        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.trustStore", trustStorePath);
+        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
+
+        // connect to database
+        SocketFactory sf = SSLSocketFactory.getDefault();
+        try {
+            dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
+            ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
+            while(true) {
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                dataBaseSocket.close();
+            } catch (IOException ex) {
+                System.out.println("DataBase connection closed");
+            }
+        }
+
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
@@ -132,30 +158,6 @@ class ServerThread extends Thread {
                 System.out.println("Socket closed");
             }
         }
-
-        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
-        System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-        System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
-
-        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
-        System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
-
-        // connect to database
-        try {
-            SocketFactory sf = SSLSocketFactory.getDefault();
-            dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
-            ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
-        } catch (Exception e) {
-            e.printStackTrace();
-            try {
-                dataBaseSocket.close();
-            } catch (IOException ex) {
-                System.out.println("DataBase connection closed");
-            }
-        }
-
     }
 
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
