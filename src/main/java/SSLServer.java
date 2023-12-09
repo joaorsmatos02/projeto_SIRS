@@ -1,5 +1,6 @@
 import javax.crypto.Mac;
 import javax.net.ServerSocketFactory;
+import javax.net.SocketFactory;
 import javax.net.ssl.*;
 import java.io.*;
 import java.security.KeyStore;
@@ -65,6 +66,7 @@ class ServerThread extends Thread {
     private static final String trustStorePath = "Server//serverKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
+    private SSLSocket dataBaseSocket;
 
     public ServerThread(SSLSocket inSoc) {
         this.socket = inSoc;
@@ -124,16 +126,36 @@ class ServerThread extends Thread {
             }
         } catch (Exception e) {
             System.out.println("Client disconnected");
-        }
-
-
-        finally {
             try {
                 socket.close();
-            } catch (Exception e) {
-                System.out.println("An error occurred in communication");
+            } catch (IOException ex) {
+                System.out.println("Socket closed");
             }
         }
+
+        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.keyStore", keyStorePath);
+        System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
+
+        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.trustStore", trustStorePath);
+        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
+
+        // connect to database
+        try {
+            SocketFactory sf = SSLSocketFactory.getDefault();
+            dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
+            ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                dataBaseSocket.close();
+            } catch (IOException ex) {
+                System.out.println("DataBase connection closed");
+            }
+        }
+
     }
 
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
