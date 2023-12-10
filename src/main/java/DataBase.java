@@ -37,9 +37,11 @@ public class DataBase {
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
-            SSLSocket socket = (SSLSocket) ss.accept();
-            DataBaseThread dbt = new DataBaseThread(socket);
-            dbt.start();
+            while(true) {
+                SSLSocket socket = (SSLSocket) ss.accept();
+                DataBaseThread dbt = new DataBaseThread(socket);
+                dbt.start();
+            }
            } catch (Exception e1) {
             System.out.println("Error when initializing database");
             }
@@ -64,6 +66,8 @@ class DataBaseThread extends Thread {
 
     @Override
     public void run() {
+        System.setProperty("javax.net.debug", "ssl");
+
 
         System.out.println("Server connecting to DataBase");
 

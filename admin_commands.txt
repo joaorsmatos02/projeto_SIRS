@@ -42,7 +42,7 @@ DB!
  - keytool -delete -alias toDeleteKey -storetype PKCS12 -keystore dataBaseTrustStore
 
  11. Importar certificado da DB para serverTrustStore
-  - keytool -importcert -alias dataBaseCert -file ../../DataBase/dataBaseKeyStore/dataBaseCert.cer -storetype PKCS12 -keystore serverTrustStore
+  - keytool -importcert -alias databasersa -file ../../DataBase/dataBaseKeyStore/dataBaseCert.cer -storetype PKCS12 -keystore serverTrustStore
 
  12. Importar certificado do server para dataBaseTrustStore
-  - keytool -importcert -alias serverCert -file ../../CAserver/serverCert.cer -storetype PKCS12 -keystore dataBaseTrustStore
+  - keytool -importcert -alias serverrsa -file ../../CAserver/serverCert.cer -storetype PKCS12 -keystore dataBaseTrustStore

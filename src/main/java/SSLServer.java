@@ -36,9 +36,9 @@ public class SSLServer {
         System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
 
 
-        /*System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
+        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
         System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);*/
+        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
 
         // create socket
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
@@ -85,11 +85,13 @@ class ServerThread extends Thread {
         System.setProperty("javax.net.ssl.trustStore", trustStorePath);
         System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
 
+        System.setProperty("javax.net.debug", "ssl");
+
         // connect to database
         SocketFactory sf = SSLSocketFactory.getDefault();
         try {
-            System.out.println("ANTES DE Ligação, port:54321");
             dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
+            System.out.println("Depois DE Ligação, port:54321");
             ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
 
