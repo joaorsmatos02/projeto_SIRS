@@ -1,3 +1,4 @@
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
@@ -5,6 +6,8 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.cert.Certificate;
 
 public class DataBase {
 
@@ -30,22 +33,16 @@ public class DataBase {
         System.setProperty("javax.net.ssl.keyStore", keyStorePath);
         System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
 
-        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
-        System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
-
         // create socket
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
-            while (true) {
-                SSLSocket socket = (SSLSocket) ss.accept();
-                DataBaseThread dbt = new DataBaseThread(socket);
-                dbt.start();
-            }
-        } catch (Exception e1) {
+            SSLSocket socket = (SSLSocket) ss.accept();
+            DataBaseThread dbt = new DataBaseThread(socket);
+            dbt.start();
+           } catch (Exception e1) {
             System.out.println("Error when initializing database");
-        }
+            }
     }
 }
 
@@ -53,11 +50,11 @@ class DataBaseThread extends Thread {
 
     private static final String keyStoreName = "dataBaseKeyStore";
     private static final String keyStorePass = "dataBaseKeyStore";
-    private static final String keyStorePath = "main.DataBase//dataBaseKeyStore//" + keyStoreName;
+    private static final String keyStorePath = "DataBase//dataBaseKeyStore//" + keyStoreName;
 
     private static final String trustStoreName = "dataBaseTrustStore";
     private static final String trustStorePass = "dataBaseTrustStore";
-    private static final String trustStorePath = "main.DataBase//dataBaseKeyStore//" + trustStoreName;
+    private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
 
@@ -68,7 +65,7 @@ class DataBaseThread extends Thread {
     @Override
     public void run() {
 
-        System.out.println("Server connected to DataBase");
+        System.out.println("Server connecting to DataBase");
 
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
@@ -103,11 +100,58 @@ class DataBaseThread extends Thread {
                             dbKeyStore.store(fos, keyStorePass.toCharArray());
                         }
                     }
+
+
                 }
             }
-            System.out.println("CHEGOU AQUI, BRO");
+
+            //Receive and verify the integrity of the Server Certificate
+            //Receive the Certificate from Server
+            Certificate serverCertificateReceived = (Certificate) in.readObject();
+            byte[] serverCertificateHMAC = (byte[]) in.readObject();
+
+            //Get SecretKey associated to Server
+            KeyStore dataBaseKS = KeyStore.getInstance("PKCS12");
+            dataBaseKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) dataBaseKS.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            if(!verifyHMac(secretKey, serverCertificateReceived, serverCertificateHMAC)) {
+                System.out.println("Corrupted Certificate. HMAC verification failed.");
+                in.close();
+                out.close();
+                System.exit(1);
+            }
+
+            //Compare the Server Certificate in DataBase TrustStore with the received one
+            KeyStore dataBaseTS = KeyStore.getInstance("PKCS12");
+            dataBaseTS.load(new FileInputStream(new File(trustStorePath)), trustStorePass.toCharArray());
+            Certificate serverCertificateFromDBTrustStore = dataBaseTS.getCertificate("servercert");
+
+            if(!serverCertificateReceived.equals(serverCertificateFromDBTrustStore)) {
+                System.out.println("Non-authentic Certificate.");
+                in.close();
+                out.close();
+                System.exit(1);
+            }
+
+            //actions
+            while(true) {
+
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKey);
+
+        // Calculate the expected HMAC using the received certificate
+        byte[] expectedHMac = mac.doFinal(certificate.getEncoded());
+
+        // Compare the calculated HMAC with the received HMAC
+        return MessageDigest.isEqual(expectedHMac, receivedHMac);
     }
 }

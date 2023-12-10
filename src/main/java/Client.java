@@ -181,6 +181,10 @@ public class Client {
                 out.writeUTF(userAlias + "_" + deviceName);
             }
 
+            //actions
+            /*while(true) {
+            }*/
+
         } catch (Exception e) {
             System.out.println("Error in the server handshake.");
         }

@@ -88,12 +88,24 @@ class ServerThread extends Thread {
         // connect to database
         SocketFactory sf = SSLSocketFactory.getDefault();
         try {
+            System.out.println("ANTES DE Ligação, port:54321");
             dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
             ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
-            while(true) {
 
-            }
+            //Send the Certificate (with HMAC) from Server to DB
+            String serverRSAAlias = "serverrsa";
+            KeyStore serverKS = KeyStore.getInstance("PKCS12");
+            serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
+
+            Certificate serverCertificate = serverKS.getCertificate(serverRSAAlias);
+            SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            //send the certificate and the associated HMAC
+            out.writeObject(serverCertificate);
+            out.writeObject(calculateHMac(secretKey, serverCertificate));
+            out.flush();
+
         } catch (Exception e) {
             e.printStackTrace();
             try {
@@ -150,6 +162,11 @@ class ServerThread extends Thread {
                     }
                 }
             }
+
+            //actions
+            while(true) {
+            }
+
         } catch (Exception e) {
             System.out.println("Client disconnected");
             try {
@@ -160,6 +177,11 @@ class ServerThread extends Thread {
         }
     }
 
+    public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKey);
+        return mac.doFinal(certificate.getEncoded());
+    }
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(secretKey);

@@ -25,7 +25,7 @@ SERVER!
  - keytool -genseckey -alias mario_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
 
 6. Adicionar chave simetrica conhecida entre server <-> dataBase à keystore
- - keytool -genseckey -alias server_db_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore dataBaseKeyStore
+ - keytool -genseckey -alias server_db_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
 
 ------------------
 DB!
