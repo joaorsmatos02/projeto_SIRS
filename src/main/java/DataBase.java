@@ -4,7 +4,6 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.security.Key;
 import java.security.KeyStore;
 
 public class DataBase {

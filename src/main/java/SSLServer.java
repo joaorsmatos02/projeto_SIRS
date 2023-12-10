@@ -24,7 +24,7 @@ public class SSLServer {
     private static final String trustStorePass = "serverTrustStore";
     private static final String trustStorePath = "Server//serverKeyStore//" + trustStoreName;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         System.out.println("Starting server...");
 

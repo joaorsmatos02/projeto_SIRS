@@ -6,9 +6,9 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.util.Scanner;
 
-public class oldMain {
+public class ToolMain {
 
-    public static void secureLibDocLib(String[] args) {
+    public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
         System.out.println("Welcome to BlingBank!");

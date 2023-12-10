@@ -42,6 +42,7 @@ public class Client {
 
         if (!stores.exists() && newDevice) {
             try {
+                new File("Client").mkdir();
                 new File(userStoresFolder).mkdir();
 
                 // Generate RSA keys + keystore
