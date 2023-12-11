@@ -1,0 +1,9 @@
+{
+  "account": {
+    "accountHolder": ["Bob"],
+    "balance": 0.00,
+    "currency": "EUR",
+    "movements": [
+    ]
+  }
+}

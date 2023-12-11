@@ -85,13 +85,10 @@ class ServerThread extends Thread {
         System.setProperty("javax.net.ssl.trustStore", trustStorePath);
         System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
 
-        System.setProperty("javax.net.debug", "ssl");
-
         // connect to database
         SocketFactory sf = SSLSocketFactory.getDefault();
         try {
             dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
-            System.out.println("Depois DE Ligação, port:54321");
             ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
 
@@ -107,6 +104,17 @@ class ServerThread extends Thread {
             out.writeObject(serverCertificate);
             out.writeObject(calculateHMac(secretKey, serverCertificate));
             out.flush();
+
+            //Read the result flag > 0-Error; 1-Correct
+            String resultFlag = in.readUTF();
+
+            if(resultFlag.equals("0")) {
+                System.out.println("Certificate validation error.");
+                in.close();
+                out.close();
+                socket.close();
+                System.exit(1);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();

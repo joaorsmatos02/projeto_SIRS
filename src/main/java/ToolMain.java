@@ -11,8 +11,17 @@ public class ToolMain {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("Welcome to BlingBank!");
-        printHelp();
+        System.out.println("""
+                Welcome to BlingBank!
+                Available commands:
+                 - BlingBank protect (inputFile) (outputFile) (userAlias_device)
+                 - BlingBank check (inputFile)
+                 - BlingBank unprotect (inputFile) (outputFile) (userAlias_device)
+                 
+                 If necessary, use 'BlingBank help' to see more details about each command.
+                 
+                 Insert command: """);
+
         String line = "";
 
         while (!(line = sc.nextLine()).equals("exit")) {
@@ -46,9 +55,10 @@ public class ToolMain {
                     default:
                         System.out.println("Unknown command. Use 'BlingBank help' to see the list of available commands.");
                 }
-                /*System.out.print("Next command:");*/
+                System.out.print("Insert command:");
             } else {
-                System.out.println("All requests should start with \"BlingBank\"");
+                System.out.println("All requests should start with \"BlingBank\".");
+                System.out.print("Insert command: ");
             }
         }
         sc.close();
@@ -59,31 +69,31 @@ public class ToolMain {
                 BlingBank help
                 Displays help information for all available commands.
 
-                BlingBank protect (inputFile) (outputFile) (clientID)
+                BlingBank protect (inputFile) (outputFile) (userAlias_device)
                 Encrypts sensitive data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
-                   - (clientID): Client ID.
+                   - (userAlias_device): User alias and the Device that is being used. (e.g. "alice_iphone")
                    
                 BlingBank check (inputFile)
                 Checks the integrity of the specified file containing protected data.
                 Arguments:
                    - (inputFile): Path to the input file.
 
-                BlingBank unprotect (inputFile) (outputFile) (clientID)
+                BlingBank unprotect (inputFile) (outputFile) (userAlias_device)
                 Decrypts the protected data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
-                   - (clientID): Client ID.""");
+                   - (userAlias_device): User alias and the Device that is being used. (e.g. "alice_iphone")""");
 
         System.out.print("Insert command: ");
 
     }
 
     private static void prepareProtect(String[] args) throws Exception {
-        if(args.length != 7) {
+        if(args.length != 5) {
             throw new IllegalArgumentException();
         }
 
@@ -99,17 +109,8 @@ public class ToolMain {
             return;
         }
 
-        FileInputStream is = new FileInputStream(args[4]);
-        String passwordKeyStore = args[5];
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        keyStore.load(is, passwordKeyStore.toCharArray());
-
-        SecretKey secretKey = (SecretKey) keyStore.getKey("secretKey", args[6].toCharArray());
-        Certificate certificate = keyStore.getCertificate("keyrsa");
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey("keyrsa", passwordKeyStore.toCharArray());
-
-
-        SecureDocumentLib.protect(inputFile, outputFile, secretKey, privateKey, certificate);
+        String userAlias_device = args[4];
+        SecureDocumentLib.protect(inputFile, outputFile, userAlias_device);
     }
 
     private static boolean prepareCheck(String[] args) throws Exception{
@@ -122,12 +123,11 @@ public class ToolMain {
             System.out.println("Input file not found");
         }
 
-
         return SecureDocumentLib.check(inputFile);
     }
 
     private static void prepareUnprotect(String[] args) throws Exception{
-        if(args.length != 7) {
+        if(args.length != 5) {
             throw new IllegalArgumentException();
         }
 
@@ -143,29 +143,26 @@ public class ToolMain {
             return;
         }
 
-        FileInputStream is = new FileInputStream(args[4]);
-        String passwordKeyStore = args[5];
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        keyStore.load(is, passwordKeyStore.toCharArray());
-
-        SecretKey secretKey = (SecretKey) keyStore.getKey("secretKey", args[6].toCharArray());
-
-        SecureDocumentLib.unprotect(inputFile, outputFile, secretKey);
+        String userAlias_device = args[4];
+        SecureDocumentLib.unprotect(inputFile, outputFile, userAlias_device);
     }
 
     private static void printInvalidArguments(String command) {
         switch (command) {
             case "protect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (clientID)");
+                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (userAlias_device)");
+                System.out.print("Insert command: ");
                 break;
             case "check":
                 System.out.println("Invalid arguments for command: " + command);
                 System.out.println("Usage: BlingBank check (inputFile)");
+                System.out.print("Insert command: ");
                 break;
             case "unprotect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("Usage: BlingBank unprotect (inputFile) (outputFile) (clientID)");
+                System.out.println("BlingBank unprotect (inputFile) (outputFile) (userAlias_device)");
+                System.out.print("Insert command: ");
                 break;
         }
     }

@@ -27,10 +27,13 @@ public class DataBase {
     private static final String trustStorePass = "dataBaseTrustStore";
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
+    private static final String connectionString = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
+    private static final String databaseName = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
+
     public static void main(String[] args) {
         System.out.println("Starting database server...");
 
-        MongoDatabase mongoDB = connectToMongoDB("url de conexao", "nome da bd");
+        MongoDatabase mongoDB = connectToMongoDB(connectionString, databaseName);
 
         // setup keystore
         File keyStore = new File(keyStorePath);
@@ -57,7 +60,7 @@ public class DataBase {
         try (MongoClient mongoClient = MongoClients.create(connectionString)) {
             return mongoClient.getDatabase(databaseName);
         } catch (Exception e) {
-            System.err.println("Erro ao conectar ao MongoDB: " + e.getMessage());
+            System.err.println("MongoDB connection error: " + e.getMessage());
             return null;
         }
     }
@@ -122,8 +125,6 @@ class DataBaseThread extends Thread {
                             dbKeyStore.store(fos, keyStorePass.toCharArray());
                         }
                     }
-
-
                 }
             }
 
@@ -139,6 +140,8 @@ class DataBaseThread extends Thread {
 
             if(!verifyHMac(secretKey, serverCertificateReceived, serverCertificateHMAC)) {
                 System.out.println("Corrupted Certificate. HMAC verification failed.");
+                //Error flag.
+                out.writeUTF("0");
                 in.close();
                 out.close();
                 System.exit(1);
@@ -151,10 +154,20 @@ class DataBaseThread extends Thread {
 
             if(!serverCertificateReceived.equals(serverCertificateFromDBTrustStore)) {
                 System.out.println("Non-authentic Certificate.");
+                //Error flag.
+                out.writeUTF("0");
                 in.close();
                 out.close();
                 System.exit(1);
             }
+
+            //Send a confirmation flag > 0-Error; 1-Correct
+            //All correct flag
+            out.writeUTF("1");
+
+            //Verifiy if first time (Empty DataBase)
+            //if()
+           /* initDataBase();*/
 
             //actions
             while(true) {
@@ -165,6 +178,11 @@ class DataBaseThread extends Thread {
             e.printStackTrace();
         }
     }
+
+    //We are using the PrivateKey of the Server just to INIT the DB. Not supposed to be like this.
+    /*private void initDataBase() {
+      SecureDocumentLib.protect();
+    }*/
 
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");

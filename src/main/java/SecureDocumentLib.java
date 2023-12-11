@@ -3,6 +3,7 @@ import dto.SecureDocumentDTO;
 import dto.SignedObjectDTO;
 import utils.RequestTable;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
@@ -20,16 +21,29 @@ public class SecureDocumentLib {
 
     private static final long EXPIRATION_TIME_MILLIS = 10000;
 
-    public static void protect(File inputFile, File outputFile, SecretKey secretKey, PrivateKey privateKey, Certificate certificate) {
+    private static final String keyStoreName = "serverKeyStore";
+    private static final String keyStorePass = "serverKeyStore";
+    private static final String keyStorePath = "Server//serverKeyStore//" + keyStoreName;
+
+    public static void protect(File inputFile, File outputFile, String userAndDevice) {
         try (FileReader fileReader = new FileReader(inputFile)) {
 
             Gson gson = new Gson();
             JsonObject rootJson = gson.fromJson(fileReader, JsonObject.class);
+
+            //Get SecretKey associated to current client
+            KeyStore serverKS = KeyStore.getInstance("PKCS12");
+            serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) serverKS.getKey(userAndDevice + "_secret", keyStorePass.toCharArray());
+
             JsonObject encryptedJson = encryptSensitiveData(rootJson, secretKey);
 
             long timestamp = System.currentTimeMillis();
 
-            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(), timestamp), privateKey);
+            PrivateKey serverPrivateKey = (PrivateKey) serverKS.getKey("serverrsa", keyStorePass.toCharArray());
+            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(), timestamp), serverPrivateKey);
+
+            Certificate certificate = serverKS.getCertificate("serverrsa");
             writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
@@ -96,7 +110,6 @@ public class SecureDocumentLib {
             movement.add("encryptedDescription", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDescription)));
             movement.remove("description");
         }
-
         return encryptedJson;
     }
 
@@ -140,22 +153,31 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public static void unprotect(File inputFile, File outputFile, SecretKey secretKey) {
+    public static void unprotect(File inputFile, File outputFile, String userAndDevice) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile))) {
 
             SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
             SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
             JsonObject document = JsonParser.parseString(dto.jsonObject()).getAsJsonObject();
-            writeToFile(outputFile, decryptSensitiveData(document, secretKey));
 
-            RequestTable.addEntry(document); // TODO
+            //Get SecretKey associated to current client
+            KeyStore serverKS = KeyStore.getInstance("PKCS12");
+            serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) serverKS.getKey(userAndDevice + "_secret", keyStorePass.toCharArray());
 
+            JsonObject sensitiveDataDecrypted = decryptSensitiveData(document, secretKey);
+            //Check if the Secret Key corresponds to the right client
+            if(sensitiveDataDecrypted != null) {
+                writeToFile(outputFile, sensitiveDataDecrypted);
+                RequestTable.addEntry(document); // TODO
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private static JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
+
         // Extract and decrypt account information
         JsonObject decryptedJson = new JsonObject();
         JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
@@ -175,10 +197,16 @@ public class SecureDocumentLib {
 
         // Decrypt balance
         cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
-        byte[] decryptedBalance = cipher.doFinal(encryptedBalance);
-        double balance = Double.parseDouble(new String(decryptedBalance));
-        decryptedJson.addProperty("balance", balance);
 
+        //Check if the Secret Key corresponds to the right client
+        try {
+            byte[] decryptedBalance = cipher.doFinal(encryptedBalance);
+            double balance = Double.parseDouble(new String(decryptedBalance));
+            decryptedJson.addProperty("balance", balance);
+        } catch (BadPaddingException e) {
+            System.out.println("You are trying to unprotect a file that doesn't belong to you.");
+            return null;
+        }
 
         // Decrypt currency
         String encryptedCurrencyStr = encryptedJson.getAsJsonPrimitive("encryptedCurrency").getAsString();

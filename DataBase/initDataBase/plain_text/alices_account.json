@@ -1,0 +1,14 @@
+{
+  "account": {
+    "accountHolder": ["Alcides"],
+    "balance": 1872.22,
+    "currency": "EUR",
+    "movements": [
+      {
+        "date": "19/12/2023",
+        "value": 2000.00,
+        "description": "Salary"
+      }
+    ]
+  }
+}

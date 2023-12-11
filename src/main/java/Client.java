@@ -17,7 +17,7 @@ public class Client {
     public static void main(String[] args) {
 
         if (args.length != 4) {
-            System.out.println("Wrong args. help command.");
+            System.out.println("Wrong args. Use help command.");
             //help command
         }
 
@@ -184,38 +184,37 @@ public class Client {
 
             Scanner scanner = new Scanner(System.in);
 
-            //print menu of commands
-            System.out.println("Welcome " + userAlias + "!");
-            System.out.println("Here you have the list of commands you can execute");
-            System.out.println("In order to see your balance, write the following command: balance");
-            System.out.println("In order to see your movements, write the following command: movements");
-            System.out.println("In order to make a movement, write the following command adding the value and the description: make_movement - value -description");
+            //Print Menu of commands
+            printMenu(userAlias);
 
-            //actions
+            //Actions
             while(true) {
                 String userInput = scanner.nextLine();
                 String[] input = userInput.split(" ");
                 if (input.length != 0){
                     switch (input[0]) {
                         case "balance":
-                            if(input.length != 1) {
-                                break;
+                            if(input.length == 1) {
+                                //cifrar a mensagem e enviar ao servidor
                             }
-                            //cifrar a mensagem e enviar ao servidor
-                            break;
-                        case "movements":
-                            if(input.length != 1) {
-                                break;
-                            }
-                            //cifrar a mensagem e enviar ao servidor
-                            break;
-                        case "make_movement":
-                            if(input.length != 3 && !(userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
-                                break;
-                            }
-                            //cifrar a mensagem e enviar ao servidor
                             break;
 
+                        case "movements":
+                            if(input.length == 1) {
+                                //cifrar a mensagem e enviar ao servidor
+                            }
+                            break;
+
+                        case "make_movement":
+                            if(input.length == 3 && (userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
+                                //cifrar a mensagem e enviar ao servidor
+                            }
+                            break;
+
+                        default:
+                            System.out.println("Error: Unrecognized command. Please check your input.");
+                            printMenu(userAlias);
+                            break;
                     }
                 }
 
@@ -225,6 +224,14 @@ public class Client {
         } catch (Exception e) {
             System.out.println("Error in the server handshake.");
         }
+    }
+
+    private static void printMenu(String userAlias) {
+        System.out.println("Welcome " + userAlias + "!\n" +
+                "Here you have the list of commands you can execute:\n" +
+                " - In order to see your balance, write the following command: balance\n" +
+                " - In order to see your movements, write the following command: movements\n" +
+                " - In order to make a movement, write the following command adding the value and the description: make_movement <value> <description>");
     }
 
     public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
