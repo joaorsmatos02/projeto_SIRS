@@ -1,3 +1,7 @@
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
+
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.net.ServerSocketFactory;
@@ -26,6 +30,8 @@ public class DataBase {
     public static void main(String[] args) {
         System.out.println("Starting database server...");
 
+        MongoDatabase mongoDB = connectToMongoDB("url de conexao", "nome da bd");
+
         // setup keystore
         File keyStore = new File(keyStorePath);
 
@@ -39,13 +45,23 @@ public class DataBase {
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             while(true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                DataBaseThread dbt = new DataBaseThread(socket);
+                DataBaseThread dbt = new DataBaseThread(socket, mongoDB);
                 dbt.start();
             }
            } catch (Exception e1) {
             System.out.println("Error when initializing database");
             }
     }
+
+    public static MongoDatabase connectToMongoDB(String connectionString, String databaseName) {
+        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
+            return mongoClient.getDatabase(databaseName);
+        } catch (Exception e) {
+            System.err.println("Erro ao conectar ao MongoDB: " + e.getMessage());
+            return null;
+        }
+    }
+
 }
 
 class DataBaseThread extends Thread {
@@ -59,9 +75,11 @@ class DataBaseThread extends Thread {
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
+    private final MongoDatabase mongodb;
 
-    public DataBaseThread(SSLSocket inSoc) {
+    public DataBaseThread(SSLSocket inSoc, MongoDatabase mongoDB) {
         this.socket = inSoc;
+        this.mongodb = mongoDB;
     }
 
     @Override
@@ -140,7 +158,7 @@ class DataBaseThread extends Thread {
 
             //actions
             while(true) {
-
+                
             }
 
         } catch (Exception e) {

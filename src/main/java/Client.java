@@ -10,6 +10,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import javax.crypto.SecretKey;
 import java.security.KeyStore.SecretKeyEntry;
+import java.util.Scanner;
 
 public class Client {
 
@@ -181,9 +182,45 @@ public class Client {
                 out.writeUTF(userAlias + "_" + deviceName);
             }
 
+            Scanner scanner = new Scanner(System.in);
+
+            //print menu of commands
+            System.out.println("Welcome " + userAlias + "!");
+            System.out.println("Here you have the list of commands you can execute");
+            System.out.println("In order to see your balance, write the following command: balance");
+            System.out.println("In order to see your movements, write the following command: movements");
+            System.out.println("In order to make a movement, write the following command adding the value and the description: make_movement - value -description");
+
             //actions
-            /*while(true) {
-            }*/
+            while(true) {
+                String userInput = scanner.nextLine();
+                String[] input = userInput.split(" ");
+                if (input.length != 0){
+                    switch (input[0]) {
+                        case "balance":
+                            if(input.length != 1) {
+                                break;
+                            }
+                            //cifrar a mensagem e enviar ao servidor
+                            break;
+                        case "movements":
+                            if(input.length != 1) {
+                                break;
+                            }
+                            //cifrar a mensagem e enviar ao servidor
+                            break;
+                        case "make_movement":
+                            if(input.length != 3 && !(userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
+                                break;
+                            }
+                            //cifrar a mensagem e enviar ao servidor
+                            break;
+
+                    }
+                }
+
+
+            }
 
         } catch (Exception e) {
             System.out.println("Error in the server handshake.");

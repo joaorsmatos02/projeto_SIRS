@@ -167,6 +167,7 @@ class ServerThread extends Thread {
 
             //actions
             while(true) {
+                //receber o input recebido no socket, decifrar e analisar o pedido
             }
 
         } catch (Exception e) {
