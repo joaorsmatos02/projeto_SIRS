@@ -1,7 +1,9 @@
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-
+import org.bson.Document;
+import java.nio.file.Files;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.net.ServerSocketFactory;
@@ -9,6 +11,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
@@ -27,13 +30,9 @@ public class DataBase {
     private static final String trustStorePass = "dataBaseTrustStore";
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
-    private static final String connectionString = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
-    private static final String databaseName = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
 
     public static void main(String[] args) {
         System.out.println("Starting database server...");
-
-        MongoDatabase mongoDB = connectToMongoDB(connectionString, databaseName);
 
         // setup keystore
         File keyStore = new File(keyStorePath);
@@ -48,23 +47,13 @@ public class DataBase {
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             while(true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                DataBaseThread dbt = new DataBaseThread(socket, mongoDB);
+                DataBaseThread dbt = new DataBaseThread(socket);
                 dbt.start();
             }
            } catch (Exception e1) {
             System.out.println("Error when initializing database");
             }
     }
-
-    public static MongoDatabase connectToMongoDB(String connectionString, String databaseName) {
-        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
-            return mongoClient.getDatabase(databaseName);
-        } catch (Exception e) {
-            System.err.println("MongoDB connection error: " + e.getMessage());
-            return null;
-        }
-    }
-
 }
 
 class DataBaseThread extends Thread {
@@ -78,17 +67,15 @@ class DataBaseThread extends Thread {
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
-    private final MongoDatabase mongodb;
+    private static final String connectionString = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
+    private static final String databaseName = "BlingBank";
 
-    public DataBaseThread(SSLSocket inSoc, MongoDatabase mongoDB) {
+    public DataBaseThread(SSLSocket inSoc) {
         this.socket = inSoc;
-        this.mongodb = mongoDB;
     }
 
     @Override
     public void run() {
-        System.setProperty("javax.net.debug", "ssl");
-
 
         System.out.println("Server connecting to DataBase");
 
@@ -167,7 +154,7 @@ class DataBaseThread extends Thread {
 
             //Verifiy if first time (Empty DataBase)
             //if()
-           /* initDataBase();*/
+            initDataBase();
 
             //actions
             while(true) {
@@ -179,10 +166,42 @@ class DataBaseThread extends Thread {
         }
     }
 
+
     //We are using the PrivateKey of the Server just to INIT the DB. Not supposed to be like this.
-    /*private void initDataBase() {
-      SecureDocumentLib.protect();
-    }*/
+    private void initDataBase() {
+        //SecureDocumentLib.protect(new File("DataBase/initDataBase/plain_text/alice_account.json"), new File("DataBase/initDataBase/enc_text/alice_account_enc.bin"), "alice_iphone");
+
+        //Just for test
+        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
+            MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
+
+            File testFile = new File("DataBase/initDataBase/plain_text/alice_account.json");
+
+            MongoCollection<Document> userAccountCollection = mongoDB.getCollection("userAccount");
+
+            // Read the content of the JSON file
+            String jsonContent = new String(Files.readAllBytes(testFile.toPath()));
+
+            // Parse the JSON content to a MongoDB Document
+            Document document = Document.parse(jsonContent);
+
+            // Insert the document into the "userAccount" collection
+            userAccountCollection.insertOne(document);
+
+            System.out.println("Document inserted successfully!");
+        } catch (IOException e) {
+            System.err.println("MongoDB connection error: " + e.getMessage());
+        }
+    }
+
+    public static MongoDatabase connectToMongoDB(String connectionString, String databaseName) {
+        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
+            return mongoClient.getDatabase(databaseName);
+        } catch (Exception e) {
+            System.err.println("MongoDB connection error: " + e.getMessage());
+            return null;
+        }
+    }
 
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
