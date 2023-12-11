@@ -147,7 +147,7 @@ class DataBaseThread extends Thread {
             //Compare the Server Certificate in DataBase TrustStore with the received one
             KeyStore dataBaseTS = KeyStore.getInstance("PKCS12");
             dataBaseTS.load(new FileInputStream(new File(trustStorePath)), trustStorePass.toCharArray());
-            Certificate serverCertificateFromDBTrustStore = dataBaseTS.getCertificate("servercert");
+            Certificate serverCertificateFromDBTrustStore = dataBaseTS.getCertificate("serverrsa");
 
             if(!serverCertificateReceived.equals(serverCertificateFromDBTrustStore)) {
                 System.out.println("Non-authentic Certificate.");
