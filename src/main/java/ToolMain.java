@@ -14,9 +14,9 @@ public class ToolMain {
         System.out.println("""
                 Welcome to BlingBank!
                 Available commands:
-                 - BlingBank protect (inputFile) (outputFile) (accountAlias)
+                 - BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption)
                  - BlingBank check (inputFile)
-                 - BlingBank unprotect (inputFile) (outputFile) (accountAlias)
+                 - BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption)
                  
                  If necessary, use 'BlingBank help' to see more details about each command.
                  
@@ -69,31 +69,33 @@ public class ToolMain {
                 BlingBank help
                 Displays help information for all available commands.
 
-                BlingBank protect (inputFile) (outputFile) (accountAlias)
+                BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption)
                 Encrypts sensitive data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
                    - (accountAlias): Account Name that is being used. (e.g. "alice", or to shared accounts: "alice_bob")
+                   - (flagTwoLayerEncryption): If this flag is set, the sensitive fields of the JSON document will be encrypted individually, before a full encryption of the document, this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values.
                    
                 BlingBank check (inputFile)
                 Checks the integrity of the specified file containing protected data.
                 Arguments:
                    - (inputFile): Path to the input file.
 
-                BlingBank unprotect (inputFile) (outputFile) (accountAlias)
+                BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption)
                 Decrypts the protected data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
-                   - (accountAlias): Account Name that is being used. (e.g. "alice", or to shared accounts: "alice_bob")""");
+                   - (accountAlias): Account Name that is being used. (e.g. "alice", or to shared accounts: "alice_bob")
+                   - (flagTwoLayerEncryption): If this flag is set, the sensitive fields of the JSON document will be encrypted individually, before a full encryption of the document, this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values.""");
 
         System.out.print("Insert command: ");
 
     }
 
     private static void prepareProtect(String[] args) throws Exception {
-        if(args.length != 5) {
+        if(args.length != 6) {
             throw new IllegalArgumentException();
         }
 
@@ -110,7 +112,8 @@ public class ToolMain {
         }
 
         String userAccount = args[4];
-        SecureDocumentLib.protect(inputFile, outputFile, userAccount);
+        boolean flagTwoLayerEncryption = "1".equals(args[5]);
+        SecureDocumentLib.protect(inputFile, outputFile, userAccount, flagTwoLayerEncryption);
     }
 
     private static boolean prepareCheck(String[] args) throws Exception{
@@ -127,7 +130,7 @@ public class ToolMain {
     }
 
     private static void prepareUnprotect(String[] args) throws Exception{
-        if(args.length != 5) {
+        if(args.length != 6) {
             throw new IllegalArgumentException();
         }
 
@@ -144,14 +147,16 @@ public class ToolMain {
         }
 
         String userAccount = args[4];
-        SecureDocumentLib.unprotect(inputFile, outputFile, userAccount);
+        Boolean flagTwoLayerEncryption = "1".equals(args[5]);
+
+        SecureDocumentLib.unprotect(inputFile, outputFile, userAccount, flagTwoLayerEncryption);
     }
 
     private static void printInvalidArguments(String command) {
         switch (command) {
             case "protect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (accountAlias)");
+                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption)");
                 System.out.print("Insert command: ");
                 break;
             case "check":
@@ -161,7 +166,7 @@ public class ToolMain {
                 break;
             case "unprotect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias)");
+                System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption)");
                 System.out.print("Insert command: ");
                 break;
         }
