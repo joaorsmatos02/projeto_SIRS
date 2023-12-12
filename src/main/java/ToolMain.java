@@ -14,9 +14,9 @@ public class ToolMain {
         System.out.println("""
                 Welcome to BlingBank!
                 Available commands:
-                 - BlingBank protect (inputFile) (outputFile) (userAlias_device)
+                 - BlingBank protect (inputFile) (outputFile) (accountAlias)
                  - BlingBank check (inputFile)
-                 - BlingBank unprotect (inputFile) (outputFile) (userAlias_device)
+                 - BlingBank unprotect (inputFile) (outputFile) (accountAlias)
                  
                  If necessary, use 'BlingBank help' to see more details about each command.
                  
@@ -69,24 +69,24 @@ public class ToolMain {
                 BlingBank help
                 Displays help information for all available commands.
 
-                BlingBank protect (inputFile) (outputFile) (userAlias_device)
+                BlingBank protect (inputFile) (outputFile) (accountAlias)
                 Encrypts sensitive data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
-                   - (userAlias_device): User alias and the Device that is being used. (e.g. "alice_iphone")
+                   - (accountAlias): Account Name that is being used. (e.g. "alice", or to shared accounts: "alice_bob")
                    
                 BlingBank check (inputFile)
                 Checks the integrity of the specified file containing protected data.
                 Arguments:
                    - (inputFile): Path to the input file.
 
-                BlingBank unprotect (inputFile) (outputFile) (userAlias_device)
+                BlingBank unprotect (inputFile) (outputFile) (accountAlias)
                 Decrypts the protected data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
                    - (outputFile): Path to the output file.
-                   - (userAlias_device): User alias and the Device that is being used. (e.g. "alice_iphone")""");
+                   - (accountAlias): Account Name that is being used. (e.g. "alice", or to shared accounts: "alice_bob")""");
 
         System.out.print("Insert command: ");
 
@@ -109,8 +109,8 @@ public class ToolMain {
             return;
         }
 
-        String userAlias_device = args[4];
-        SecureDocumentLib.protect(inputFile, outputFile, userAlias_device);
+        String userAccount = args[4];
+        SecureDocumentLib.protect(inputFile, outputFile, userAccount);
     }
 
     private static boolean prepareCheck(String[] args) throws Exception{
@@ -143,15 +143,15 @@ public class ToolMain {
             return;
         }
 
-        String userAlias_device = args[4];
-        SecureDocumentLib.unprotect(inputFile, outputFile, userAlias_device);
+        String userAccount = args[4];
+        SecureDocumentLib.unprotect(inputFile, outputFile, userAccount);
     }
 
     private static void printInvalidArguments(String command) {
         switch (command) {
             case "protect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (userAlias_device)");
+                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (accountAlias)");
                 System.out.print("Insert command: ");
                 break;
             case "check":
@@ -161,7 +161,7 @@ public class ToolMain {
                 break;
             case "unprotect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("BlingBank unprotect (inputFile) (outputFile) (userAlias_device)");
+                System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias)");
                 System.out.print("Insert command: ");
                 break;
         }

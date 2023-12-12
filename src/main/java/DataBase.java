@@ -169,7 +169,32 @@ class DataBaseThread extends Thread {
 
     //We are using the PrivateKey of the Server just to INIT the DB. Not supposed to be like this.
     private void initDataBase() {
-        //SecureDocumentLib.protect(new File("DataBase/initDataBase/plain_text/alice_account.json"), new File("DataBase/initDataBase/enc_text/alice_account_enc.bin"), "alice_iphone");
+
+        String[] plainFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account.json",
+                                               "DataBase/initDataBase/plain_text/bob_account.json",
+                                               "DataBase/initDataBase/plain_text/mario_account.json",
+                                               "DataBase/initDataBase/plain_text/alcides_account.json"};
+
+        String[] encFilePaths = new String[]{"DataBase/initDataBase/enc_text/alice_account_enc.bin",
+                                             "DataBase/initDataBase/enc_text/bob_account_enc.bin",
+                                             "DataBase/initDataBase/enc_text/mario_account_enc.bin",
+                                             "DataBase/initDataBase/enc_text/alcides_account_enc.bin"};
+
+        String[] accountAliasArray = new String[]{"alice", "bob", "mario", "alcides"};
+
+        for (int i = 0; i < plainFilePaths.length; i++) {
+            SecureDocumentLib.protect(new File(plainFilePaths[i]), new File(encFilePaths[i]), accountAliasArray[i]);
+        }
+
+        for (int i = 0; i < plainFilePaths.length; i++) {
+            try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File(encFilePaths[0])))) {
+
+            } catch (Exception e) {
+
+                e.printStackTrace();
+            }
+        }
+
 
         //Just for test
         try (MongoClient mongoClient = MongoClients.create(connectionString)) {
@@ -191,15 +216,6 @@ class DataBaseThread extends Thread {
             System.out.println("Document inserted successfully!");
         } catch (IOException e) {
             System.err.println("MongoDB connection error: " + e.getMessage());
-        }
-    }
-
-    public static MongoDatabase connectToMongoDB(String connectionString, String databaseName) {
-        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
-            return mongoClient.getDatabase(databaseName);
-        } catch (Exception e) {
-            System.err.println("MongoDB connection error: " + e.getMessage());
-            return null;
         }
     }
 

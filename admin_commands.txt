@@ -17,7 +17,14 @@ SERVER!
  - keytool -delete -alias toDeleteKey -storetype PKCS12 -keystore serverTrustStore
 
 (Assumido)
-5. Gerar secretKeys entre banco<->cliente
+5.
+5.1. Gerar secretKeys entre banco<->db por conta
+ - keytool -genseckey -alias alice_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias bob_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias mario_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias alcides_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+
+5.2. Gerar secretKeys entre banco<->cliente por dispositivo
  - keytool -genseckey -alias alice_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
  - keytool -genseckey -alias bob_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
  - keytool -genseckey -alias alice_computador_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore

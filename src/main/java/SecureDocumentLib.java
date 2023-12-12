@@ -25,7 +25,7 @@ public class SecureDocumentLib {
     private static final String keyStorePass = "serverKeyStore";
     private static final String keyStorePath = "Server//serverKeyStore//" + keyStoreName;
 
-    public static void protect(File inputFile, File outputFile, String userAndDevice) {
+    public static void protect(File inputFile, File outputFile, String accountAlias) {
         try (FileReader fileReader = new FileReader(inputFile)) {
 
             Gson gson = new Gson();
@@ -34,7 +34,7 @@ public class SecureDocumentLib {
             //Get SecretKey associated to current client
             KeyStore serverKS = KeyStore.getInstance("PKCS12");
             serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
-            SecretKey secretKey = (SecretKey) serverKS.getKey(userAndDevice + "_secret", keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) serverKS.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
 
             JsonObject encryptedJson = encryptSensitiveData(rootJson, secretKey);
 
@@ -44,6 +44,7 @@ public class SecureDocumentLib {
             SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(), timestamp), serverPrivateKey);
 
             Certificate certificate = serverKS.getCertificate("serverrsa");
+
             writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
@@ -153,7 +154,7 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public static void unprotect(File inputFile, File outputFile, String userAndDevice) {
+    public static void unprotect(File inputFile, File outputFile, String accountAlias) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile))) {
 
             SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
@@ -163,7 +164,7 @@ public class SecureDocumentLib {
             //Get SecretKey associated to current client
             KeyStore serverKS = KeyStore.getInstance("PKCS12");
             serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
-            SecretKey secretKey = (SecretKey) serverKS.getKey(userAndDevice + "_secret", keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) serverKS.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
 
             JsonObject sensitiveDataDecrypted = decryptSensitiveData(document, secretKey);
             //Check if the Secret Key corresponds to the right client
