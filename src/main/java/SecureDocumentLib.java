@@ -21,29 +21,49 @@ public class SecureDocumentLib {
 
     private static final long EXPIRATION_TIME_MILLIS = 10000;
 
-    private static final String keyStoreName = "serverKeyStore";
-    private static final String keyStorePass = "serverKeyStore";
-    private static final String keyStorePath = "Server//serverKeyStore//" + keyStoreName;
+    private String keyStoreName;
+    private String keyStorePass;
+    private String keyStorePath;
 
-    public static void protect(File inputFile, File outputFile, String accountAlias) {
+    public SecureDocumentLib(String keyStoreName, String keyStorePass, String keyStorePath) {
+        this.keyStoreName = keyStoreName;
+        this.keyStorePass = keyStorePass;
+        this.keyStorePath = keyStorePath;
+    }
+
+    /**
+     *
+     *
+     * @param inputFile
+     * @param outputFile
+     * @param accountAlias
+     * @param twoLayerEncryption - if this flag is set, the sensitive fields of the JSON document will be encrypted individually, before a full encryption of the document,
+     *                             this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values
+     */
+    public void protect(File inputFile, File outputFile, String accountAlias, boolean twoLayerEncryption) {
         try (FileReader fileReader = new FileReader(inputFile)) {
 
             Gson gson = new Gson();
             JsonObject rootJson = gson.fromJson(fileReader, JsonObject.class);
 
             //Get SecretKey associated to current client
-            KeyStore serverKS = KeyStore.getInstance("PKCS12");
-            serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
-            SecretKey secretKey = (SecretKey) serverKS.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
-            JsonObject encryptedJson = encryptSensitiveData(rootJson, secretKey);
+            if(twoLayerEncryption) {
+                SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+                rootJson = encryptSensitiveData(rootJson, accountSecretKey);
+            }
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+            byte[] encrypted = encrypt(rootJson.toString().getBytes(), secretKey);
+            String finalEncode = Base64.getEncoder().encodeToString(encrypted);
 
             long timestamp = System.currentTimeMillis();
 
-            PrivateKey serverPrivateKey = (PrivateKey) serverKS.getKey("serverrsa", keyStorePass.toCharArray());
-            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(encryptedJson.toString(), timestamp), serverPrivateKey);
+            PrivateKey serverPrivateKey = (PrivateKey) ks.getKey("serverrsa", keyStorePass.toCharArray());
+            SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(finalEncode, timestamp), serverPrivateKey);
 
-            Certificate certificate = serverKS.getCertificate("serverrsa");
+            Certificate certificate = ks.getCertificate("serverrsa");
 
             writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
 
@@ -52,7 +72,7 @@ public class SecureDocumentLib {
         }
     }
 
-    private static JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
+    private JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
         // Extract and encrypt account information
         JsonObject encryptedJson = rootJson.getAsJsonObject("account");
         JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
@@ -114,7 +134,7 @@ public class SecureDocumentLib {
         return encryptedJson;
     }
 
-    private static SignedObject signJSONTimestamp(SecureDocumentDTO jsonTimestampDTO, PrivateKey privateKey) {
+    private SignedObject signJSONTimestamp(SecureDocumentDTO jsonTimestampDTO, PrivateKey privateKey) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             return new SignedObject(jsonTimestampDTO, privateKey, signature);
@@ -126,7 +146,7 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public static boolean check(File file) {
+    public boolean check(File file) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
 
             Signature signature = Signature.getInstance("SHA256withRSA");
@@ -143,41 +163,55 @@ public class SecureDocumentLib {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return false;
     }
 
-    private static boolean verifyTimestamp(SecureDocumentDTO dto) {
+    private boolean verifyTimestamp(SecureDocumentDTO dto) {
         return System.currentTimeMillis() - dto.timestamp() <= EXPIRATION_TIME_MILLIS &&
-                !RequestTable.hasEntry(JsonParser.parseString(dto.jsonObject()).getAsJsonObject());
+                !RequestTable.hasEntry(dto.document());
     }
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public static void unprotect(File inputFile, File outputFile, String accountAlias) {
+    public void unprotect(File inputFile, File outputFile, String accountAlias, boolean twoLayerEncryption) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile))) {
 
             SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
             SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
-            JsonObject document = JsonParser.parseString(dto.jsonObject()).getAsJsonObject();
+            Gson gson = new Gson();
 
-            //Get SecretKey associated to current client
-            KeyStore serverKS = KeyStore.getInstance("PKCS12");
-            serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
-            SecretKey secretKey = (SecretKey) serverKS.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
-            JsonObject sensitiveDataDecrypted = decryptSensitiveData(document, secretKey);
-            //Check if the Secret Key corresponds to the right client
-            if(sensitiveDataDecrypted != null) {
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+            byte[] encryptedDoc = Base64.getDecoder().decode(dto.document());
+
+            byte[] iv = Arrays.copyOfRange(encryptedDoc, 0, 16);
+            byte[] encrypted = Arrays.copyOfRange(encryptedDoc, iv.length, encryptedDoc.length);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            String decryptedString = new String(cipher.doFinal(encrypted));
+            JsonObject decrypted = gson.fromJson(decryptedString, JsonObject.class);
+
+            JsonObject sensitiveDataDecrypted = null;
+            if (twoLayerEncryption) {
+                SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+                sensitiveDataDecrypted = decryptSensitiveData(decrypted, accountSecretKey);
+            }
+
+            // Check if the Secret Key corresponds to the right client
+            if (sensitiveDataDecrypted != null) {
                 writeToFile(outputFile, sensitiveDataDecrypted);
-                RequestTable.addEntry(document); // TODO
+                RequestTable.addEntry(dto.document());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
+
+    private JsonObject decryptSensitiveData(JsonObject encryptedJson, SecretKey secretKey) throws Exception {
 
         // Extract and decrypt account information
         JsonObject decryptedJson = new JsonObject();
@@ -265,7 +299,26 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private static void writeToFile(File file, Object... objects) {
+    private byte[] encrypt(byte[] object, SecretKey secretKey) {
+        try {
+            SecureRandom random = new SecureRandom();
+            byte[] iv = new byte[16];
+            random.nextBytes(iv);
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            byte[] ciphered = cipher.doFinal(object);
+
+            byte[] result = new byte[iv.length + ciphered.length];
+            System.arraycopy(iv, 0, result, 0, iv.length);
+            System.arraycopy(ciphered, 0, result, iv.length, ciphered.length);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void writeToFile(File file, Object... objects) {
         for (Object o : objects) {
             if (o instanceof JsonObject) {
                 writeObjectStr(file, o.toString());
@@ -276,7 +329,7 @@ public class SecureDocumentLib {
 
     }
 
-    private static void writeObjectStr(File file, String object) {
+    private void writeObjectStr(File file, String object) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(object);
         } catch (IOException e) {
@@ -284,7 +337,7 @@ public class SecureDocumentLib {
         }
     }
 
-    private static void writeObject(File file, Object object) {
+    private void writeObject(File file, Object object) {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
             objectOutputStream.writeObject(object);
         } catch (IOException e) {
