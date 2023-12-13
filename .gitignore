@@ -595,3 +595,7 @@ fabric.properties
 
 #ignore folder from CLient
 Client/
+
+
+DataBase/initDataBase/enc_text/*
+DataBase/initDataBase/unprotect_result/*
