@@ -182,10 +182,10 @@ class DataBaseThread extends Thread {
 
         String[] accountAliasArray = new String[]{"alice", "bob", "mario", "alcides"};
 
-        for (int i = 0; i < plainFilePaths.length; i++) {
+        /*for (int i = 0; i < plainFilePaths.length; i++) {
             //falta flag
             SecureDocumentLib.protect(new File(plainFilePaths[i]), new File(encFilePaths[i]), accountAliasArray[i]);
-        }
+        }*/
 
         for (int i = 0; i < plainFilePaths.length; i++) {
             try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File(encFilePaths[0])))) {
