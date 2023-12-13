@@ -179,8 +179,8 @@ class ServerThread extends Thread {
 
             String clientAccount = in.readUTF();
 
-            SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa");
-            SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa");
+            SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa",userAndDevice + "_cert" );
+            SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
 
             //actions
             while(true) {
@@ -189,13 +189,18 @@ class ServerThread extends Thread {
                 String[] userInput = decryptedMessage.split(" ");
 
                 if (userInput.length != 0) {
+                    // Case 0, no update on DB, case 1, new DB update
+                    String updateDBFlag;
                     String encryptedAccount;
                     switch (userInput[0]) {
                         case "balance":
+                            updateDBFlag = secureMessageLibDB.protectMessage("0");
                             encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") ) {
+                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
+                                outDB.writeUTF(updateDBFlag);
                                 outDB.writeUTF(encryptedAccount);
-                                byte [] account = inDB.readAllBytes();
+                                String account = inDB.readUTF();
+                                // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
                                 System.out.println("Error in the db connection or encrypting");
                             }
@@ -204,10 +209,13 @@ class ServerThread extends Thread {
                             break;
 
                         case "movements":
+                            updateDBFlag = secureMessageLibDB.protectMessage("0");
                             encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") ) {
+                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
+                                outDB.writeUTF(updateDBFlag);
                                 outDB.writeUTF(encryptedAccount);
-                                byte [] account = inDB.readAllBytes();
+                                String account = inDB.readUTF();
+                                // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
                                 System.out.println("Error in the db connection or encrypting");
                             }
@@ -216,13 +224,13 @@ class ServerThread extends Thread {
                             break;
 
                         case "make_movement":
+                            updateDBFlag = secureMessageLibDB.protectMessage("0");
                             encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") ) {
+                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
+                                outDB.writeUTF(updateDBFlag);
                                 outDB.writeUTF(encryptedAccount);
-                                byte [] account = inDB.readAllBytes();
-
-
-                                //Tratar do pedido
+                                String account = inDB.readUTF();
+                                // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
                                 System.out.println("Error in the db connection or encrypting");
                             }

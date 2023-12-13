@@ -17,15 +17,18 @@ public class SecureMessageLib {
     private String clientAlias;
     private String pkAlias;
 
+    private String certName;
 
 
-    public SecureMessageLib(String keyStorePass, String keyStorePath, String trustStorePass, String trustStorePath, String clientAlias, String pkAlias){
+
+    public SecureMessageLib(String keyStorePass, String keyStorePath, String trustStorePass, String trustStorePath, String clientAlias, String pkAlias, String certName){
         this.keyStorePass = keyStorePass;
         this.keyStorePath = keyStorePath;
         this.trustStorePass = trustStorePass;
         this.trustStorePath = trustStorePath;
         this.clientAlias = clientAlias;
         this.pkAlias = pkAlias;
+        this.certName = certName;
     }
 
     public String protectMessage(String message){
@@ -65,7 +68,7 @@ public class SecureMessageLib {
             FileInputStream fis = new FileInputStream(this.trustStorePath);
             trustStore.load(fis, this.trustStorePass.toCharArray());
 
-            Certificate certificate = trustStore.getCertificate(clientAlias + "_cert");
+            Certificate certificate = trustStore.getCertificate(certName);
             PublicKey publicKey = certificate.getPublicKey();
 
             byte[] iv = Arrays.copyOfRange(encryptedDataWithIV, 0, 16);

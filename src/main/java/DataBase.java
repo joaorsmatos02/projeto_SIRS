@@ -156,11 +156,47 @@ class DataBaseThread extends Thread {
             //if()
             initDataBase();
 
+            SecureMessageLib secureMessageLibServer = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath,
+                    "server_db", "databasersa", "serverrsa");
+
             //actions
             while(true) {
-                
-            }
+                String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(in.readUTF());
+                String decryptedAccount = secureMessageLibServer.unprotectMessage(in.readUTF());
 
+                if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
+                        && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature")) {
+
+                    String[] clientsFromAccount = decryptedAccount.split("_");
+                    if(clientsFromAccount.length > 1) {
+                        //buscar conta partilhada
+                        // ir buscar conta que tem todos os clientsFromAccount associado
+
+                        // fazer protect com flag a 0
+
+                        // pegar nos bytes do ficheiro
+
+                        //enviar bytes do ficheiro
+
+                        //apagar
+                    } else {
+                        //buscar conta partilhada
+                        // ir buscar conta que tem todos os clientsFromAccount associado
+                        //
+                        // fazer protect com flag a 0
+                        //
+                        // pegar nos bytes do ficheiro
+                        //
+                        //enviar bytes do ficheiro
+                        //
+                        //apagar
+                    }
+                } else {
+                    String errorMessage = "An error in decryption ocurred";
+                    out.writeUTF(secureMessageLibServer.protectMessage(errorMessage));
+                }
+
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

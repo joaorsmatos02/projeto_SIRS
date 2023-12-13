@@ -190,7 +190,7 @@ public class Client {
             printMenu(userAlias);
 
             SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath, trustStorePath,
-                    passwordStores, userAlias + "_" + deviceName, userAlias + "rsa");
+                    passwordStores, userAlias + "_" + deviceName, userAlias + "rsa", "serverrsa");
             //Actions
             while(true) {
                 String userInput = scanner.nextLine();
