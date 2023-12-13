@@ -129,9 +129,10 @@ class ServerThread extends Thread {
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
             String clientIdentifier = in.readUTF();
-            //userAlias + "_" + deviceName + "true(newDevice) or false(!newDevice)"
+            //userAlias + "_" + deviceName + "true(newDevice) "
             String[] clientIdentifierSplitted = clientIdentifier.split(" ");
             String userAndDevice = clientIdentifierSplitted[0];
+
 
             //2args == newDevice flag
             if(clientIdentifierSplitted.length == 2){
@@ -172,6 +173,8 @@ class ServerThread extends Thread {
                     }
                 }
             }
+
+            String clientAccount = in.readUTF();
 
             //actions
             while(true) {

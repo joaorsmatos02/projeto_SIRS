@@ -23,11 +23,12 @@ public class Client {
 
         System.out.println("Starting client...");
 
-        //args: 0-userAlias | 1-password | 2-newDevice(0-false or 1-true)| 3-deviceName
+        //args: 0-userAlias | 1-password | 2-newDevice(0-false or 1-true)| 3-deviceName | 4- account
         String userAlias = args[0];
         String passwordStores = args[1];
         boolean newDevice = "1".equals(args[2]);
         String deviceName = args[3];
+        String account = args[4];
 
         String userStoresFolder = "Client//" + userAlias + "_" + deviceName;
         String keyStoreName = userAlias + "_" + deviceName + "_KeyStore";
@@ -169,6 +170,7 @@ public class Client {
                 KeyStore clientKS = KeyStore.getInstance("PKCS12");
                 clientKS.load(new FileInputStream(new File(keyStorePath)), passwordStores.toCharArray());
 
+                //userAlias + "_" + deviceName + "true(newDevice) "
                 out.writeUTF(userAlias + "_" + deviceName + " true");
 
                 Certificate clientCertificate = clientKS.getCertificate(userAlias+"rsa");
@@ -181,6 +183,8 @@ public class Client {
             } else {
                 out.writeUTF(userAlias + "_" + deviceName);
             }
+
+            out.writeUTF(account);
 
             Scanner scanner = new Scanner(System.in);
 
