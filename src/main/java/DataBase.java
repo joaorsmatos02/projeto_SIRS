@@ -196,11 +196,12 @@ class DataBaseThread extends Thread {
             secureDocumentLib.unprotect(new File(encFilePaths[i]), new File(resultDecFilePaths[i]), accountAliasArray[i], false);
         }
 
-        //Just for test
+        //Connection to Mongo
         try (MongoClient mongoClient = MongoClients.create(connectionString)) {
             MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
 
             MongoCollection<Document> userAccountCollection = mongoDB.getCollection("userAccount");
+            userAccountCollection.drop();
 
             for (int i = 0; i < resultDecFilePaths.length; i++) {
                 File currentDecryptedFile = new File(resultDecFilePaths[i]);
