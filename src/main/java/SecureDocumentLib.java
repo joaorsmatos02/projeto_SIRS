@@ -146,7 +146,7 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public boolean check(File file) {
+    public static boolean check(File file) {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
 
             Signature signature = Signature.getInstance("SHA256withRSA");
@@ -166,7 +166,7 @@ public class SecureDocumentLib {
         return false;
     }
 
-    private boolean verifyTimestamp(SecureDocumentDTO dto) {
+    private static boolean verifyTimestamp(SecureDocumentDTO dto) {
         return System.currentTimeMillis() - dto.timestamp() <= EXPIRATION_TIME_MILLIS &&
                 !RequestTable.hasEntry(dto.document());
     }
@@ -194,15 +194,14 @@ public class SecureDocumentLib {
             String decryptedString = new String(cipher.doFinal(encrypted));
             JsonObject decrypted = gson.fromJson(decryptedString, JsonObject.class);
 
-            JsonObject sensitiveDataDecrypted = null;
             if (twoLayerEncryption) {
                 SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
-                sensitiveDataDecrypted = decryptSensitiveData(decrypted, accountSecretKey);
+                decrypted = decryptSensitiveData(decrypted, accountSecretKey);
             }
 
             // Check if the Secret Key corresponds to the right client
-            if (sensitiveDataDecrypted != null) {
-                writeToFile(outputFile, sensitiveDataDecrypted);
+            if (decrypted != null) {
+                writeToFile(outputFile, decrypted);
                 RequestTable.addEntry(dto.document());
             }
         } catch (Exception e) {

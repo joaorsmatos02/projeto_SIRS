@@ -171,55 +171,56 @@ class DataBaseThread extends Thread {
     private void initDataBase() {
 
         String[] plainFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account.json",
-                                               "DataBase/initDataBase/plain_text/bob_account.json",
-                                               "DataBase/initDataBase/plain_text/mario_account.json",
-                                               "DataBase/initDataBase/plain_text/alcides_account.json"};
+                "DataBase/initDataBase/plain_text/bob_account.json",
+                "DataBase/initDataBase/plain_text/mario_account.json",
+                "DataBase/initDataBase/plain_text/alcides_account.json"};
 
         String[] encFilePaths = new String[]{"DataBase/initDataBase/enc_text/alice_account_enc.bin",
-                                             "DataBase/initDataBase/enc_text/bob_account_enc.bin",
-                                             "DataBase/initDataBase/enc_text/mario_account_enc.bin",
-                                             "DataBase/initDataBase/enc_text/alcides_account_enc.bin"};
+                "DataBase/initDataBase/enc_text/bob_account_enc.bin",
+                "DataBase/initDataBase/enc_text/mario_account_enc.bin",
+                "DataBase/initDataBase/enc_text/alcides_account_enc.bin"};
+
+        String[] resultDecFilePaths = new String[]{"DataBase/initDataBase/unprotect_result/alice_account_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/bob_account_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/mario_account_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/alcides_account_unprotected.json"};
 
         String[] accountAliasArray = new String[]{"alice", "bob", "mario", "alcides"};
 
-        for (int i = 0; i < plainFilePaths.length; i++) {
-            //falta flag
-            SecureDocumentLib.protect(new File(plainFilePaths[i]), new File(encFilePaths[i]), accountAliasArray[i]);
-        }
+        //Just for init - We use the Server KeyStore to protect the files
+        SecureDocumentLib secureDocumentLib = new SecureDocumentLib("serverKeyStore", "serverKeyStore", "Server/serverKeyStore/serverKeyStore");
 
         for (int i = 0; i < plainFilePaths.length; i++) {
-            try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File(encFilePaths[0])))) {
 
-            } catch (Exception e) {
-
-                e.printStackTrace();
-            }
+            secureDocumentLib.protect(new File(plainFilePaths[i]), new File(encFilePaths[i]), accountAliasArray[i], true);
+            secureDocumentLib.unprotect(new File(encFilePaths[i]), new File(resultDecFilePaths[i]), accountAliasArray[i], false);
         }
-
 
         //Just for test
         try (MongoClient mongoClient = MongoClients.create(connectionString)) {
             MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
 
-            File testFile = new File("DataBase/initDataBase/plain_text/alice_account.json");
-
             MongoCollection<Document> userAccountCollection = mongoDB.getCollection("userAccount");
 
-            // Read the content of the JSON file
-            String jsonContent = new String(Files.readAllBytes(testFile.toPath()));
+            for (int i = 0; i < resultDecFilePaths.length; i++) {
+                File currentDecryptedFile = new File(resultDecFilePaths[i]);
 
-            // Parse the JSON content to a MongoDB Document
-            Document document = Document.parse(jsonContent);
+                // Read the content of the JSON file
+                String jsonContent = new String(Files.readAllBytes(currentDecryptedFile.toPath()));
 
-            // Insert the document into the "userAccount" collection
-            userAccountCollection.insertOne(document);
+                // Parse the JSON content to a MongoDB Document
+                Document document = Document.parse(jsonContent);
 
-            System.out.println("Document inserted successfully!");
+                // Insert the document into the "userAccount" collection
+                userAccountCollection.insertOne(document);
+
+                System.out.println("Document inserted successfully!");
+            }
+
         } catch (IOException e) {
             System.err.println("MongoDB connection error: " + e.getMessage());
         }
     }
-
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(secretKey);
