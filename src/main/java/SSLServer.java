@@ -197,6 +197,7 @@ class ServerThread extends Thread {
                             if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
                                 outDB.writeUTF(updateDBFlag);
                                 outDB.writeUTF(encryptedAccount);
+                                outDB.flush();
                                 String account = inDB.readUTF();
                                 // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
@@ -212,6 +213,7 @@ class ServerThread extends Thread {
                             if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
                                 outDB.writeUTF(updateDBFlag);
                                 outDB.writeUTF(encryptedAccount);
+                                outDB.flush();
                                 String account = inDB.readUTF();
                                 // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
@@ -227,6 +229,7 @@ class ServerThread extends Thread {
                             if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
                                 outDB.writeUTF(updateDBFlag);
                                 outDB.writeUTF(encryptedAccount);
+                                outDB.flush();
                                 String account = inDB.readUTF();
                                 // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {

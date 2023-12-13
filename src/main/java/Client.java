@@ -202,6 +202,7 @@ public class Client {
                                 String encryptedPayload = secureMessageLib.protectMessage(userInput);
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
+                                    out.flush();
                                 } else {
                                     System.out.println("Encryption Failed");
                                     printMenu(userAlias);

@@ -52,7 +52,7 @@ public class SecureMessageLib {
         }
     }
 
-    public String unprotectMessage(String encryptedMessage) throws Exception {
+    public String unprotectMessage(String encryptedMessage)  {
         try{
             String[] parts = encryptedMessage.split("\\|");
 
@@ -64,6 +64,9 @@ public class SecureMessageLib {
             byte[] encryptedDataWithIV = Base64.getDecoder().decode(parts[0]);
             byte[] signature = Base64.getDecoder().decode(parts[1]);
 
+            byte[] iv = Arrays.copyOfRange(encryptedDataWithIV, 0, 16);
+            byte[] encryptedData = Arrays.copyOfRange(encryptedDataWithIV, iv.length, encryptedDataWithIV.length);
+
             KeyStore trustStore = KeyStore.getInstance("PKCS12");
             FileInputStream fis = new FileInputStream(this.trustStorePath);
             trustStore.load(fis, this.trustStorePass.toCharArray());
@@ -71,15 +74,12 @@ public class SecureMessageLib {
             Certificate certificate = trustStore.getCertificate(certName);
             PublicKey publicKey = certificate.getPublicKey();
 
-            byte[] iv = Arrays.copyOfRange(encryptedDataWithIV, 0, 16);
-            byte[] encryptedData = Arrays.copyOfRange(encryptedDataWithIV, iv.length, encryptedDataWithIV.length);
-
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, secretKeyWithReceiver, new IvParameterSpec(iv));
-            byte[] decryptedData = cipher.doFinal(encryptedData);
-
-            if(verifySignature(decryptedData, signature, publicKey)){
-                return new String(decryptedData);
+            if(verifySignature(encryptedDataWithIV, signature, publicKey)){
+                Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+                cipher.init(Cipher.DECRYPT_MODE, secretKeyWithReceiver, new IvParameterSpec(iv));
+                byte[] decryptedData = cipher.doFinal(encryptedData);
+                String result = new String(decryptedData);
+                return result;
             } else {
                 return "Error verifying signature";
             }
