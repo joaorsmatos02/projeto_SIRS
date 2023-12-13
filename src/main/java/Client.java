@@ -34,8 +34,6 @@ public class Client {
         String keyStoreName = userAlias + "_" + deviceName + "_KeyStore";
         String keyStorePath = userStoresFolder + "//" + keyStoreName;
 
-        String privateKeyAlias = "pk";
-
         String trustStoreName = userAlias + "_" + deviceName + "_TrustStore";
         String trustStorePath = "Client//" + userAlias + "_" + deviceName + "//" + trustStoreName;
 
@@ -191,27 +189,41 @@ public class Client {
             //Print Menu of commands
             printMenu(userAlias);
 
+            SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath, trustStorePath,
+                    passwordStores, userAlias + "_" + deviceName, userAlias + "rsa");
             //Actions
             while(true) {
                 String userInput = scanner.nextLine();
                 String[] input = userInput.split(" ");
                 if (input.length != 0){
                     switch (input[0]) {
-                        case "balance":
+                        case "balance", "movements":
                             if(input.length == 1) {
-                                //cifrar a mensagem e enviar ao servidor
-                            }
-                            break;
-
-                        case "movements":
-                            if(input.length == 1) {
-                                //cifrar a mensagem e enviar ao servidor
+                                String encryptedPayload = secureMessageLib.protectMessage(userInput);
+                                if (!encryptedPayload.equals("Encryption Failed")){
+                                    out.writeUTF(encryptedPayload);
+                                } else {
+                                    System.out.println("Encryption Failed");
+                                    printMenu(userAlias);
+                                }
+                            } else {
+                                System.out.println("Error: Unrecognized command. Please check your input.");
+                                printMenu(userAlias);
                             }
                             break;
 
                         case "make_movement":
                             if(input.length == 3 && (userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
-                                //cifrar a mensagem e enviar ao servidor
+                                String encryptedPayload = secureMessageLib.protectMessage(userInput);
+                                if (!encryptedPayload.equals("Encryption Failed")){
+                                    out.writeUTF(encryptedPayload);
+                                } else {
+                                    System.out.println("Encryption Failed");
+                                    printMenu(userAlias);
+                                }
+                            } else {
+                                System.out.println("Error: Unrecognized command. Please check your input.");
+                                printMenu(userAlias);
                             }
                             break;
 

@@ -49,7 +49,7 @@ public class SecureMessageLib {
         }
     }
 
-    private String decryptMessage(String encryptedMessage) throws Exception {
+    public String unprotectMessage(String encryptedMessage) throws Exception {
         try{
             String[] parts = encryptedMessage.split("\\|");
 

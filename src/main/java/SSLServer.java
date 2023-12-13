@@ -87,10 +87,13 @@ class ServerThread extends Thread {
 
         // connect to database
         SocketFactory sf = SSLSocketFactory.getDefault();
+        ObjectOutputStream outDB = null;
+        ObjectInputStream inDB = null;
+
         try {
             dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
-            ObjectOutputStream out = new ObjectOutputStream(dataBaseSocket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(dataBaseSocket.getInputStream());
+            outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
+            inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
 
             //Send the Certificate (with HMAC) from Server to DB
             String serverRSAAlias = "serverrsa";
@@ -101,17 +104,17 @@ class ServerThread extends Thread {
             SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());
 
             //send the certificate and the associated HMAC
-            out.writeObject(serverCertificate);
-            out.writeObject(calculateHMac(secretKey, serverCertificate));
-            out.flush();
+            outDB.writeObject(serverCertificate);
+            outDB.writeObject(calculateHMac(secretKey, serverCertificate));
+            outDB.flush();
 
             //Read the result flag > 0-Error; 1-Correct
-            String resultFlag = in.readUTF();
+            String resultFlag = inDB.readUTF();
 
             if(resultFlag.equals("0")) {
                 System.out.println("Certificate validation error.");
-                in.close();
-                out.close();
+                inDB.close();
+                outDB.close();
                 socket.close();
                 System.exit(1);
             }
@@ -176,9 +179,60 @@ class ServerThread extends Thread {
 
             String clientAccount = in.readUTF();
 
+            SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa");
+            SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa");
+
             //actions
             while(true) {
-                //receber o input recebido no socket, decifrar e analisar o pedido
+                String encryptedMessage = in.readUTF();
+                String decryptedMessage = secureMessageLibClient.unprotectMessage(encryptedMessage);
+                String[] userInput = decryptedMessage.split(" ");
+
+                if (userInput.length != 0) {
+                    String encryptedAccount;
+                    switch (userInput[0]) {
+                        case "balance":
+                            encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
+                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") ) {
+                                outDB.writeUTF(encryptedAccount);
+                                byte [] account = inDB.readAllBytes();
+                            } else {
+                                System.out.println("Error in the db connection or encrypting");
+                            }
+
+                            //Tratar do pedido
+                            break;
+
+                        case "movements":
+                            encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
+                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") ) {
+                                outDB.writeUTF(encryptedAccount);
+                                byte [] account = inDB.readAllBytes();
+                            } else {
+                                System.out.println("Error in the db connection or encrypting");
+                            }
+
+                            //Tratar do pedido
+                            break;
+
+                        case "make_movement":
+                            encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
+                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") ) {
+                                outDB.writeUTF(encryptedAccount);
+                                byte [] account = inDB.readAllBytes();
+
+
+                                //Tratar do pedido
+                            } else {
+                                System.out.println("Error in the db connection or encrypting");
+                            }
+                            break;
+
+                        default:
+                            System.out.println("Error: Unrecognized command. Please check your input.");
+                            break;
+                    }
+                }
             }
 
         } catch (Exception e) {
