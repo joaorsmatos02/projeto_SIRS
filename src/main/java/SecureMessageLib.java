@@ -14,19 +14,19 @@ public class SecureMessageLib {
 
     private String trustStorePass;
     private String trustStorePath;
-    private String clientAlias;
+    private String clientAndDeviceAlias;
     private String pkAlias;
 
     private String certName;
 
 
 
-    public SecureMessageLib(String keyStorePass, String keyStorePath, String trustStorePass, String trustStorePath, String clientAlias, String pkAlias, String certName){
+    public SecureMessageLib(String keyStorePass, String keyStorePath, String trustStorePass, String trustStorePath, String clientAndDeviceAlias, String pkAlias, String certName){
         this.keyStorePass = keyStorePass;
         this.keyStorePath = keyStorePath;
         this.trustStorePass = trustStorePass;
         this.trustStorePath = trustStorePath;
-        this.clientAlias = clientAlias;
+        this.clientAndDeviceAlias = clientAndDeviceAlias;
         this.pkAlias = pkAlias;
         this.certName = certName;
     }
@@ -36,7 +36,7 @@ public class SecureMessageLib {
             KeyStore ks = KeyStore.getInstance("PKCS12");
             ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
-            SecretKey secretKeyWithReceiver = (SecretKey) ks.getKey(clientAlias + "_secret", keyStorePass.toCharArray());
+            SecretKey secretKeyWithReceiver = (SecretKey) ks.getKey(clientAndDeviceAlias + "_secret", keyStorePass.toCharArray());
 
             PrivateKey privateKey = (PrivateKey) ks.getKey(pkAlias, keyStorePass.toCharArray());
             byte [] encryptedBytes = encrypt(message.getBytes(), secretKeyWithReceiver);
@@ -59,7 +59,7 @@ public class SecureMessageLib {
             KeyStore ks = KeyStore.getInstance("PKCS12");
             ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
-            SecretKey secretKeyWithReceiver = (SecretKey) ks.getKey(clientAlias + "_secret", keyStorePass.toCharArray());
+            SecretKey secretKeyWithReceiver = (SecretKey) ks.getKey(clientAndDeviceAlias + "_secret", keyStorePass.toCharArray());
 
             byte[] encryptedDataWithIV = Base64.getDecoder().decode(parts[0]);
             byte[] signature = Base64.getDecoder().decode(parts[1]);
