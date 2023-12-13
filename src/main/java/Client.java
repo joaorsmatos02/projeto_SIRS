@@ -16,9 +16,9 @@ public class Client {
 
     public static void main(String[] args) {
 
-        if (args.length != 4) {
+        if (args.length != 5) {
             System.out.println("Wrong args. Use help command.");
-            //help command
+            System.exit(1);
         }
 
         System.out.println("Starting client...");

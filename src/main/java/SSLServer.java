@@ -94,7 +94,6 @@ class ServerThread extends Thread {
             dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
             outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
-
             //Send the Certificate (with HMAC) from Server to DB
             String serverRSAAlias = "serverrsa";
             KeyStore serverKS = KeyStore.getInstance("PKCS12");
@@ -102,7 +101,6 @@ class ServerThread extends Thread {
 
             Certificate serverCertificate = serverKS.getCertificate(serverRSAAlias);
             SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());
-
             //send the certificate and the associated HMAC
             outDB.writeObject(serverCertificate);
             outDB.writeObject(calculateHMac(secretKey, serverCertificate));
@@ -177,8 +175,8 @@ class ServerThread extends Thread {
                 }
             }
 
-            String clientAccount = in.readUTF();
 
+            String clientAccount = in.readUTF();
             SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa",userAndDevice + "_cert" );
             SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
 

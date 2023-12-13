@@ -148,13 +148,14 @@ class DataBaseThread extends Thread {
                 System.exit(1);
             }
 
-            //Send a confirmation flag > 0-Error; 1-Correct
-            //All correct flag
-            out.writeUTF("1");
-
             //Verifiy if first time (Empty DataBase)
             //if()
             initDataBase();
+
+            //Send a confirmation flag > 0-Error; 1-Correct
+            //All correct flag
+            out.writeUTF("1");
+            out.flush();
 
             SecureMessageLib secureMessageLibServer = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath,
                     "server_db", "databasersa", "serverrsa");
@@ -173,7 +174,6 @@ class DataBaseThread extends Thread {
 
                     if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
                             && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature") && userAccountCollection != null) {
-
                         String[] clientsFromAccount = decryptedAccount.split("_");
                         if(clientsFromAccount.length > 1) {
                             //buscar conta partilhada
