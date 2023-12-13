@@ -11,7 +11,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.nio.file.Paths;
+import com.mongodb.client.FindIterable;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
@@ -159,44 +159,68 @@ class DataBaseThread extends Thread {
             SecureMessageLib secureMessageLibServer = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath,
                     "server_db", "databasersa", "serverrsa");
 
-            //actions
-            while(true) {
-                String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(in.readUTF());
-                String decryptedAccount = secureMessageLibServer.unprotectMessage(in.readUTF());
 
-                if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
-                        && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature")) {
+            MongoCollection<Document> userAccountCollection = null;
+            try (MongoClient mongoClient = MongoClients.create(connectionString)) {
+                MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
 
-                    String[] clientsFromAccount = decryptedAccount.split("_");
-                    if(clientsFromAccount.length > 1) {
-                        //buscar conta partilhada
-                        // ir buscar conta que tem todos os clientsFromAccount associado
+                userAccountCollection = mongoDB.getCollection("userAccount");
 
-                        // fazer protect com flag a 0
+                //actions
+                while(true) {
+                    String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(in.readUTF());
+                    String decryptedAccount = secureMessageLibServer.unprotectMessage(in.readUTF());
 
-                        // pegar nos bytes do ficheiro
+                    if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
+                            && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature") && userAccountCollection != null) {
 
-                        //enviar bytes do ficheiro
+                        String[] clientsFromAccount = decryptedAccount.split("_");
+                        if(clientsFromAccount.length > 1) {
+                            //buscar conta partilhada
+                            // ir buscar conta que tem todos os clientsFromAccount associado
 
-                        //apagar
+                            // fazer protect com flag a 0
+
+                            // pegar nos bytes do ficheiro
+
+                            //enviar bytes do ficheiro
+
+                            //apagar
+                        } else {
+                            //buscar conta singular
+                            // Query to find documents where decryptedAccount is in the accountHolder array
+                            Document query = new Document("accountHolder", new Document("$in", decryptedAccount));
+                            // Execute the query
+                            FindIterable<Document> result = userAccountCollection.find(query);
+                            // Get the first matching document
+                            Document matchingDocument = result.first();
+
+                            if (matchingDocument != null) {
+                                System.out.println("Matching Document: " + matchingDocument.toJson());
+                                // Process the matching document as needed
+                            } else {
+                                System.out.println("No matching document found.");
+                            }
+
+
+                            // fazer protect com flag a 0
+                            //
+                            // pegar nos bytes do ficheiro
+                            //
+                            //enviar bytes do ficheiro
+                            //
+                            //apagar
+                        }
                     } else {
-                        //buscar conta partilhada
-                        // ir buscar conta que tem todos os clientsFromAccount associado
-                        //
-                        // fazer protect com flag a 0
-                        //
-                        // pegar nos bytes do ficheiro
-                        //
-                        //enviar bytes do ficheiro
-                        //
-                        //apagar
+                        String errorMessage = "An error in decryption ocurred";
+                        out.writeUTF(secureMessageLibServer.protectMessage(errorMessage));
                     }
-                } else {
-                    String errorMessage = "An error in decryption ocurred";
-                    out.writeUTF(secureMessageLibServer.protectMessage(errorMessage));
                 }
-
+            } catch (Exception e) {
+                System.err.println("MongoDB connection error: " + e.getMessage());
             }
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
