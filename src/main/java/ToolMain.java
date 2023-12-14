@@ -9,6 +9,8 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.util.Scanner;
 
+import static utils.utils.writeToFile;
+
 public class ToolMain {
 
     public static void main(String[] args) {
@@ -204,33 +206,6 @@ public class ToolMain {
                 System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)");
                 System.out.print("Insert command: ");
                 break;
-        }
-    }
-
-    private static void writeToFile(File file, Object... objects) {
-        for (Object o : objects) {
-            if (o instanceof JsonObject) {
-                writeObjectStr(file, o.toString());
-            } else {
-                writeObject(file, o);
-            }
-        }
-
-    }
-
-    private static void writeObjectStr(File file, String object) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(object);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static void writeObject(File file, Object object) {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
-            objectOutputStream.writeObject(object);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 

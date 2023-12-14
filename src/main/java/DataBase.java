@@ -1,3 +1,4 @@
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -5,6 +6,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import dto.SignedObjectDTO;
 import org.bson.Document;
+
 import java.nio.file.Files;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -13,14 +15,14 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import javax.json.*;
-import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.MessageDigest;
-import java.security.SignedObject;
 import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Objects;
+
+import static utils.utils.writeToFile;
 
 public class DataBase {
 
@@ -185,7 +187,7 @@ class DataBaseThread extends Thread {
                     if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
                             && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature") && userAccountCollection != null) {
                         String[] clientsFromAccount = decryptedAccount.split("_");
-                        if(clientsFromAccount.length > 1) {
+                        if(clientsFromAccount.length > 1) { // TODO
                             //buscar conta partilhada
                             // ir buscar conta que tem todos os clientsFromAccount associado
 
@@ -209,23 +211,23 @@ class DataBaseThread extends Thread {
                                 JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
                                 SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false);
                                 //PASSAR PARA BYTES > BASE64 > SECUREMESSAGELIB
-                                String result = Base64.getEncoder().encodeToString(protectedData);
 
+                                String result = null;
+                                try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                     ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                                    oos.writeObject(protectedData);
+                                    byte[] serializedObject = bos.toByteArray();
+                                    result = Base64.getEncoder().encodeToString(serializedObject);
+                                }
+
+                                out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in decryption ocurred")));
 
                             } else {
                                 System.out.println("No matching document found.");
                             }
-                            // fazer protect com flag a 0
-
-                            // pegar nos bytes do ficheiro
-                            //
-                            //enviar bytes do ficheiro
-                            //
-                            //apagar
                         }
                     } else {
-                        String errorMessage = "An error in decryption ocurred";
-                        out.writeUTF(secureMessageLibServer.protectMessage(errorMessage));
+                        out.writeUTF(secureMessageLibServer.protectMessage("An error in decryption ocurred"));
                     }
                 }
 
@@ -261,9 +263,18 @@ class DataBaseThread extends Thread {
         SecureDocumentLib secureDocumentLib = new SecureDocumentLib("serverKeyStore", "serverKeyStore", "Server/serverKeyStore/serverKeyStore");
 
         for (int i = 0; i < plainFilePaths.length; i++) {
+            Gson gson = new Gson();
+            try (FileReader plainFileReader = new FileReader(plainFilePaths[i]);
+                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(encFilePaths[i]))){
 
-            secureDocumentLib.protect(new File(plainFilePaths[i]), new File(encFilePaths[i]), accountAliasArray[i], true);
-            secureDocumentLib.unprotect(new File(encFilePaths[i]), new File(resultDecFilePaths[i]), accountAliasArray[i], false);
+                JsonObject plainFile = gson.fromJson(plainFileReader, JsonObject.class);
+                SignedObjectDTO encFile = (SignedObjectDTO) objectInputStream.readObject();
+
+                writeToFile(new File(encFilePaths[i]), secureDocumentLib.protect(plainFile, accountAliasArray[i], true));
+                writeToFile(new File(resultDecFilePaths[i]), secureDocumentLib.unprotect(encFile, accountAliasArray[i], false));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
 
@@ -304,15 +315,9 @@ class DataBaseThread extends Thread {
     }
 
     private JsonObject documentToJsonObject(Document matchingDocument) {
-        String jsonString = matchingDocument.toJson();
-
-        // Convert JSON string to JsonObject
-        JsonObject jsonObject;
-        try (JsonReader jsonReader = Json.createReader(new StringReader(jsonString))) {
-            jsonObject = jsonReader.readObject();
-            return jsonObject;
-        }
-        return null;
+            String jsonString = matchingDocument.toJson();
+            Gson gson = new Gson();
+            return gson.fromJson(jsonString, JsonObject.class);
     }
 }
 
