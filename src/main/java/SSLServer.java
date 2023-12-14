@@ -183,6 +183,7 @@ class ServerThread extends Thread {
             String clientAccount = in.readUTF();
             SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa",userAndDevice + "_cert" );
             SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
+            SecureDocumentLib secureDocumentLib = new SecureDocumentLib(keyStoreName, keyStorePass, keyStorePath);
 
             //actions
             while(true) {
@@ -196,28 +197,13 @@ class ServerThread extends Thread {
                     String encryptedAccount;
                     switch (userInput[0]) {
                         case "balance":
-                            updateDBFlag = secureMessageLibDB.protectMessage("0");
-                            encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
-                                outDB.writeUTF(updateDBFlag);
-                                outDB.writeUTF(encryptedAccount);
-                                outDB.flush();
-                                String account = inDB.readUTF();
-                                String result = secureMessageLibClient.unprotectMessage(account);
-                                byte[] messageDecoded = Base64.getDecoder().decode(result);
-
-
-
-                                /*secureMessageLibDB.unprotectMessage()*/
-                            } else {
-                                System.out.println("Error in the db connection or encrypting");
-                            }
-
-                            //Tratar do pedido
+                            String result = RequestsHandler.handleRequest(secureMessageLibDB, secureMessageLibClient, secureDocumentLib, outDB, inDB, clientAccount, userAndDevice);
+                            out.writeUTF(result);
+                            out.flush();
                             break;
 
                         case "movements":
-                            updateDBFlag = secureMessageLibDB.protectMessage("0");
+                            /*updateDBFlag = secureMessageLibDB.protectMessage("0");
                             encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
                             if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
                                 outDB.writeUTF(updateDBFlag);
@@ -227,13 +213,13 @@ class ServerThread extends Thread {
                                 // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
                                 System.out.println("Error in the db connection or encrypting");
-                            }
+                            }*/
 
                             //Tratar do pedido
                             break;
 
                         case "make_movement":
-                            updateDBFlag = secureMessageLibDB.protectMessage("0");
+/*                            updateDBFlag = secureMessageLibDB.protectMessage("0");
                             encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
                             if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
                                 outDB.writeUTF(updateDBFlag);
@@ -243,7 +229,7 @@ class ServerThread extends Thread {
                                 // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
                             } else {
                                 System.out.println("Error in the db connection or encrypting");
-                            }
+                            }*/
                             break;
 
                         default:
