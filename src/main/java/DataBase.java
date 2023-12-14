@@ -15,6 +15,7 @@ import com.mongodb.client.FindIterable;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
+import java.util.Arrays;
 
 public class DataBase {
 
@@ -188,12 +189,11 @@ class DataBaseThread extends Thread {
                             //apagar
                         } else {
                             //buscar conta singular
-                            // Query to find documents where decryptedAccount is in the accountHolder array
-                            Document query = new Document("accountHolder", new Document("$in", decryptedAccount));
-                            // Execute the query
-                            FindIterable<Document> result = userAccountCollection.find(query);
-                            // Get the first matching document
-                            Document matchingDocument = result.first();
+                            // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
+                            Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+
+                            // Execute the query and get the first matching document
+                            Document matchingDocument = userAccountCollection.find(query).first();
 
                             if (matchingDocument != null) {
                                 System.out.println("Matching Document: " + matchingDocument.toJson());

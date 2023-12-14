@@ -1,6 +1,6 @@
 {
   "account": {
-    "accountHolder": ["Mario"],
+    "accountHolder": ["mario"],
     "balance": 100.00,
     "currency": "EUR",
     "movements": [

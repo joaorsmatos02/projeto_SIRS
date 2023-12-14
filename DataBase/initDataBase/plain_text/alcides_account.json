@@ -1,6 +1,6 @@
 {
   "account": {
-    "accountHolder": ["Alcides"],
+    "accountHolder": ["alcides"],
     "balance": 1872.22,
     "currency": "EUR",
     "movements": [
