@@ -1,5 +1,5 @@
+import com.google.gson.JsonObject;
 import dto.SignedObjectDTO;
-import org.bson.json.JsonObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
