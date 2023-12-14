@@ -1,7 +1,9 @@
+import com.google.gson.JsonObject;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import dto.SignedObjectDTO;
 import org.bson.Document;
 import java.nio.file.Files;
 import javax.crypto.Mac;
@@ -11,10 +13,11 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-
+import javax.json.*;
 import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.MessageDigest;
+import java.security.SignedObject;
 import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Base64;
@@ -201,34 +204,17 @@ class DataBaseThread extends Thread {
                             // Execute the query and get the first matching document
                             Document matchingDocument = userAccountCollection.find(query).first();
 
-                            // Store the Document in a JSON file
                             if (matchingDocument != null) {
-                                String jsonString = matchingDocument.toJson();
+                                // Store the Document in a JSON file
+                                JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
+                                SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false);
+                                //PASSAR PARA BYTES > BASE64 > SECUREMESSAGELIB
+                                String result = Base64.getEncoder().encodeToString(protectedData);
 
-                                try (FileWriter firstLayerFile = new FileWriter("matchingDocument.json")) {
-
-                                    firstLayerFile.write(jsonString);
-                                    System.out.println("Matching document stored in matchingDocument.json");
-
-secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingDocumentProtected.bin"),"",false);
-
-
-                                    byte[] secondLayerBytes = Files.readAllBytes(Path.of("matchingDocumentProtected.bin"));
-                                    String result = Base64.getEncoder().encodeToString(secondLayerBytes);
-
-                                    String encryptedBytes = secureMessageLibServer.protectMessage(result);
-
-                                    out.writeUTF(encryptedBytes);
-                                    out.flush();
-
-                                } catch (IOException e) {
-                                    System.err.println("Error writing to file: " + e.getMessage());
-                                }
 
                             } else {
                                 System.out.println("No matching document found.");
                             }
-
                             // fazer protect com flag a 0
 
                             // pegar nos bytes do ficheiro
@@ -316,4 +302,17 @@ secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingD
         // Compare the calculated HMAC with the received HMAC
         return MessageDigest.isEqual(expectedHMac, receivedHMac);
     }
+
+    private JsonObject documentToJsonObject(Document matchingDocument) {
+        String jsonString = matchingDocument.toJson();
+
+        // Convert JSON string to JsonObject
+        JsonObject jsonObject;
+        try (JsonReader jsonReader = Json.createReader(new StringReader(jsonString))) {
+            jsonObject = jsonReader.readObject();
+            return jsonObject;
+        }
+        return null;
+    }
 }
+
