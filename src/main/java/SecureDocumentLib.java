@@ -32,30 +32,23 @@ public class SecureDocumentLib {
     }
 
     /**
-     *
-     *
-     * @param inputFile
-     * @param outputString
      * @param accountAlias
      * @param twoLayerEncryption - if this flag is set, the sensitive fields of the JSON document will be encrypted individually, before a full encryption of the document,
-     *                             this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values
+     *                           this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values
      */
-    public void protect(File inputFile, File outputString, String accountAlias, boolean twoLayerEncryption) {
-        try (FileReader fileReader = new FileReader(inputFile)) {
-
-            Gson gson = new Gson();
-            JsonObject rootJson = gson.fromJson(fileReader, JsonObject.class);
+    public SignedObjectDTO protect(JsonObject jsonObject, String accountAlias, boolean twoLayerEncryption) {
+        try {
 
             //Get SecretKey associated to current client
             KeyStore ks = KeyStore.getInstance("PKCS12");
             ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
-            if(twoLayerEncryption) {
+            if (twoLayerEncryption) {
                 SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
-                rootJson = encryptSensitiveData(rootJson, accountSecretKey);
+                jsonObject = encryptSensitiveData(jsonObject, accountSecretKey);
             }
             SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
-            byte[] encrypted = encrypt(rootJson.toString().getBytes(), secretKey);
+            byte[] encrypted = encrypt(jsonObject.toString().getBytes(), secretKey);
             String finalEncode = Base64.getEncoder().encodeToString(encrypted);
 
             long timestamp = System.currentTimeMillis();
@@ -65,11 +58,12 @@ public class SecureDocumentLib {
 
             Certificate certificate = ks.getCertificate("serverrsa");
 
-            writeToFile(outputString, new SignedObjectDTO(signed, certificate));
+            return new SignedObjectDTO(signed, certificate);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     private JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
@@ -146,12 +140,10 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public static boolean check(File file) {
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file))) {
-
+    public static boolean check(SignedObjectDTO signedObjectDTO) {
+        try {
             Signature signature = Signature.getInstance("SHA256withRSA");
 
-            SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
             SignedObject signedObject = signedObjectDTO.signedObject();
             Certificate certificate = signedObjectDTO.certificate();
 
@@ -173,10 +165,8 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public void unprotect(File inputFile, File outputFile, String accountAlias, boolean twoLayerEncryption) {
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile))) {
-
-            SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
+    public JsonObject unprotect(SignedObjectDTO  signedObjectDTO, String accountAlias, boolean twoLayerEncryption) {
+        try {
             SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
             Gson gson = new Gson();
 
@@ -201,12 +191,13 @@ public class SecureDocumentLib {
 
             // Check if the Secret Key corresponds to the right client
             if (decrypted != null) {
-                writeToFile(outputFile, decrypted);
-                RequestTable.addEntry(dto.document());
+               RequestTable.addEntry(dto.document());
+               return decrypted;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 
@@ -315,32 +306,5 @@ public class SecureDocumentLib {
             e.printStackTrace();
         }
         return null;
-    }
-
-    private void writeToFile(File file, Object... objects) {
-        for (Object o : objects) {
-            if (o instanceof JsonObject) {
-                writeObjectStr(file, o.toString());
-            } else {
-                writeObject(file, o);
-            }
-        }
-
-    }
-
-    private void writeObjectStr(File file, String object) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write(object);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void writeObject(File file, Object object) {
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
-            objectOutputStream.writeObject(object);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

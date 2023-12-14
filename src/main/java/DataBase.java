@@ -1,3 +1,4 @@
+/*
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -209,7 +210,9 @@ class DataBaseThread extends Thread {
                                     firstLayerFile.write(jsonString);
                                     System.out.println("Matching document stored in matchingDocument.json");
 
-                                    secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingDocumentProtected.bin"),"",false);
+                                    */
+/*secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingDocumentProtected.bin"),"",false);*//*
+
 
                                     byte[] secondLayerBytes = Files.readAllBytes(Path.of("matchingDocumentProtected.bin"));
                                     String result = Base64.getEncoder().encodeToString(secondLayerBytes);
@@ -316,4 +319,4 @@ class DataBaseThread extends Thread {
         // Compare the calculated HMAC with the received HMAC
         return MessageDigest.isEqual(expectedHMac, receivedHMac);
     }
-}
+}*/

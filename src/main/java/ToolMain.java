@@ -1,6 +1,9 @@
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import dto.SignedObjectDTO;
+
 import javax.crypto.SecretKey;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -111,6 +114,9 @@ public class ToolMain {
             System.out.println("Input file not found");
             return;
         }
+        Gson gson = new Gson();
+        FileReader fileReader = new FileReader(inputFile);
+        JsonObject rootJson = gson.fromJson(fileReader, JsonObject.class);
 
         File outputFile = new File(args[3]);
         if(outputFile.exists()) {
@@ -126,10 +132,10 @@ public class ToolMain {
         String keyStorePath = args[8];
 
         SecureDocumentLib secureDocLib = new SecureDocumentLib(KeyStoreName, keyStorePass, keyStorePath);
-        secureDocLib.protect(inputFile, outputFile, userAccount, flagTwoLayerEncryption);
+        writeToFile(outputFile, secureDocLib.protect(rootJson, userAccount, flagTwoLayerEncryption));
     }
 
-    private static boolean prepareCheck(String[] args) throws Exception{
+    private static boolean prepareCheck(String[] args) {
         if(args.length != 3) {
             throw new IllegalArgumentException();
         }
@@ -139,7 +145,14 @@ public class ToolMain {
             System.out.println("Input file not found");
         }
 
-        return SecureDocumentLib.check(inputFile);
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile));
+            SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
+            return SecureDocumentLib.check(signedObjectDTO);
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 
     private static void prepareUnprotect(String[] args) throws Exception{
@@ -152,6 +165,9 @@ public class ToolMain {
             System.out.println("Input file not found");
             return;
         }
+        ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(inputFile));
+        SignedObjectDTO signedObjectDTO = (SignedObjectDTO) objectInputStream.readObject();
+
 
         File outputFile = new File(args[3]);
         if(outputFile.exists()) {
@@ -167,8 +183,8 @@ public class ToolMain {
         String keyStorePath = args[8];
 
         SecureDocumentLib secureDocLib = new SecureDocumentLib(KeyStoreName, keyStorePass, keyStorePath);
+        writeToFile(outputFile, secureDocLib.unprotect(signedObjectDTO, userAccount, flagTwoLayerEncryption));
 
-        secureDocLib.unprotect(inputFile, outputFile, userAccount, flagTwoLayerEncryption);
     }
 
     private static void printInvalidArguments(String command) {
@@ -188,6 +204,33 @@ public class ToolMain {
                 System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)");
                 System.out.print("Insert command: ");
                 break;
+        }
+    }
+
+    private static void writeToFile(File file, Object... objects) {
+        for (Object o : objects) {
+            if (o instanceof JsonObject) {
+                writeObjectStr(file, o.toString());
+            } else {
+                writeObject(file, o);
+            }
+        }
+
+    }
+
+    private static void writeObjectStr(File file, String object) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(object);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void writeObject(File file, Object object) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file))) {
+            objectOutputStream.writeObject(object);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
