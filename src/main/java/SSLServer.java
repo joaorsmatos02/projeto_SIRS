@@ -41,13 +41,22 @@ public class SSLServer {
         System.setProperty("javax.net.ssl.trustStore", trustStorePath);
         System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
 
+        SocketFactory sf = SSLSocketFactory.getDefault();
+        SSLSocket dataBaseSocket = null;
+        try {
+            dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
         // create socket
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             while (true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                ServerThread st = new ServerThread(socket);
+                ServerThread st = new ServerThread(socket, dataBaseSocket);
                 st.start();
             }
         } catch (Exception e1) {
@@ -67,10 +76,20 @@ class ServerThread extends Thread {
     private static final String trustStorePath = "Server//serverKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
-    private SSLSocket dataBaseSocket;
+    private final SSLSocket dataBaseSocket;
+    private final ObjectOutputStream outDB;
+    private final ObjectInputStream inDB;
 
-    public ServerThread(SSLSocket inSoc) {
+    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket) {
         this.socket = inSoc;
+        this.dataBaseSocket = dataBaseSocket;
+        try {
+            this.outDB = new ObjectOutputStream(inSoc.getOutputStream());
+            this.inDB = new ObjectInputStream(inSoc.getInputStream());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -78,27 +97,11 @@ class ServerThread extends Thread {
 
         System.out.println("Client connected");
 
-        System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
-        System.setProperty("javax.net.ssl.keyStore", keyStorePath);
-        System.setProperty("javax.net.ssl.keyStorePassword", keyStorePass);
-
-        System.setProperty("javax.net.ssl.trustStoreType", "PKCS12");
-        System.setProperty("javax.net.ssl.trustStore", trustStorePath);
-        System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
-
-        // connect to database
-        SocketFactory sf = SSLSocketFactory.getDefault();
-        ObjectOutputStream outDB = null;
-        ObjectInputStream inDB = null;
-
         try {
-            dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
-            outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
-            inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
             //Send the Certificate (with HMAC) from Server to DB
             String serverRSAAlias = "serverrsa";
             KeyStore serverKS = KeyStore.getInstance("PKCS12");
-            serverKS.load(new FileInputStream(new File(keyStorePath)), keyStorePass.toCharArray());
+            serverKS.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
             Certificate serverCertificate = serverKS.getCertificate(serverRSAAlias);
             SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());

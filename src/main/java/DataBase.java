@@ -1,4 +1,3 @@
-/*
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -12,7 +11,6 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import com.mongodb.client.FindIterable;
 
 import java.nio.file.Path;
 import java.security.KeyStore;
@@ -35,6 +33,9 @@ public class DataBase {
     private static final String trustStorePass = "dataBaseTrustStore";
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
+    private static final String connectionString = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
+    private static final String databaseName = "BlingBank";
+
 
     public static void main(String[] args) {
         System.out.println("Starting database server...");
@@ -50,9 +51,11 @@ public class DataBase {
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
+            MongoClient mongoClient = MongoClients.create(connectionString);
+            MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
             while(true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                DataBaseThread dbt = new DataBaseThread(socket);
+                DataBaseThread dbt = new DataBaseThread(socket, mongoDB);
                 dbt.start();
             }
            } catch (Exception e1) {
@@ -72,11 +75,11 @@ class DataBaseThread extends Thread {
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
-    private static final String connectionString = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
-    private static final String databaseName = "BlingBank";
+    private final MongoDatabase mongoDB;
 
-    public DataBaseThread(SSLSocket inSoc) {
+    public DataBaseThread(SSLSocket inSoc, MongoDatabase mongoDB) {
         this.socket = inSoc;
+        this.mongoDB = mongoDB;
     }
 
     @Override
@@ -155,7 +158,7 @@ class DataBaseThread extends Thread {
 
             //Verifiy if first time (Empty DataBase)
             //if()
-            initDataBase();
+            initDataBase(mongoDB);
 
             //Send a confirmation flag > 0-Error; 1-Correct
             //All correct flag
@@ -169,12 +172,9 @@ class DataBaseThread extends Thread {
 
 
             MongoCollection<Document> userAccountCollection = null;
-            try (MongoClient mongoClient = MongoClients.create(connectionString)) {
-                MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
+            userAccountCollection = mongoDB.getCollection("userAccount");
 
-                userAccountCollection = mongoDB.getCollection("userAccount");
-
-                //actions
+            //actions
                 while(true) {
                     String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(in.readUTF());
                     String decryptedAccount = secureMessageLibServer.unprotectMessage(in.readUTF());
@@ -210,8 +210,7 @@ class DataBaseThread extends Thread {
                                     firstLayerFile.write(jsonString);
                                     System.out.println("Matching document stored in matchingDocument.json");
 
-                                    */
-/*secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingDocumentProtected.bin"),"",false);*//*
+secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingDocumentProtected.bin"),"",false);
 
 
                                     byte[] secondLayerBytes = Files.readAllBytes(Path.of("matchingDocumentProtected.bin"));
@@ -243,9 +242,7 @@ class DataBaseThread extends Thread {
                         out.writeUTF(secureMessageLibServer.protectMessage(errorMessage));
                     }
                 }
-            } catch (Exception e) {
-                System.err.println("MongoDB connection error: " + e.getMessage());
-            }
+
 
 
         } catch (Exception e) {
@@ -255,7 +252,7 @@ class DataBaseThread extends Thread {
 
 
     //We are using the PrivateKey of the Server just to INIT the DB. Not supposed to be like this.
-    private void initDataBase() {
+    private void initDataBase(MongoDatabase mongoDB) {
 
         String[] plainFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account.json",
                 "DataBase/initDataBase/plain_text/bob_account.json",
@@ -283,9 +280,6 @@ class DataBaseThread extends Thread {
             secureDocumentLib.unprotect(new File(encFilePaths[i]), new File(resultDecFilePaths[i]), accountAliasArray[i], false);
         }
 
-        //Connection to Mongo
-        try (MongoClient mongoClient = MongoClients.create(connectionString)) {
-            MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
 
             MongoCollection<Document> userAccountCollection = mongoDB.getCollection("userAccount");
             userAccountCollection.drop();
@@ -294,7 +288,12 @@ class DataBaseThread extends Thread {
                 File currentDecryptedFile = new File(resultDecFilePaths[i]);
 
                 // Read the content of the JSON file
-                String jsonContent = new String(Files.readAllBytes(currentDecryptedFile.toPath()));
+                String jsonContent = null;
+                try {
+                    jsonContent = new String(Files.readAllBytes(currentDecryptedFile.toPath()));
+                } catch (IOException e) {
+                    System.err.println("Error while getting file");
+                }
 
                 // Parse the JSON content to a MongoDB Document
                 Document document = Document.parse(jsonContent);
@@ -305,9 +304,7 @@ class DataBaseThread extends Thread {
                 System.out.println("Document inserted successfully!");
             }
 
-        } catch (IOException e) {
-            System.err.println("MongoDB connection error: " + e.getMessage());
-        }
+
     }
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
@@ -319,4 +316,4 @@ class DataBaseThread extends Thread {
         // Compare the calculated HMAC with the received HMAC
         return MessageDigest.isEqual(expectedHMac, receivedHMac);
     }
-}*/
+}
