@@ -9,6 +9,7 @@ import java.security.cert.Certificate;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 
 public class SSLServer {
 
@@ -199,7 +200,12 @@ class ServerThread extends Thread {
                                 outDB.writeUTF(encryptedAccount);
                                 outDB.flush();
                                 String account = inDB.readUTF();
-                                // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
+                                String result = secureMessageLibClient.unprotectMessage(account);
+                                byte[] messageDecoded = Base64.getDecoder().decode(result);
+
+
+
+                                /*secureMessageLibDB.unprotectMessage()*/
                             } else {
                                 System.out.println("Error in the db connection or encrypting");
                             }

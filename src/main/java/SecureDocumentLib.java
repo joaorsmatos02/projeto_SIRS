@@ -35,12 +35,12 @@ public class SecureDocumentLib {
      *
      *
      * @param inputFile
-     * @param outputFile
+     * @param outputString
      * @param accountAlias
      * @param twoLayerEncryption - if this flag is set, the sensitive fields of the JSON document will be encrypted individually, before a full encryption of the document,
      *                             this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values
      */
-    public void protect(File inputFile, File outputFile, String accountAlias, boolean twoLayerEncryption) {
+    public void protect(File inputFile, File outputString, String accountAlias, boolean twoLayerEncryption) {
         try (FileReader fileReader = new FileReader(inputFile)) {
 
             Gson gson = new Gson();
@@ -65,7 +65,7 @@ public class SecureDocumentLib {
 
             Certificate certificate = ks.getCertificate("serverrsa");
 
-            writeToFile(outputFile, new SignedObjectDTO(signed, certificate));
+            writeToFile(outputString, new SignedObjectDTO(signed, certificate));
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -12,10 +12,13 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 import com.mongodb.client.FindIterable;
+
+import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
 import java.util.Arrays;
+import java.util.Base64;
 
 public class DataBase {
 
@@ -161,6 +164,8 @@ class DataBaseThread extends Thread {
             SecureMessageLib secureMessageLibServer = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath,
                     "server_db", "databasersa", "serverrsa");
 
+            SecureDocumentLib secureDocumentLib = new SecureDocumentLib(keyStoreName, keyStorePass, keyStorePath);
+
 
             MongoCollection<Document> userAccountCollection = null;
             try (MongoClient mongoClient = MongoClients.create(connectionString)) {
@@ -195,16 +200,35 @@ class DataBaseThread extends Thread {
                             // Execute the query and get the first matching document
                             Document matchingDocument = userAccountCollection.find(query).first();
 
+                            // Store the Document in a JSON file
                             if (matchingDocument != null) {
-                                System.out.println("Matching Document: " + matchingDocument.toJson());
-                                // Process the matching document as needed
+                                String jsonString = matchingDocument.toJson();
+
+                                try (FileWriter firstLayerFile = new FileWriter("matchingDocument.json")) {
+
+                                    firstLayerFile.write(jsonString);
+                                    System.out.println("Matching document stored in matchingDocument.json");
+
+                                    secureDocumentLib.protect(new File("matchingDocument.json"), new File("matchingDocumentProtected.bin"),"",false);
+
+                                    byte[] secondLayerBytes = Files.readAllBytes(Path.of("matchingDocumentProtected.bin"));
+                                    String result = Base64.getEncoder().encodeToString(secondLayerBytes);
+
+                                    String encryptedBytes = secureMessageLibServer.protectMessage(result);
+
+                                    out.writeUTF(encryptedBytes);
+                                    out.flush();
+
+                                } catch (IOException e) {
+                                    System.err.println("Error writing to file: " + e.getMessage());
+                                }
+
                             } else {
                                 System.out.println("No matching document found.");
                             }
 
-
                             // fazer protect com flag a 0
-                            //
+
                             // pegar nos bytes do ficheiro
                             //
                             //enviar bytes do ficheiro

@@ -78,8 +78,7 @@ public class SecureMessageLib {
                 Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
                 cipher.init(Cipher.DECRYPT_MODE, secretKeyWithReceiver, new IvParameterSpec(iv));
                 byte[] decryptedData = cipher.doFinal(encryptedData);
-                String result = new String(decryptedData);
-                return result;
+                return new String(decryptedData);
             } else {
                 return "Error verifying signature";
             }
