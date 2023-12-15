@@ -39,6 +39,7 @@ public class DataBase {
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
     private static final String connectionString = "mongodb+srv://grupo09SIRS:FWcnIQ39qyytoBWH@blingbank.a3q9851.mongodb.net/?retryWrites=true&w=majority";
+
     private static final String databaseName = "BlingBank";
 
 
@@ -163,12 +164,14 @@ class DataBaseThread extends Thread {
 
             //Verifiy if first time (Empty DataBase)
             //if()
-            initDataBase(mongoDB);
+
 
             //Send a confirmation flag > 0-Error; 1-Correct
             //All correct flag
             out.writeUTF("1");
             out.flush();
+
+            initDataBase(mongoDB);
 
             SecureMessageLib secureMessageLibServer = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath,
                     "server_db", "databasersa", "serverrsa");
