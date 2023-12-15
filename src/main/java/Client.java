@@ -203,6 +203,8 @@ public class Client {
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
                                     out.flush();
+                                    String answer = secureMessageLib.unprotectMessage(in.readUTF());
+                                    System.out.println(answer);
                                 } else {
                                     System.out.println("Encryption Failed");
                                     printMenu(userAlias);
@@ -214,10 +216,13 @@ public class Client {
                             break;
 
                         case "make_movement":
-                            if(input.length == 3 && (userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
+                            if(input.length >= 3 && (userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
                                 String encryptedPayload = secureMessageLib.protectMessage(userInput);
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
+                                    out.flush();
+                                    String answer = secureMessageLib.unprotectMessage(in.readUTF());
+                                    System.out.println(answer);
                                 } else {
                                     System.out.println("Encryption Failed");
                                     printMenu(userAlias);
