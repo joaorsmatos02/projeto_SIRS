@@ -312,4 +312,73 @@ public class SecureDocumentLib {
         }
         return null;
     }
+
+    public String encryptMovement(JsonObject movement, String accountAlias, byte[] iv){
+        try {
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            // Encrypt balance, currency, and movements
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, accountSecretKey, new IvParameterSpec(iv));
+
+            // Encrypt movement value
+            double value = movement.getAsJsonPrimitive("value").getAsDouble();
+            byte[] encryptedValue = cipher.doFinal(Double.toString(value).getBytes());
+            movement.add("encryptedValue", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedValue)));
+            movement.remove("value");
+
+            // Encrypt movement date
+            // Adapt "date" to Date type
+            String dateString = movement.getAsJsonPrimitive("date").getAsString();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = dateFormat.parse(dateString);
+            byte[] encryptedDate = cipher.doFinal(date.toString().getBytes());
+            movement.add("encryptedDate", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDate)));
+            movement.remove("date");
+
+            // Encrypt movement description
+            String description = movement.getAsJsonPrimitive("description").getAsString();
+            byte[] encryptedDescription = cipher.doFinal(description.getBytes());
+            movement.add("encryptedDescription", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDescription)));
+            movement.remove("description");
+
+
+
+            byte [] movement2Layer = encrypt(movement.toString().getBytes(), secretKey);
+
+            return Base64.getEncoder().encodeToString(movement2Layer);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public JsonObject decryptMovement(String encryptedMovement) {
+        try {
+            Gson gson = new Gson();
+
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            byte[] encryptedMove = Base64.getDecoder().decode(encryptedMovement);
+
+            byte[] iv = Arrays.copyOfRange(encryptedMove, 0, 16);
+            byte[] encryptedMovementBytes = Arrays.copyOfRange(encryptedMove, iv.length, encryptedMove.length);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            String decryptedString = new String(cipher.doFinal(encryptedMovementBytes));
+            return gson.fromJson(decryptedString, JsonObject.class);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
