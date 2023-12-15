@@ -180,7 +180,6 @@ class ServerThread extends Thread {
 
 
             String clientAccount = in.readUTF();
-            System.out.println("\n\n\n\n" + clientAccount);
             SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa",userAndDevice + "_cert" );
             SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
             SecureDocumentLib secureDocumentLib = new SecureDocumentLib(keyStoreName, keyStorePass, keyStorePath);

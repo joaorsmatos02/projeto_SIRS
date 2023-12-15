@@ -17,17 +17,15 @@ public class RequestsHandler {
                 outDB.writeUTF(updateDBFlag);
                 outDB.writeUTF(encryptedAccount);
                 outDB.flush();
-
                 String account = inDB.readUTF();
-
-                String result = secureMessageLibClient.unprotectMessage(account);
+                String result = secureMessageLibDB.unprotectMessage(account);
 
                 byte[] messageDecoded = Base64.getDecoder().decode(result);
 
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
                 SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
 
-                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, accountAlias, true);
+                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true);
 
                 // ir buscar o balance e tratar da resposta
 

@@ -213,7 +213,6 @@ class DataBaseThread extends Thread {
                                 // Store the Document in a JSON file
                                 JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
                                 SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false);
-                                //PASSAR PARA BYTES > BASE64 > SECUREMESSAGELIB
 
                                 String result = null;
                                 try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -222,9 +221,8 @@ class DataBaseThread extends Thread {
                                     byte[] serializedObject = bos.toByteArray();
                                     result = Base64.getEncoder().encodeToString(serializedObject);
                                 }
-
-                                out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in decryption ocurred")));
-
+                                out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in encryption ocurred")));
+                                out.flush();
                             } else {
                                 System.out.println("No matching document found.");
                             }

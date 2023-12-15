@@ -53,7 +53,12 @@ public class SecureDocumentLib {
 
             long timestamp = System.currentTimeMillis();
 
-            PrivateKey serverPrivateKey = (PrivateKey) ks.getKey("serverrsa", keyStorePass.toCharArray());
+            PrivateKey serverPrivateKey = null;
+            if (keyStoreName.equals("serverKeyStore")) {
+                serverPrivateKey = (PrivateKey) ks.getKey("serverrsa", keyStorePass.toCharArray());
+            } else {
+                serverPrivateKey = (PrivateKey) ks.getKey("databasersa", keyStorePass.toCharArray());
+            }
             SignedObject signed = signJSONTimestamp(new SecureDocumentDTO(finalEncode, timestamp), serverPrivateKey);
 
             Certificate certificate = ks.getCertificate("serverrsa");
