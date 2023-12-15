@@ -123,7 +123,7 @@ public class RequestsHandler {
                 JsonObject movement = new JsonObject();
 
                 movement.addProperty("date", date);
-                movement.addProperty("value", value);
+                movement.addProperty("value", "-"+value);
                 movement.addProperty("description", description);
 
                 outDB.writeUTF(updateDBFlag);

@@ -6,7 +6,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import dto.SignedObjectDTO;
 import org.bson.Document;
-
+import com.mongodb.client.result.UpdateResult;
 import java.nio.file.Files;
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -220,19 +220,22 @@ class DataBaseThread extends Thread {
                                         JsonObject encryptedValuesMovement = secureDocumentLib.decryptMovement(secureMessageLibServer.unprotectMessage(in.readUTF()));
 
                                         // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
-                                        Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
-
-                                        // Execute the query and get the first matching document
-                                        Document matchingDocument = userAccountCollection.find(query).first();
+                                        Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
                                         Document novoMovimentoDocument = Document.parse(encryptedValuesMovement.toString());
 
-                                        Document update = new Document("$push", Collections.singletonMap("account.movements", novoMovimentoDocument));
+                                        // Create an update to push the new values to the "movements" array
+                                        Document update = new Document("$push", new Document("movements", novoMovimentoDocument));
 
-                                        // Executar a atualização
-                                        userAccountCollection.updateOne(query, update);
+                                        // Perform the update
+                                        UpdateResult updateResult = userAccountCollection.updateOne(filterToAccount, update);
 
-                                        out.writeUTF(secureMessageLibServer.protectMessage("Movement done!"));
+                                        if (updateResult.getModifiedCount() > 0) {
+                                            out.writeUTF(secureMessageLibServer.protectMessage("Movement done!"));
+                                            out.flush();
+                                        } else {
+                                            System.out.println("Error while performing movement.");
+                                        }
                                     }
                                     //update db adicionando o novo movement enviar resposta se correu bem ou nao encriptada com secureMessageLib
                                     break;
@@ -242,6 +245,7 @@ class DataBaseThread extends Thread {
                         }
                     } else {
                         out.writeUTF(secureMessageLibServer.protectMessage("An error in decryption ocurred"));
+                        out.flush();
                     }
                 }
 
