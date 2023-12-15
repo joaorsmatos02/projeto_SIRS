@@ -112,7 +112,6 @@ class ServerThread extends Thread {
 
             //Read the result flag > 0-Error; 1-Correct
             String resultFlag = inDB.readUTF();
-            System.out.println("\n\n\n\n\n\n" + resultFlag); //////////////////////////
             if(resultFlag.equals("0")) {
                 System.out.println("Certificate validation error.");
                 inDB.close();
@@ -141,7 +140,6 @@ class ServerThread extends Thread {
 
             //2args == newDevice flag
             if(clientIdentifierSplitted.length == 2){
-                System.out.println("\n\n\n\n\n\n" + clientIdentifier); //////////////////////////
                 Certificate clientCertificate = (Certificate) in.readObject();
                 byte[] clientCertificateHMAC = (byte[]) in.readObject();
 

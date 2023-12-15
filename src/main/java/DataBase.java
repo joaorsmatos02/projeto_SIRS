@@ -267,13 +267,12 @@ class DataBaseThread extends Thread {
 
         for (int i = 0; i < plainFilePaths.length; i++) {
             Gson gson = new Gson();
-            try (FileReader plainFileReader = new FileReader(plainFilePaths[i]);
-                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(encFilePaths[i]))){
-
+            try (FileReader plainFileReader = new FileReader(plainFilePaths[i])){
                 JsonObject plainFile = gson.fromJson(plainFileReader, JsonObject.class);
-                SignedObjectDTO encFile = (SignedObjectDTO) objectInputStream.readObject();
-
                 writeToFile(new File(encFilePaths[i]), secureDocumentLib.protect(plainFile, accountAliasArray[i], true));
+
+                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(encFilePaths[i]));
+                SignedObjectDTO encFile = (SignedObjectDTO) objectInputStream.readObject();
                 writeToFile(new File(resultDecFilePaths[i]), secureDocumentLib.unprotect(encFile, accountAliasArray[i], false));
             } catch (Exception e) {
                 e.printStackTrace();
