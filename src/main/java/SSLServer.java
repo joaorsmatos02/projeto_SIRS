@@ -183,6 +183,7 @@ class ServerThread extends Thread {
             SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa",userAndDevice + "_cert" );
             SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
             SecureDocumentLib secureDocumentLib = new SecureDocumentLib(keyStoreName, keyStorePass, keyStorePath);
+            RequestsHandler requestsHandler = new RequestsHandler(secureMessageLibDB, secureMessageLibClient, secureDocumentLib, this.outDB, this.inDB);
 
             //actions
             while(true) {
@@ -196,39 +197,25 @@ class ServerThread extends Thread {
                     String encryptedAccount;
                     switch (userInput[0]) {
                         case "balance":
-                            String result = RequestsHandler.handleRequest(secureMessageLibDB, secureMessageLibClient, secureDocumentLib, outDB, inDB, clientAccount, userAndDevice);
-                            out.writeUTF(result);
+                            String resultBalance = requestsHandler.handleRequestBalance(clientAccount);
+                            out.writeUTF(resultBalance);
                             out.flush();
                             break;
 
                         case "movements":
-                            /*updateDBFlag = secureMessageLibDB.protectMessage("0");
-                            encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
-                                outDB.writeUTF(updateDBFlag);
-                                outDB.writeUTF(encryptedAccount);
-                                outDB.flush();
-                                String account = inDB.readUTF();
-                                // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
-                            } else {
-                                System.out.println("Error in the db connection or encrypting");
-                            }*/
-
-                            //Tratar do pedido
+                            String resultMovements = requestsHandler.handleRequestMovements(clientAccount);
+                            out.writeUTF(resultMovements);
+                            out.flush();
                             break;
 
                         case "make_movement":
-/*                            updateDBFlag = secureMessageLibDB.protectMessage("0");
-                            encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
-                                outDB.writeUTF(updateDBFlag);
-                                outDB.writeUTF(encryptedAccount);
-                                outDB.flush();
-                                String account = inDB.readUTF();
-                                // unprotec com secureMessageLib , da string fazer decode de B64 para obter os bytes
-                            } else {
-                                System.out.println("Error in the db connection or encrypting");
-                            }*/
+                            String description = "";
+                            for (int i = 2; i < userInput.length; i++) {
+                                description = description + userInput[i] + " ";
+                            }
+                            String resultMakeMovement = requestsHandler.handleRequestMakeMovement(clientAccount,userInput[1], description);
+                            out.writeUTF(resultMakeMovement);
+                            out.flush();
                             break;
 
                         default:
