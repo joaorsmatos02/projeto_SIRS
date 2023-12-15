@@ -20,6 +20,7 @@ import java.security.MessageDigest;
 import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Objects;
 
 import static utils.utils.writeToFile;
@@ -190,41 +191,53 @@ class DataBaseThread extends Thread {
                     if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
                             && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature") && userAccountCollection != null) {
                         String[] clientsFromAccount = decryptedAccount.split("_");
-                        if(clientsFromAccount.length > 1) { // TODO
-                            //buscar conta partilhada
-                            // ir buscar conta que tem todos os clientsFromAccount associado
+                        if(decryptedUpdateFlag.equals("0")) {
+                            if(clientsFromAccount.length > 1) { // TODO
+                                //buscar conta partilhada
+                                // ir buscar conta que tem todos os clientsFromAccount associado
 
-                            // fazer protect com flag a 0
+                                // fazer protect com flag a 0
 
-                            // pegar nos bytes do ficheiro
+                                // pegar nos bytes do ficheiro
 
-                            //enviar bytes do ficheiro
+                                //enviar bytes do ficheiro
 
-                            //apagar
-                        } else {
-                            //buscar conta singular
-                            // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
-                            Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+                                //apagar
 
-                            // Execute the query and get the first matching document
-                            Document matchingDocument = userAccountCollection.find(query).first();
-
-                            if (matchingDocument != null) {
-                                // Store the Document in a JSON file
-                                JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
-                                SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false);
-
-                                String result = null;
-                                try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                     ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-                                    oos.writeObject(protectedData);
-                                    byte[] serializedObject = bos.toByteArray();
-                                    result = Base64.getEncoder().encodeToString(serializedObject);
-                                }
-                                out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in encryption ocurred")));
-                                out.flush();
                             } else {
-                                System.out.println("No matching document found.");
+                                getAccount(userAccountCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
+                            }
+                            // Update db
+                        } else {
+                            String request = secureMessageLibServer.unprotectMessage(in.readUTF());
+                            //tratar dos pedidos de update
+                            String [] requestSplit = request.split(" ");
+                            getAccount(userAccountCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
+
+                            switch (requestSplit[0]) {
+                                case "movement":
+                                    if(secureMessageLibServer.unprotectMessage(in.readUTF()).equals("ok")){
+                                        JsonObject encryptedValuesMovement = secureDocumentLib.decryptMovement(secureMessageLibServer.unprotectMessage(in.readUTF()));
+
+                                        // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
+                                        Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+
+                                        // Execute the query and get the first matching document
+                                        Document matchingDocument = userAccountCollection.find(query).first();
+
+                                        Document novoMovimentoDocument = Document.parse(encryptedValuesMovement.toString());
+
+                                        Document update = new Document("$push", Collections.singletonMap("account.movements", novoMovimentoDocument));
+
+                                        // Executar a atualização
+                                        userAccountCollection.updateOne(query, update);
+
+                                        out.writeUTF(secureMessageLibServer.protectMessage("Movement done!"));
+                                    }
+                                    //update db adicionando o novo movement enviar resposta se correu bem ou nao encriptada com secureMessageLib
+                                    break;
+
+
                             }
                         }
                     } else {
@@ -232,10 +245,38 @@ class DataBaseThread extends Thread {
                     }
                 }
 
-
-
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void getAccount(MongoCollection<Document> userAccountCollection, SecureDocumentLib secureDocumentLib, SecureMessageLib secureMessageLibServer, ObjectOutputStream out, String[] clientsFromAccount) {
+        //buscar conta singular
+        // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
+        Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+
+        // Execute the query and get the first matching document
+        Document matchingDocument = userAccountCollection.find(query).first();
+
+        if (matchingDocument != null) {
+            // Store the Document in a JSON file
+
+            JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
+            SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false);
+
+            String result = null;
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                 ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(protectedData);
+                byte[] serializedObject = bos.toByteArray();
+                result = Base64.getEncoder().encodeToString(serializedObject);
+                out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in decryption ocurred")));
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No matching document found.");
         }
     }
 
