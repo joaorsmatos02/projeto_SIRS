@@ -189,8 +189,8 @@ public class Client {
             //Print Menu of commands
             printMenu(userAlias);
 
-            SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath, trustStorePath,
-                    passwordStores, userAlias + "_" + deviceName, userAlias + "rsa", "serverrsa");
+            SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath,
+                    passwordStores, trustStorePath, userAlias + "_" + deviceName, userAlias + "rsa", "serverrsa");
             //Actions
             while(true) {
                 String userInput = scanner.nextLine();
@@ -216,7 +216,7 @@ public class Client {
                             break;
 
                         case "make_movement":
-                            if(input.length >= 3 && (userInput.matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(userInput) > 0)) {
+                            if(input.length >= 3 && (input[1].matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(input[1]) > 0)) {
                                 String encryptedPayload = secureMessageLib.protectMessage(userInput);
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
