@@ -5,6 +5,7 @@ import utils.RequestTable;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import java.io.*;
@@ -36,7 +37,7 @@ public class SecureDocumentLib {
      * @param twoLayerEncryption - if this flag is set, the sensitive fields of the JSON document will be encrypted individually, before a full encryption of the document,
      *                           this is used when sending files from the server to the database, so the latter can verify the identity of the server but not access the values
      */
-    public SignedObjectDTO protect(JsonObject jsonObject, String accountAlias, boolean twoLayerEncryption) {
+    public SignedObjectDTO protect(JsonObject jsonObject, String accountAlias, boolean twoLayerEncryption, String docType) {
         try {
 
             //Get SecretKey associated to current client
@@ -44,8 +45,14 @@ public class SecureDocumentLib {
             ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
             if (twoLayerEncryption) {
-                SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
-                jsonObject = encryptSensitiveData(jsonObject, accountSecretKey);
+                if (docType.equals("account")) {
+                    SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+                    jsonObject = encryptSensitiveData(jsonObject, accountSecretKey);
+                } else {
+                    SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+                    jsonObject = encryptSensitiveDataPayment(jsonObject, accountSecretKey);
+                }
+
             }
             SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
             byte[] encrypted = encrypt(jsonObject.toString().getBytes(), secretKey);
@@ -69,6 +76,77 @@ public class SecureDocumentLib {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private JsonObject encryptSensitiveDataPayment(JsonObject rootJson, SecretKey accountSecretKey) throws Exception {
+        JsonObject encryptedJson = rootJson.getAsJsonObject("account");
+        JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
+
+        encryptedJson.add("accountHolder", accountHolderArray);
+
+        SecureRandom random = new SecureRandom();
+        byte[] iv = new byte[16];
+        random.nextBytes(iv);
+        String paymentsNumber = encryptedJson.getAsJsonPrimitive("payments_number").getAsString();
+        encryptedJson.remove("payments_number");
+
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, accountSecretKey, new IvParameterSpec(iv));
+
+        byte[] encryptedPaymentNumbers = cipher.doFinal(paymentsNumber.getBytes());
+        // Concatenate IV and encryptedBalance
+        byte[] ivAndEncryptedPaymentNumbers = new byte[iv.length + encryptedPaymentNumbers.length];
+        System.arraycopy(iv, 0, ivAndEncryptedPaymentNumbers, 0, iv.length);
+        System.arraycopy(encryptedPaymentNumbers, 0, ivAndEncryptedPaymentNumbers, iv.length, encryptedPaymentNumbers.length);
+        encryptedJson.add("encryptedPaymentNumbers", new JsonPrimitive(Base64.getEncoder().encodeToString(ivAndEncryptedPaymentNumbers)));
+
+        JsonArray paymentsArray = encryptedJson.getAsJsonArray("payments");
+        for (JsonElement j : paymentsArray) {
+            JsonObject payment = j.getAsJsonObject();
+
+            // Encrypt movement value
+            double value = payment.getAsJsonPrimitive("value").getAsDouble();
+            byte[] encryptedValue = cipher.doFinal(Double.toString(value).getBytes());
+            payment.add("encryptedValue", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedValue)));
+            payment.remove("value");
+
+            // Encrypt movement date
+            // Adapt "date" to Date type
+            String dateString = payment.getAsJsonPrimitive("date").getAsString();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = dateFormat.parse(dateString);
+            byte[] encryptedDate = cipher.doFinal(date.toString().getBytes());
+            payment.add("encryptedDate", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDate)));
+            payment.remove("date");
+
+            // Encrypt movement description
+            String description = payment.getAsJsonPrimitive("description").getAsString();
+            byte[] encryptedDescription = cipher.doFinal(description.getBytes());
+            payment.add("encryptedDescription", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDescription)));
+            payment.remove("description");
+
+
+            JsonArray destinyAccountArray = payment.getAsJsonArray("destinyAccount");
+            String [] encryptedUsers = new String[destinyAccountArray.size()];
+
+            for (int i = 0; i < destinyAccountArray.size(); i++) {
+                byte [] userEncrypted = cipher.doFinal(destinyAccountArray.get(i).getAsString().getBytes());
+                encryptedUsers[i] = Base64.getEncoder().encodeToString(userEncrypted);
+            }
+            int counter = destinyAccountArray.size();
+            for (int i = 0; i < counter; i++) {
+                destinyAccountArray.remove(0);
+            }
+            for (int i = 0; i < encryptedUsers.length; i++) {
+                destinyAccountArray.add(encryptedUsers[i]);
+            }
+            payment.add("encryptedDestinyAccount", destinyAccountArray);
+            payment.remove("destinyAccount");
+
+        }
+
+        return encryptedJson;
     }
 
     private JsonObject encryptSensitiveData(JsonObject rootJson, SecretKey secretKey) throws Exception {
@@ -170,7 +248,7 @@ public class SecureDocumentLib {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public JsonObject unprotect(SignedObjectDTO  signedObjectDTO, String accountAlias, boolean twoLayerEncryption) {
+    public JsonObject unprotect(SignedObjectDTO  signedObjectDTO, String accountAlias, boolean twoLayerEncryption, String docType) {
         try {
             SecureDocumentDTO dto = (SecureDocumentDTO) signedObjectDTO.signedObject().getObject();
             Gson gson = new Gson();
@@ -190,8 +268,14 @@ public class SecureDocumentLib {
             JsonObject decrypted = gson.fromJson(decryptedString, JsonObject.class);
 
             if (twoLayerEncryption) {
-                SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
-                decrypted = decryptSensitiveData(decrypted, accountSecretKey);
+                if(docType.equals("account")){
+                    SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+                    decrypted = decryptSensitiveData(decrypted, accountSecretKey);
+                } else {
+                    SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+                    decrypted = decryptSensitiveDataPayment(decrypted, accountSecretKey);
+                }
+
             }
 
             // Check if the Secret Key corresponds to the right client
@@ -203,6 +287,98 @@ public class SecureDocumentLib {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private JsonObject decryptSensitiveDataPayment(JsonObject encryptedJson, SecretKey accountSecretKey) throws Exception{
+        JsonObject decryptedJson = new JsonObject();
+        JsonArray accountHolderArray = encryptedJson.getAsJsonArray("accountHolder");
+        String ivAndEncryptedPaymentNumberStr = encryptedJson.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
+        byte[] ivAndEncryptedPaymentNumber = Base64.getDecoder().decode(ivAndEncryptedPaymentNumberStr);
+
+        // Separate IV and encryptedBalance
+        byte[] iv = Arrays.copyOfRange(ivAndEncryptedPaymentNumber, 0, 16); // 16 bytes for the IV
+        byte[] encryptedpaymentNumber = Arrays.copyOfRange(ivAndEncryptedPaymentNumber, iv.length, ivAndEncryptedPaymentNumber.length);
+
+        // Decrypt balance, currency, and movements
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+        // Decrypt balance
+        cipher.init(Cipher.DECRYPT_MODE, accountSecretKey, new IvParameterSpec(iv));
+
+        //Check if the Secret Key corresponds to the right client
+        try {
+            byte[] decryptedPaymentNumber = cipher.doFinal(encryptedpaymentNumber);
+            String balance = new String(encryptedpaymentNumber);
+            decryptedJson.addProperty("payments_number", balance);
+        } catch (BadPaddingException e) {
+            System.out.println("You are trying to unprotect a file that doesn't belong to you.");
+            return null;
+        }
+
+        // Decrypt movements
+        JsonArray paymentsArray = encryptedJson.getAsJsonArray("movements");
+        JsonArray paymentsArrayCopy = new JsonArray();
+        for (JsonElement j : paymentsArray) {
+            JsonObject payment = j.getAsJsonObject();
+
+            // Decrypt movement date
+            String encryptedDateStr = payment.getAsJsonPrimitive("encryptedDate").getAsString();
+            byte[] encryptedDate = Base64.getDecoder().decode(encryptedDateStr);
+            String decryptedDateStr = new String(cipher.doFinal(encryptedDate));
+            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy"); //Error if not formatted like this
+            Date date = dateFormat.parse(decryptedDateStr);
+
+            SimpleDateFormat wellFormattedDate = new SimpleDateFormat("dd/MM/yyyy");
+            String wellFormattedStr = wellFormattedDate.format(date);
+            Date dateWellFormatted = wellFormattedDate.parse(wellFormattedStr);
+
+            payment.addProperty("date", wellFormattedDate.format(dateWellFormatted));
+            payment.remove("encryptedDate");
+
+            // Decrypt movement value
+            String encryptedValueStr = payment.getAsJsonPrimitive("encryptedValue").getAsString();
+            byte[] encryptedValue = Base64.getDecoder().decode(encryptedValueStr);
+            double value = Double.parseDouble(new String(cipher.doFinal(encryptedValue)));
+            // Format the double value to always have two decimal places
+            String formattedValue = String.format("%.2f", value);
+            // Use BigDecimal to preserve precision
+            BigDecimal bigDecimalValue = new BigDecimal(formattedValue);
+            payment.addProperty("value", bigDecimalValue);
+            payment.remove("encryptedValue");
+
+            // Decrypt movement description
+            String encryptedDescriptionStr = payment.getAsJsonPrimitive("encryptedDescription").getAsString();
+            byte[] encryptedDescription = Base64.getDecoder().decode(encryptedDescriptionStr);
+            String description = new String(cipher.doFinal(encryptedDescription));
+            payment.addProperty("description", description);
+            payment.remove("encryptedDescription");
+
+            JsonArray destinyAccountArray = payment.getAsJsonArray("encryptedDestinyAccount");
+            String [] decryptedUsers = new String[destinyAccountArray.size()];
+
+            for (int i = 0; i < destinyAccountArray.size(); i++) {
+                byte[] encryptedUser = Base64.getDecoder().decode(destinyAccountArray.get(i).getAsString());
+                String user = new String(cipher.doFinal(encryptedUser));
+                decryptedUsers[i] = user;
+            }
+            int counter = destinyAccountArray.size();
+            for (int i = 0; i < counter; i++) {
+                destinyAccountArray.remove(0);
+            }
+            for (int i = 0; i < decryptedUsers.length; i++) {
+                destinyAccountArray.add(decryptedUsers[i]);
+            }
+            payment.add("destinyAccount", destinyAccountArray);
+            payment.remove("encryptedDestinyAccount");
+
+            paymentsArrayCopy.add(payment);
+        }
+
+        decryptedJson.add("payments", paymentsArrayCopy);
+
+        JsonObject result = new JsonObject();
+        result.add("account", decryptedJson);
+        return result;
     }
 
 
