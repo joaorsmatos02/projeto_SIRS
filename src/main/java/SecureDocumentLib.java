@@ -604,4 +604,93 @@ public class SecureDocumentLib {
         }
         return null;
     }
+
+    public String encryptPayment(JsonObject payment, String accountAlias, byte[] iv) {
+        try {
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            // Encrypt balance, currency, and movements
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, accountSecretKey, new IvParameterSpec(iv));
+
+            double value = payment.getAsJsonPrimitive("value").getAsDouble();
+            byte[] encryptedValue = cipher.doFinal(Double.toString(value).getBytes());
+            payment.add("encryptedValue", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedValue)));
+            payment.remove("value");
+
+            // Encrypt movement date
+            // Adapt "date" to Date type
+            String dateString = payment.getAsJsonPrimitive("date").getAsString();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date date = dateFormat.parse(dateString);
+            byte[] encryptedDate = cipher.doFinal(date.toString().getBytes());
+            payment.add("encryptedDate", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDate)));
+            payment.remove("date");
+
+            // Encrypt movement description
+            String description = payment.getAsJsonPrimitive("description").getAsString();
+            byte[] encryptedDescription = cipher.doFinal(description.getBytes());
+            payment.add("encryptedDescription", new JsonPrimitive(Base64.getEncoder().encodeToString(encryptedDescription)));
+            payment.remove("description");
+
+
+            JsonArray destinyAccountArray = payment.getAsJsonArray("destinyAccount");
+            String [] encryptedUsers = new String[destinyAccountArray.size()];
+
+            for (int i = 0; i < destinyAccountArray.size(); i++) {
+                byte [] userEncrypted = cipher.doFinal(destinyAccountArray.get(i).getAsString().getBytes());
+                encryptedUsers[i] = Base64.getEncoder().encodeToString(userEncrypted);
+            }
+            int counter = destinyAccountArray.size();
+            for (int i = 0; i < counter; i++) {
+                destinyAccountArray.remove(0);
+            }
+            for (int i = 0; i < encryptedUsers.length; i++) {
+                destinyAccountArray.add(encryptedUsers[i]);
+            }
+            payment.add("encryptedDestinyAccount", destinyAccountArray);
+            payment.remove("destinyAccount");
+
+
+
+
+            byte [] movement2Layer = encrypt(payment.toString().getBytes(), secretKey);
+
+            return Base64.getEncoder().encodeToString(movement2Layer);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public JsonObject decryptPayment(String encryptedPayment) {
+        try {
+            Gson gson = new Gson();
+
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            byte[] encryptedMove = Base64.getDecoder().decode(encryptedPayment);
+
+            byte[] iv = Arrays.copyOfRange(encryptedMove, 0, 16);
+            byte[] encryptedMovementBytes = Arrays.copyOfRange(encryptedMove, iv.length, encryptedMove.length);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            String decryptedString = new String(cipher.doFinal(encryptedMovementBytes));
+            return gson.fromJson(decryptedString, JsonObject.class);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 }

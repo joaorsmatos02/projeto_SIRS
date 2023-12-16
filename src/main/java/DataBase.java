@@ -183,6 +183,9 @@ class DataBaseThread extends Thread {
             MongoCollection<Document> userAccountCollection = null;
             userAccountCollection = mongoDB.getCollection("userAccount");
 
+            MongoCollection<Document> userPaymentCollection = null;
+            userPaymentCollection = mongoDB.getCollection("userAccountPayments");
+
             //actions
                 while(true) {
                     String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(in.readUTF());
@@ -248,6 +251,38 @@ class DataBaseThread extends Thread {
                                     //update db adicionando o novo movement enviar resposta se correu bem ou nao encriptada com secureMessageLib
                                     break;
 
+                                case "payment":
+                                    String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                    //String updatedBalance = secureMessageLibServer.unprotectMessage(in.readUTF());
+
+                                    getAccountPayment(userPaymentCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
+
+                                    Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+
+                                    Document updateBalance = new Document("$set", new Document("encryptedBalance", updatedBalance));
+                                    UpdateResult updateBalanceResult = userAccountCollection.updateOne(filterToAccount, updateBalance);
+
+                                    if (updateBalanceResult.getModifiedCount() > 0) {
+                                        System.out.println("Balance updated successfully");
+                                    } else {
+                                        out.writeUTF("Error while performing movement.");
+                                        break;
+                                    }
+
+                                    JsonObject encryptedValuesPayment = secureDocumentLib.decryptPayment(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                    Document newPaymentDocument = Document.parse(encryptedValuesPayment.toString());
+                                    // Create an update to push the new values to the "movements" array
+                                    Document updatePayment = new Document("$push", new Document("payments", newPaymentDocument));
+                                    UpdateResult updatePaymentResult = userAccountCollection.updateOne(filterToAccount, updatePayment);
+
+                                    if (updatePaymentResult.getModifiedCount() > 0) {
+                                        out.writeUTF(secureMessageLibServer.protectMessage("Payment done!"));
+                                        out.flush();
+                                    } else {
+                                        out.writeUTF("Error while performing movement.");
+                                    }
+
+                                    break;
 
                             }
                         }
@@ -259,6 +294,36 @@ class DataBaseThread extends Thread {
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private void getAccountPayment(MongoCollection<Document> userAccountPaymentCollection, SecureDocumentLib secureDocumentLib, SecureMessageLib secureMessageLibServer, ObjectOutputStream out, String[] clientsFromAccount) {
+        //buscar conta singular
+        // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
+        Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+
+        // Execute the query and get the first matching document
+        Document matchingDocument = userAccountPaymentCollection.find(query).first();
+
+        if (matchingDocument != null) {
+            // Store the Document in a JSON file
+
+            JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
+            SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false, "payment");
+
+            String result = null;
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                 ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(protectedData);
+                byte[] serializedObject = bos.toByteArray();
+                result = Base64.getEncoder().encodeToString(serializedObject);
+                out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in decryption ocurred")));
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("No matching document found.");
         }
     }
 

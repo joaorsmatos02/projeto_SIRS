@@ -181,26 +181,97 @@ public class RequestsHandler {
 
 
     public String handleRequestMakePayment(String clientAccount, String value, String description, String destinyAccount){
-        if (clientAccount.split("_").length > 1){
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-            Date currentDate = new Date();
-            String date = dateFormat.format(currentDate);
+        try{
+            if (clientAccount.split("_").length > 1){
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                Date currentDate = new Date();
+                String date = dateFormat.format(currentDate);
 
-            JsonObject payment = new JsonObject();
+                String updateDBFlag = secureMessageLibDB.protectMessage("1");
+                String encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
+                String encryptedRequest = secureMessageLibDB.protectMessage("payment");
 
-            payment.addProperty("date", date);
-            payment.addProperty("value", "-"+value);
-            payment.addProperty("description", description);
+                outDB.writeUTF(updateDBFlag);
+                outDB.writeUTF(encryptedAccount);
+                outDB.writeUTF(encryptedRequest);
+                outDB.flush();
+
+                //get the account to get the iv
+                String account = inDB.readUTF();
+
+                String result = secureMessageLibDB.unprotectMessage(account);
+
+                byte[] messageDecoded = Base64.getDecoder().decode(result);
+
+                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
+                SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
+
+                JsonObject objectAccountDecrypted = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
+
+                JsonObject accountObject = objectAccountDecrypted.getAsJsonObject("account");
+
+                double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
+
+                if(balance >= Double.parseDouble(value)){
+                    outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
+                    String payment = inDB.readUTF();
+
+                    String paymentResult = secureMessageLibDB.unprotectMessage(payment);
+
+                    byte[] paymentMessageDecoded = Base64.getDecoder().decode(result);
+
+                    ObjectInputStream ois2 = new ObjectInputStream(new ByteArrayInputStream(paymentMessageDecoded));
+                    SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois.readObject();
+
+                    JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
+
+
+                    String ivAndEncryptedPaymentNumberStr = objectAccountPaymentDecrypted.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
+                    byte[] ivAndEncryptedPaymentNumber = Base64.getDecoder().decode(ivAndEncryptedPaymentNumberStr);
+
+                    // Separate IV and encryptedBalance
+                    byte[] iv = Arrays.copyOfRange(ivAndEncryptedPaymentNumber, 0, 16); // 16 bytes for the IV
+
+                    JsonObject newPayment = new JsonObject();
+
+                    newPayment.addProperty("date", date);
+                    newPayment.addProperty("value", "-"+value);
+                    newPayment.addProperty("description", description);
+                    JsonArray jsonArray = new JsonArray();
+
+                    String [] usersDestiny = destinyAccount.split("_");
+                    for (int i = 0; i < usersDestiny.length ; i++) {
+                        jsonArray.add(usersDestiny[i]);
+                    }
+                    newPayment.add("destinyAccount", jsonArray);
 
 
 
-            // criar array e meter no payment, obter conta dos payments, obter iv e encriptar payment, obter a conta e verificar o balance, alterar balance enviar encriptado
+                    JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
 
+                    String ivAndEncryptedBalanceStr = object.getAsJsonPrimitive("encryptedBalance").getAsString();
+                    byte[] ivAndEncryptedBalance = Base64.getDecoder().decode(ivAndEncryptedBalanceStr);
 
-            return "ok";
-        } else {
-            //precisa confirmação
-            return "aguardando";
+                    // Separate IV and encryptedBalance
+                    byte[] iv2 = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
+                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2)));
+                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv2)));
+                    outDB.flush();
+
+                    String resultFromDB = secureMessageLibDB.unprotectMessage(inDB.readUTF());
+
+                    return secureMessageLibClient.protectMessage(resultFromDB);
+                } else {
+                    outDB.writeUTF(secureMessageLibDB.protectMessage("stop"));
+                    return secureMessageLibClient.protectMessage("You dont have balance to make that movement");
+                }
+            } else {
+                //precisa confirmação
+                return "aguardando";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return "Error";
     }
 }
