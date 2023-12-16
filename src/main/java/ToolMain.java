@@ -134,7 +134,7 @@ public class ToolMain {
         String keyStorePath = args[8];
 
         SecureDocumentLib secureDocLib = new SecureDocumentLib(KeyStoreName, keyStorePass, keyStorePath);
-        writeToFile(outputFile, secureDocLib.protect(rootJson, userAccount, flagTwoLayerEncryption));
+        writeToFile(outputFile, secureDocLib.protect(rootJson, userAccount, flagTwoLayerEncryption, "account"));
     }
 
     private static boolean prepareCheck(String[] args) {
@@ -185,7 +185,7 @@ public class ToolMain {
         String keyStorePath = args[8];
 
         SecureDocumentLib secureDocLib = new SecureDocumentLib(KeyStoreName, keyStorePass, keyStorePath);
-        writeToFile(outputFile, secureDocLib.unprotect(signedObjectDTO, userAccount, flagTwoLayerEncryption));
+        writeToFile(outputFile, secureDocLib.unprotect(signedObjectDTO, userAccount, flagTwoLayerEncryption, "account"));
 
     }
 
