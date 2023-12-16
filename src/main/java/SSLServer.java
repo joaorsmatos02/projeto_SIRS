@@ -251,10 +251,12 @@ class ServerThread extends Thread {
                                 } else {
                                     out.writeUTF(secureMessageLibClient.protectMessage("Error verifying signature"));
                                 }
+                                break;
 
-
-
-
+                            case "payments":
+                                String resultPayments = requestsHandler.handleRequestPayments(clientAccount);
+                                out.writeUTF(resultPayments);
+                                out.flush();
                                 break;
 
 

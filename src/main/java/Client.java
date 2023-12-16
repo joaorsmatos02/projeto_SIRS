@@ -197,7 +197,7 @@ public class Client {
                 String[] input = userInput.split(" ");
                 if (input.length != 0){
                     switch (input[0]) {
-                        case "balance", "movements":
+                        case "balance", "movements", "payments":
                             if(input.length == 1) {
                                 String encryptedPayload = secureMessageLib.protectMessage(userInput);
                                 if (!encryptedPayload.equals("Encryption Failed")){
@@ -244,14 +244,18 @@ public class Client {
                                     out.writeUTF(secureMessageLib.protectMessage(userInput + nonce));
                                     out.flush();
                                     System.out.println(secureMessageLib.unprotectMessage(in.readUTF()));
+                                    System.out.print("Next command: ");
                                 } else {
                                     System.out.println(nonce);
+                                    System.out.print("Next command: ");
                                 }
 
                             } else {
                                 System.out.println("Error: Unrecognized destiny account or command. Please check your input.");
                                 printMenu(userAlias);
                             }
+                            break;
+
 
                         case "exit":
                             System.out.print("Closing BlingBank...");
@@ -278,8 +282,9 @@ public class Client {
                 "Here you have the list of commands you can execute:\n" +
                 " - In order to see your balance, write the following command > balance\n" +
                 " - In order to see your movements, write the following command > movements\n" +
-                " - In order to make a movement, write the following command adding the value and the description > make_movement <value> <description>" +
-                " - In order to make a payment, write the following command adding the value, destiny account (alias name) and description make_payment > make_payment <value> <destinyAccount> <description>");
+                " - In order to make a movement, write the following command adding the value and the description > make_movement <value> <description>\n" +
+                " - In order to make a payment, write the following command adding the value, destiny account (alias name) and description make_payment > make_payment <value> <destinyAccount> <description>\n" +
+                " - In order to see your payments, write the following command > payments");
     }
 
     public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
@@ -289,6 +294,6 @@ public class Client {
     }
 
     private static boolean existingAccountDifFromSelf(String currentClient, String paymentToAccount) {
-        return (paymentToAccount.equals("alice") || paymentToAccount.equals("bob") || paymentToAccount.equals("mario") || paymentToAccount.equals("alices")) && !paymentToAccount.equals(currentClient);
+        return (paymentToAccount.equals("alice") || paymentToAccount.equals("bob") || paymentToAccount.equals("mario") || paymentToAccount.equals("alcides")) && !paymentToAccount.equals(currentClient);
     }
 }

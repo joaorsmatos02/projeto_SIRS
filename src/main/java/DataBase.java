@@ -195,21 +195,14 @@ class DataBaseThread extends Thread {
                             && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature") && userAccountCollection != null) {
                         String[] clientsFromAccount = decryptedAccount.split("_");
                         if(decryptedUpdateFlag.equals("0")) {
-                            if(clientsFromAccount.length > 1) { // TODO
-                                //buscar conta partilhada
-                                // ir buscar conta que tem todos os clientsFromAccount associado
-
-                                // fazer protect com flag a 0
-
-                                // pegar nos bytes do ficheiro
-
-                                //enviar bytes do ficheiro
-
-                                //apagar
-
-                            } else {
+                            String docType = secureMessageLibServer.unprotectMessage(in.readUTF());
+                            if(docType.equals("account")){
                                 getAccount(userAccountCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
+                            } else {
+                                getAccountPayment(userPaymentCollection,secureDocumentLib,secureMessageLibServer, out, clientsFromAccount);
                             }
+
+
                             // Update db
                         } else {
                             String request = secureMessageLibServer.unprotectMessage(in.readUTF());

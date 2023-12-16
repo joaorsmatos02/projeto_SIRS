@@ -33,9 +33,11 @@ public class RequestsHandler {
             // Case 0, no update on DB, case 1, new DB update
             String updateDBFlag = secureMessageLibDB.protectMessage("0");
             String encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
+            String encryptedDocType = secureMessageLibDB.protectMessage("account");
+            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed") && !encryptedDocType.equals("Encryption Failed")) {
                 outDB.writeUTF(updateDBFlag);
                 outDB.writeUTF(encryptedAccount);
+                outDB.writeUTF(encryptedDocType);
                 outDB.flush();
                 String account = inDB.readUTF();
 
@@ -68,9 +70,11 @@ public class RequestsHandler {
             // Case 0, no update on DB, case 1, new DB update
             String updateDBFlag = secureMessageLibDB.protectMessage("0");
             String encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed")) {
+            String encryptedDocType = secureMessageLibDB.protectMessage("account");
+            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed") && !encryptedDocType.equals("Encryption Failed")) {
                 outDB.writeUTF(updateDBFlag);
                 outDB.writeUTF(encryptedAccount);
+                outDB.writeUTF(encryptedDocType);
                 outDB.flush();
 
                 String account = inDB.readUTF();
@@ -271,6 +275,64 @@ public class RequestsHandler {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        return "Error";
+    }
+
+    public String handleRequestPayments(String clientAccount) {
+        try {
+            // Case 0, no update on DB, case 1, new DB update
+            String updateDBFlag = secureMessageLibDB.protectMessage("0");
+            String encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
+            String encryptedDocType = secureMessageLibDB.protectMessage("payment");
+            if (outDB != null && inDB != null && !encryptedAccount.equals("Encryption Failed") && !updateDBFlag.equals("Encryption Failed") && !encryptedDocType.equals("Encryption Failed")) {
+                outDB.writeUTF(updateDBFlag);
+                outDB.writeUTF(encryptedAccount);
+                outDB.writeUTF(encryptedDocType);
+                outDB.flush();
+
+                String payment = inDB.readUTF();
+
+                String result = secureMessageLibDB.unprotectMessage(payment);
+
+                byte[] messageDecoded = Base64.getDecoder().decode(result);
+
+                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
+                SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
+
+                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "payment");
+
+                JsonObject accountObject = object.getAsJsonObject("account");
+
+                JsonArray paymentsArray = accountObject.getAsJsonArray("payments");
+
+                String resultMessage = "";
+
+                for (JsonElement paymentElement : paymentsArray) {
+                    JsonObject paymentObject = paymentElement.getAsJsonObject();
+
+                    String date = paymentObject.getAsJsonPrimitive("date").getAsString();
+                    double value = paymentObject.getAsJsonPrimitive("value").getAsDouble();
+                    String description = paymentObject.getAsJsonPrimitive("description").getAsString();
+                    JsonArray users = paymentObject.getAsJsonPrimitive("destinyAccount").getAsJsonArray();
+                    String account = "";
+
+                    for (int i = 0; i < users.size(); i++) {
+                        if (i != users.size() - 1){
+                            account = account + users.get(i) + "_";
+                        } else {
+                            account = account + users.get(i);
+                        }
+                    }
+
+
+                    resultMessage = resultMessage + "Payment\n" + "Date: " + date + "\nValue: " + value + "\nDescription: " + description + "\nDestiny Account: " + account + "\n\n";
+                }
+
+                return secureMessageLibClient.protectMessage(resultMessage);
+            }
+        } catch(Exception e) {
+            return "Error";
         }
         return "Error";
     }
