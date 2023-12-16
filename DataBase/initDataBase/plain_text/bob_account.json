@@ -1,7 +1,7 @@
 {
   "account": {
     "accountHolder": ["bob"],
-    "balance": 0.00,
+    "balance": 300.00,
     "currency": "EUR",
     "movements": [
     ]

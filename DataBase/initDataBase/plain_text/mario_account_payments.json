@@ -5,7 +5,7 @@
       {
         "date": "09/11/2023",
         "value": 10.00,
-        "destinyAccount": "bob",
+        "destinyAccount": ["alice"],
         "description": "Gift"
       }
     ]

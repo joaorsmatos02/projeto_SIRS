@@ -301,15 +301,32 @@ class DataBaseThread extends Thread {
                 "DataBase/initDataBase/plain_text/mario_account.json",
                 "DataBase/initDataBase/plain_text/alcides_account.json"};
 
+        String[] plainPaymentsFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account_payments.json",
+                "DataBase/initDataBase/plain_text/bob_account_payments.json",
+                "DataBase/initDataBase/plain_text/mario_account_payments.json",
+                "DataBase/initDataBase/plain_text/alcides_account_payments.json"};
+
+
         String[] encFilePaths = new String[]{"DataBase/initDataBase/enc_text/alice_account_enc.bin",
                 "DataBase/initDataBase/enc_text/bob_account_enc.bin",
                 "DataBase/initDataBase/enc_text/mario_account_enc.bin",
                 "DataBase/initDataBase/enc_text/alcides_account_enc.bin"};
 
+        String[] encPaymentsFilePaths = new String[]{"DataBase/initDataBase/enc_text/alice_account_payments_enc.bin",
+                "DataBase/initDataBase/enc_text/bob_account_payments_enc.bin",
+                "DataBase/initDataBase/enc_text/mario_account_payments_enc.bin",
+                "DataBase/initDataBase/enc_text/alcides_account_payments_enc.bin"};
+
+
         String[] resultDecFilePaths = new String[]{"DataBase/initDataBase/unprotect_result/alice_account_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/bob_account_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/mario_account_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/alcides_account_unprotected.json"};
+
+        String[] resultDecPaymentsFilePaths = new String[]{"DataBase/initDataBase/unprotect_result/alice_account_payments_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/bob_account_payments_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/mario_account_payments_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/alcides_account_payments_unprotected.json"};
 
         String[] accountAliasArray = new String[]{"alice", "bob", "mario", "alcides"};
 
@@ -318,13 +335,23 @@ class DataBaseThread extends Thread {
 
         for (int i = 0; i < plainFilePaths.length; i++) {
             Gson gson = new Gson();
-            try (FileReader plainFileReader = new FileReader(plainFilePaths[i])){
+            try (FileReader plainFileReader = new FileReader(plainFilePaths[i]);
+                 FileReader plainPaymentsFileReader = new FileReader(plainPaymentsFilePaths[i])){
+
                 JsonObject plainFile = gson.fromJson(plainFileReader, JsonObject.class);
                 writeToFile(new File(encFilePaths[i]), secureDocumentLib.protect(plainFile, accountAliasArray[i], true));
 
                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(encFilePaths[i]));
                 SignedObjectDTO encFile = (SignedObjectDTO) objectInputStream.readObject();
                 writeToFile(new File(resultDecFilePaths[i]), secureDocumentLib.unprotect(encFile, accountAliasArray[i], false));
+
+                //AGAIN, BUT FOR PAYMENTS - TEM DE SE ADAPTAR O PROTECT E UNPROTECT PARA ESTES FICHEIROS!!!
+                JsonObject plainPaymentsFile = gson.fromJson(plainPaymentsFileReader, JsonObject.class);
+                writeToFile(new File(encPaymentsFilePaths[i]), secureDocumentLib.protect(plainPaymentsFile, accountAliasArray[i], true));
+
+                ObjectInputStream objectInputStreamPayments = new ObjectInputStream(new FileInputStream(encPaymentsFilePaths[i]));
+                SignedObjectDTO encPaymentsFile = (SignedObjectDTO) objectInputStreamPayments.readObject();
+                writeToFile(new File(resultDecPaymentsFilePaths[i]), secureDocumentLib.unprotect(encPaymentsFile, accountAliasArray[i], false));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -334,24 +361,32 @@ class DataBaseThread extends Thread {
             MongoCollection<Document> userAccountCollection = mongoDB.getCollection("userAccount");
             userAccountCollection.drop();
 
+            MongoCollection<Document> userAccountPaymentsCollection = mongoDB.getCollection("userAccountPayments");
+            userAccountPaymentsCollection.drop();
+
             for (int i = 0; i < resultDecFilePaths.length; i++) {
                 File currentDecryptedFile = new File(resultDecFilePaths[i]);
+                File currentDecryptedPaymentsFile = new File(resultDecPaymentsFilePaths[i]);
 
                 // Read the content of the JSON file
                 String jsonContent = null;
+                String jsonPaymentsContent= null;
                 try {
                     jsonContent = new String(Files.readAllBytes(currentDecryptedFile.toPath()));
+                    jsonPaymentsContent = new String(Files.readAllBytes(currentDecryptedPaymentsFile.toPath()));
                 } catch (IOException e) {
                     System.err.println("Error while getting file");
                 }
 
                 // Parse the JSON content to a MongoDB Document
                 Document document = Document.parse(jsonContent);
+                Document paymentsDocument = Document.parse(jsonPaymentsContent);
 
                 // Insert the document into the "userAccount" collection
                 userAccountCollection.insertOne(document);
+                userAccountCollection.insertOne(paymentsDocument);
 
-                System.out.println("Document inserted successfully!");
+                System.out.println("Documents inserted successfully!");
             }
 
 

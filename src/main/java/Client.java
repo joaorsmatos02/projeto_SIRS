@@ -205,6 +205,7 @@ public class Client {
                                     out.flush();
                                     String answer = secureMessageLib.unprotectMessage(in.readUTF());
                                     System.out.println(answer);
+                                    System.out.print("Next command: ");
                                 } else {
                                     System.out.println("Encryption Failed");
                                     printMenu(userAlias);
@@ -223,6 +224,7 @@ public class Client {
                                     out.flush();
                                     String answer = secureMessageLib.unprotectMessage(in.readUTF());
                                     System.out.println(answer);
+                                    System.out.print("Next command: ");
                                 } else {
                                     System.out.println("Encryption Failed");
                                     printMenu(userAlias);
@@ -232,6 +234,18 @@ public class Client {
                                 printMenu(userAlias);
                             }
                             break;
+
+                        case "make_payment":
+                            if(input.length >= 4 && (input[1].matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(input[1]) > 0) && existingAccountDifFromSelf(userAlias, input[2])) {
+
+                            } else {
+                                System.out.println("Error: Unrecognized destiny account or command. Please check your input.");
+                                printMenu(userAlias);
+                            }
+
+                        case "exit":
+                            System.out.print("Closing BlingBank...");
+                            System.exit(0);
 
                         default:
                             System.out.println("Error: Unrecognized command. Please check your input.");
@@ -248,17 +262,23 @@ public class Client {
         }
     }
 
+
     private static void printMenu(String userAlias) {
         System.out.println("Welcome " + userAlias + "!\n" +
                 "Here you have the list of commands you can execute:\n" +
-                " - In order to see your balance, write the following command: balance\n" +
-                " - In order to see your movements, write the following command: movements\n" +
-                " - In order to make a movement, write the following command adding the value and the description: make_movement <value> <description>");
+                " - In order to see your balance, write the following command > balance\n" +
+                " - In order to see your movements, write the following command > movements\n" +
+                " - In order to make a movement, write the following command adding the value and the description > make_movement <value> <description>" +
+                " - In order to make a payment, write the following command adding the value, destiny account (alias name) and description make_payment > make_payment <value> <destinyAccount> <description>");
     }
 
     public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
         mac.init(secretKey);
         return mac.doFinal(certificate.getEncoded());
+    }
+
+    private static boolean existingAccountDifFromSelf(String currentClient, String paymentToAccount) {
+        return (paymentToAccount.equals("alice") || paymentToAccount.equals("bob") || paymentToAccount.equals("mario") || paymentToAccount.equals("alices")) && !paymentToAccount.equals(currentClient);
     }
 }
