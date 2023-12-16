@@ -1,6 +1,7 @@
 {
   "account": {
     "accountHolder": ["alcides"],
+    "payments_number": "1",
     "payments": [
       {
         "date": "09/11/2023",
