@@ -1,6 +1,7 @@
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import dto.SignedObjectDTO;
 
 import java.io.ByteArrayInputStream;
@@ -176,5 +177,30 @@ public class RequestsHandler {
             return "Error";
         }
         return "Error";
+    }
+
+
+    public String handleRequestMakePayment(String clientAccount, String value, String description, String destinyAccount){
+        if (clientAccount.split("_").length > 1){
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date currentDate = new Date();
+            String date = dateFormat.format(currentDate);
+
+            JsonObject payment = new JsonObject();
+
+            payment.addProperty("date", date);
+            payment.addProperty("value", "-"+value);
+            payment.addProperty("description", description);
+
+
+
+            // criar array e meter no payment, obter conta dos payments, obter iv e encriptar payment, obter a conta e verificar o balance, alterar balance enviar encriptado
+
+
+            return "ok";
+        } else {
+            //precisa confirmação
+            return "aguardando";
+        }
     }
 }

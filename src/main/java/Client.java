@@ -237,6 +237,16 @@ public class Client {
 
                         case "make_payment":
                             if(input.length >= 4 && (input[1].matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(input[1]) > 0) && existingAccountDifFromSelf(userAlias, input[2])) {
+                                out.writeUTF(secureMessageLib.protectMessage("make_payment"));
+                                out.flush();
+                                String nonce = secureMessageLib.unprotectMessage(in.readUTF());
+                                if(!nonce.equals("Wrong signature")){
+                                    out.writeUTF(secureMessageLib.protectMessage(userInput + nonce));
+                                    out.flush();
+                                    System.out.println(secureMessageLib.unprotectMessage(in.readUTF()));
+                                } else {
+                                    System.out.println(nonce);
+                                }
 
                             } else {
                                 System.out.println("Error: Unrecognized destiny account or command. Please check your input.");

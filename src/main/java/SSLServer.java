@@ -53,10 +53,12 @@ public class SSLServer {
         // create socket
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
+        NonceHandler nonceHandler = new NonceHandler();
+
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             while (true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                ServerThread st = new ServerThread(socket, dataBaseSocket);
+                ServerThread st = new ServerThread(socket, dataBaseSocket, nonceHandler);
                 st.start();
             }
         } catch (Exception e1) {
@@ -79,10 +81,12 @@ class ServerThread extends Thread {
     private final SSLSocket dataBaseSocket;
     private final ObjectOutputStream outDB;
     private final ObjectInputStream inDB;
+    private NonceHandler nonceHandler;
 
-    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket) {
+    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket, NonceHandler nonceHandler) {
         this.socket = inSoc;
         this.dataBaseSocket = dataBaseSocket;
+        this.nonceHandler = nonceHandler;
         try {
             this.outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             this.inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
@@ -189,40 +193,80 @@ class ServerThread extends Thread {
             while(true) {
                 String encryptedMessage = in.readUTF();
                 String decryptedMessage = secureMessageLibClient.unprotectMessage(encryptedMessage);
-                String[] userInput = decryptedMessage.split(" ");
+                if (!decryptedMessage.equals("Error verifying signature")){
+                    String[] userInput = decryptedMessage.split(" ");
 
-                if (userInput.length != 0) {
-                    // Case 0, no update on DB, case 1, new DB update
-                    String updateDBFlag;
-                    String encryptedAccount;
-                    switch (userInput[0]) {
-                        case "balance":
-                            String resultBalance = requestsHandler.handleRequestBalance(clientAccount);
-                            out.writeUTF(resultBalance);
-                            out.flush();
-                            break;
+                    if (userInput.length != 0) {
+                        // Case 0, no update on DB, case 1, new DB update
+                        String updateDBFlag;
+                        String encryptedAccount;
+                        switch (userInput[0]) {
+                            case "balance":
+                                String resultBalance = requestsHandler.handleRequestBalance(clientAccount);
+                                out.writeUTF(resultBalance);
+                                out.flush();
+                                break;
 
-                        case "movements":
-                            String resultMovements = requestsHandler.handleRequestMovements(clientAccount);
-                            out.writeUTF(resultMovements);
-                            out.flush();
-                            break;
+                            case "movements":
+                                String resultMovements = requestsHandler.handleRequestMovements(clientAccount);
+                                out.writeUTF(resultMovements);
+                                out.flush();
+                                break;
 
-                        case "make_movement":
-                            String description = "";
-                            for (int i = 2; i < userInput.length; i++) {
-                                description = description + userInput[i] + " ";
-                            }
-                            String resultMakeMovement = requestsHandler.handleRequestMakeMovement(clientAccount,userInput[1], description);
-                            out.writeUTF(resultMakeMovement);
-                            out.flush();
-                            break;
+                            case "make_movement":
+                                String description = "";
+                                for (int i = 2; i < userInput.length; i++) {
+                                    description = description + userInput[i] + " ";
+                                }
+                                String resultMakeMovement = requestsHandler.handleRequestMakeMovement(clientAccount,userInput[1], description);
+                                out.writeUTF(resultMakeMovement);
+                                out.flush();
+                                break;
 
-                        default:
-                            System.out.println("Error: Unrecognized command. Please check your input.");
-                            break;
+                            case "make_payment":
+                                String nonce = String.valueOf(nonceHandler.getNonce());
+                                out.writeUTF(secureMessageLibClient.protectMessage(nonce));
+                                out.flush();
+
+                                String requestAndNonce = secureMessageLibClient.unprotectMessage(in.readUTF());
+                                if(!requestAndNonce.equals("Error verifying signature")){
+                                    String [] requestAndNonceSplit = requestAndNonce.split(" ");
+                                    String request = "";
+                                    String description1 = "";
+                                    for (int i = 0; i < requestAndNonceSplit.length - 1; i++) {
+                                        request = request + requestAndNonceSplit[i];
+                                        if (i != 0){
+                                            description1 = description1 + requestAndNonceSplit[i];
+                                        }
+                                    }
+
+                                    if (nonceHandler.validRequest(Integer.parseInt(nonce),request)){
+                                        nonceHandler.addRequest(Integer.parseInt(nonce), request);
+                                        String answer = requestsHandler.handleRequestMakePayment(clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2] );
+                                        out.writeUTF(secureMessageLibClient.protectMessage(answer));
+                                    } else {
+                                        out.writeUTF(secureMessageLibClient.protectMessage("Freshness Attack"));
+                                    }
+
+                                } else {
+                                    out.writeUTF(secureMessageLibClient.protectMessage("Error verifying signature"));
+                                }
+
+
+
+
+                                break;
+
+
+                            default:
+                                System.out.println("Error: Unrecognized command. Please check your input.");
+                                break;
+                        }
                     }
+                } else {
+                    out.writeUTF(secureMessageLibClient.protectMessage("Wrong signature"));
                 }
+
             }
 
         } catch (Exception e) {
