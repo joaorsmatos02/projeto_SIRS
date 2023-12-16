@@ -217,24 +217,32 @@ class DataBaseThread extends Thread {
                             switch (requestSplit[0]) {
                                 case "movement":
                                     if(secureMessageLibServer.unprotectMessage(in.readUTF()).equals("ok")){
-                                        JsonObject encryptedValuesMovement = secureDocumentLib.decryptMovement(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        //String updatedBalance = secureMessageLibServer.unprotectMessage(in.readUTF());
 
-                                        // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
                                         Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
+                                        Document updateBalance = new Document("$set", new Document("encryptedBalance", updatedBalance));
+                                        UpdateResult updateBalanceResult = userAccountCollection.updateOne(filterToAccount, updateBalance);
+
+                                        if (updateBalanceResult.getModifiedCount() > 0) {
+                                            System.out.println("Balance updated successfully");
+                                        } else {
+                                            out.writeUTF("Error while performing movement.");
+                                            break;
+                                        }
+
+                                        JsonObject encryptedValuesMovement = secureDocumentLib.decryptMovement(secureMessageLibServer.unprotectMessage(in.readUTF()));
                                         Document novoMovimentoDocument = Document.parse(encryptedValuesMovement.toString());
-
                                         // Create an update to push the new values to the "movements" array
-                                        Document update = new Document("$push", new Document("movements", novoMovimentoDocument));
+                                        Document updateMovement = new Document("$push", new Document("movements", novoMovimentoDocument));
+                                        UpdateResult updateMovementResult = userAccountCollection.updateOne(filterToAccount, updateMovement);
 
-                                        // Perform the update
-                                        UpdateResult updateResult = userAccountCollection.updateOne(filterToAccount, update);
-
-                                        if (updateResult.getModifiedCount() > 0) {
+                                        if (updateMovementResult.getModifiedCount() > 0) {
                                             out.writeUTF(secureMessageLibServer.protectMessage("Movement done!"));
                                             out.flush();
                                         } else {
-                                            System.out.println("Error while performing movement.");
+                                            out.writeUTF("Error while performing movement.");
                                         }
                                     }
                                     //update db adicionando o novo movement enviar resposta se correu bem ou nao encriptada com secureMessageLib

@@ -313,6 +313,33 @@ public class SecureDocumentLib {
         return null;
     }
 
+    public String encryptBalance(String balance, String accountAlias, byte[] iv){
+        try {
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, accountSecretKey, new IvParameterSpec(iv));
+
+            byte[] encryptedBalance = cipher.doFinal(balance.getBytes());
+
+            byte[] ivAndEncryptedBalance = new byte[iv.length + encryptedBalance.length];
+            System.arraycopy(iv, 0, ivAndEncryptedBalance, 0, iv.length);
+            System.arraycopy(encryptedBalance, 0, ivAndEncryptedBalance, iv.length, encryptedBalance.length);
+
+            byte [] balance2Layer = encrypt(Base64.getEncoder().encode(ivAndEncryptedBalance), secretKey);
+
+            return Base64.getEncoder().encodeToString(balance2Layer);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public String encryptMovement(JsonObject movement, String accountAlias, byte[] iv){
         try {
             KeyStore ks = KeyStore.getInstance("PKCS12");
@@ -331,7 +358,6 @@ public class SecureDocumentLib {
             movement.remove("value");
 
             // Encrypt movement date
-            // Adapt "date" to Date type
             String dateString = movement.getAsJsonPrimitive("date").getAsString();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             Date date = dateFormat.parse(dateString);
@@ -351,6 +377,27 @@ public class SecureDocumentLib {
 
             return Base64.getEncoder().encodeToString(movement2Layer);
 
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String decryptBalance(String encryptedBalance) {
+        try {
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            byte[] encryptedBal = Base64.getDecoder().decode(encryptedBalance);
+
+            byte[] iv = Arrays.copyOfRange(encryptedBal, 0, 16);
+            byte[] encryptedBalanceBytes = Arrays.copyOfRange(encryptedBal, iv.length, encryptedBal.length);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            return new String(cipher.doFinal(encryptedBalanceBytes));
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -158,6 +158,8 @@ public class RequestsHandler {
                     // Separate IV and encryptedBalance
                     byte[] iv = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
 
+                    //outDB.writeUTF(secureMessageLibDB.protectMessage(String.valueOf((balance - Double.parseDouble(value)))));
+                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv)));
                     outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptMovement(movement, clientAccount, iv)));
                     outDB.flush();
 
