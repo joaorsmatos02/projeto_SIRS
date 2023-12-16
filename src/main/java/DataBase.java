@@ -274,7 +274,7 @@ class DataBaseThread extends Thread {
             // Store the Document in a JSON file
 
             JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
-            SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false);
+            SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false, "account");
 
             String result = null;
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -339,19 +339,19 @@ class DataBaseThread extends Thread {
                  FileReader plainPaymentsFileReader = new FileReader(plainPaymentsFilePaths[i])){
 
                 JsonObject plainFile = gson.fromJson(plainFileReader, JsonObject.class);
-                writeToFile(new File(encFilePaths[i]), secureDocumentLib.protect(plainFile, accountAliasArray[i], true));
+                writeToFile(new File(encFilePaths[i]), secureDocumentLib.protect(plainFile, accountAliasArray[i], true, "account"));
 
                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(encFilePaths[i]));
                 SignedObjectDTO encFile = (SignedObjectDTO) objectInputStream.readObject();
-                writeToFile(new File(resultDecFilePaths[i]), secureDocumentLib.unprotect(encFile, accountAliasArray[i], false));
+                writeToFile(new File(resultDecFilePaths[i]), secureDocumentLib.unprotect(encFile, accountAliasArray[i], false, "account"));
 
                 //AGAIN, BUT FOR PAYMENTS - TEM DE SE ADAPTAR O PROTECT E UNPROTECT PARA ESTES FICHEIROS!!!
                 JsonObject plainPaymentsFile = gson.fromJson(plainPaymentsFileReader, JsonObject.class);
-                writeToFile(new File(encPaymentsFilePaths[i]), secureDocumentLib.protect(plainPaymentsFile, accountAliasArray[i], true));
+                writeToFile(new File(encPaymentsFilePaths[i]), secureDocumentLib.protect(plainPaymentsFile, accountAliasArray[i], true, "payment"));
 
                 ObjectInputStream objectInputStreamPayments = new ObjectInputStream(new FileInputStream(encPaymentsFilePaths[i]));
                 SignedObjectDTO encPaymentsFile = (SignedObjectDTO) objectInputStreamPayments.readObject();
-                writeToFile(new File(resultDecPaymentsFilePaths[i]), secureDocumentLib.unprotect(encPaymentsFile, accountAliasArray[i], false));
+                writeToFile(new File(resultDecPaymentsFilePaths[i]), secureDocumentLib.unprotect(encPaymentsFile, accountAliasArray[i], false, "payment"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -384,7 +384,7 @@ class DataBaseThread extends Thread {
 
                 // Insert the document into the "userAccount" collection
                 userAccountCollection.insertOne(document);
-                userAccountCollection.insertOne(paymentsDocument);
+                userAccountPaymentsCollection.insertOne(paymentsDocument);
 
                 System.out.println("Documents inserted successfully!");
             }
