@@ -45,7 +45,7 @@ public class RequestsHandler {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
                 SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
 
-                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true);
+                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
 
                 JsonObject accountObject = object.getAsJsonObject("account");
 
@@ -81,7 +81,7 @@ public class RequestsHandler {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
                 SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
 
-                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true);
+                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
 
                 JsonObject accountObject = object.getAsJsonObject("account");
 
@@ -141,7 +141,7 @@ public class RequestsHandler {
                 ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
                 SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
 
-                JsonObject objectAccountDecrypted = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true);
+                JsonObject objectAccountDecrypted = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
 
                 JsonObject accountObject = objectAccountDecrypted.getAsJsonObject("account");
 
@@ -150,7 +150,7 @@ public class RequestsHandler {
                 if (balance >= Double.parseDouble(value)){
                     outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
 
-                    JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false);
+                    JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
 
                     String ivAndEncryptedBalanceStr = object.getAsJsonPrimitive("encryptedBalance").getAsString();
                     byte[] ivAndEncryptedBalance = Base64.getDecoder().decode(ivAndEncryptedBalanceStr);
