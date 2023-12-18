@@ -250,8 +250,12 @@ public class RequestsHandler {
                     }
                     newPayment.add("destinyAccount", jsonArray);
 
+
+
                     JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
-                    String paymentNumbers = objectAccountPaymentDecrypted.getAsJsonPrimitive("payments_number").getAsString();
+                    JsonObject paymentObject = objectAccountPaymentDecrypted.getAsJsonObject("account");
+
+                    String paymentNumbers = paymentObject.getAsJsonPrimitive("payments_number").getAsString();
 
 
                     JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
@@ -311,7 +315,7 @@ public class RequestsHandler {
 
                 JsonArray paymentsArray = accountObject.getAsJsonArray("payments");
 
-                String paymentNumber = accountObject.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
+                String paymentNumber = accountObject.getAsJsonPrimitive("payments_number").getAsString();
 
                 String resultMessage = "Total Payments: " + paymentNumber + "\n";
 
