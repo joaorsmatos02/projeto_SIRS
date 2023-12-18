@@ -23,6 +23,7 @@ SERVER!
  - keytool -genseckey -alias bob_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
  - keytool -genseckey -alias mario_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
  - keytool -genseckey -alias alcides_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+ - keytool -genseckey -alias alice_bob_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
 
 5.2. Gerar secretKeys entre banco<->cliente por dispositivo
  - keytool -genseckey -alias alice_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore

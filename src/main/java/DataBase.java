@@ -357,36 +357,42 @@ class DataBaseThread extends Thread {
         String[] plainFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account.json",
                 "DataBase/initDataBase/plain_text/bob_account.json",
                 "DataBase/initDataBase/plain_text/mario_account.json",
-                "DataBase/initDataBase/plain_text/alcides_account.json"};
+                "DataBase/initDataBase/plain_text/alcides_account.json" +
+                "DataBase/initDataBase/plain_text/alice_bob_account.json"};
 
         String[] plainPaymentsFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account_payments.json",
                 "DataBase/initDataBase/plain_text/bob_account_payments.json",
                 "DataBase/initDataBase/plain_text/mario_account_payments.json",
-                "DataBase/initDataBase/plain_text/alcides_account_payments.json"};
+                "DataBase/initDataBase/plain_text/alcides_account_payments.json",
+                "DataBase/initDataBase/plain_text/alice_bob_account_payments.json"};
 
 
         String[] encFilePaths = new String[]{"DataBase/initDataBase/enc_text/alice_account_enc.bin",
                 "DataBase/initDataBase/enc_text/bob_account_enc.bin",
                 "DataBase/initDataBase/enc_text/mario_account_enc.bin",
-                "DataBase/initDataBase/enc_text/alcides_account_enc.bin"};
+                "DataBase/initDataBase/enc_text/alcides_account_enc.bin",
+                "DataBase/initDataBase/enc_text/alice_bob_account_enc.bin"};
 
         String[] encPaymentsFilePaths = new String[]{"DataBase/initDataBase/enc_text/alice_account_payments_enc.bin",
                 "DataBase/initDataBase/enc_text/bob_account_payments_enc.bin",
                 "DataBase/initDataBase/enc_text/mario_account_payments_enc.bin",
-                "DataBase/initDataBase/enc_text/alcides_account_payments_enc.bin"};
+                "DataBase/initDataBase/enc_text/alcides_account_payments_enc.bin",
+                "DataBase/initDataBase/enc_text/alice_bob_account_payments_enc.bin"};
 
 
         String[] resultDecFilePaths = new String[]{"DataBase/initDataBase/unprotect_result/alice_account_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/bob_account_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/mario_account_unprotected.json",
-                "DataBase/initDataBase/unprotect_result/alcides_account_unprotected.json"};
+                "DataBase/initDataBase/unprotect_result/alcides_account_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/alice_bob_account_unprotected.json"};
 
         String[] resultDecPaymentsFilePaths = new String[]{"DataBase/initDataBase/unprotect_result/alice_account_payments_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/bob_account_payments_unprotected.json",
                 "DataBase/initDataBase/unprotect_result/mario_account_payments_unprotected.json",
-                "DataBase/initDataBase/unprotect_result/alcides_account_payments_unprotected.json"};
+                "DataBase/initDataBase/unprotect_result/alcides_account_payments_unprotected.json",
+                "DataBase/initDataBase/unprotect_result/alice_bob_account_payments_unprotected.json"};
 
-        String[] accountAliasArray = new String[]{"alice", "bob", "mario", "alcides"};
+        String[] accountAliasArray = new String[]{"alice", "bob", "mario", "alcides", "alice_bob"};
 
         //Just for init - We use the Server KeyStore to protect the files
         SecureDocumentLib secureDocumentLib = new SecureDocumentLib("serverKeyStore", "serverKeyStore", "Server/serverKeyStore/serverKeyStore");
