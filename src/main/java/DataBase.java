@@ -245,36 +245,36 @@ class DataBaseThread extends Thread {
                                     break;
 
                                 case "payment":
-                                    String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(in.readUTF()));
-                                    //String updatedBalance = secureMessageLibServer.unprotectMessage(in.readUTF());
+                                    if(secureMessageLibServer.unprotectMessage(in.readUTF()).equals("ok")) {
+                                        getAccountPayment(userPaymentCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
 
-                                    getAccountPayment(userPaymentCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
+                                        String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(in.readUTF()));
 
-                                    Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+                                        Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
-                                    Document updateBalance = new Document("$set", new Document("encryptedBalance", updatedBalance));
-                                    UpdateResult updateBalanceResult = userAccountCollection.updateOne(filterToAccount, updateBalance);
+                                        Document updateBalance = new Document("$set", new Document("encryptedBalance", updatedBalance));
+                                        UpdateResult updateBalanceResult = userAccountCollection.updateOne(filterToAccount, updateBalance);
 
-                                    if (updateBalanceResult.getModifiedCount() > 0) {
-                                        System.out.println("Balance updated successfully");
-                                    } else {
-                                        out.writeUTF("Error while performing movement.");
-                                        break;
+                                        if (updateBalanceResult.getModifiedCount() > 0) {
+                                            System.out.println("Balance updated successfully");
+                                        } else {
+                                            out.writeUTF("Error while performing movement.");
+                                            break;
+                                        }
+
+                                        JsonObject encryptedValuesPayment = secureDocumentLib.decryptPayment(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        Document newPaymentDocument = Document.parse(encryptedValuesPayment.toString());
+                                        // Create an update to push the new values to the "movements" array
+                                        Document updatePayment = new Document("$push", new Document("payments", newPaymentDocument));
+                                        UpdateResult updatePaymentResult = userAccountCollection.updateOne(filterToAccount, updatePayment);
+
+                                        if (updatePaymentResult.getModifiedCount() > 0) {
+                                            out.writeUTF(secureMessageLibServer.protectMessage("Payment done!"));
+                                            out.flush();
+                                        } else {
+                                            out.writeUTF("Error while performing movement.");
+                                        }
                                     }
-
-                                    JsonObject encryptedValuesPayment = secureDocumentLib.decryptPayment(secureMessageLibServer.unprotectMessage(in.readUTF()));
-                                    Document newPaymentDocument = Document.parse(encryptedValuesPayment.toString());
-                                    // Create an update to push the new values to the "movements" array
-                                    Document updatePayment = new Document("$push", new Document("payments", newPaymentDocument));
-                                    UpdateResult updatePaymentResult = userAccountCollection.updateOne(filterToAccount, updatePayment);
-
-                                    if (updatePaymentResult.getModifiedCount() > 0) {
-                                        out.writeUTF(secureMessageLibServer.protectMessage("Payment done!"));
-                                        out.flush();
-                                    } else {
-                                        out.writeUTF("Error while performing movement.");
-                                    }
-
                                     break;
 
                             }

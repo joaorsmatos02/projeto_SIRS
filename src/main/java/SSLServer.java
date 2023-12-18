@@ -235,13 +235,13 @@ class ServerThread extends Thread {
                                     String description1 = "";
                                     for (int i = 0; i < requestAndNonceSplit.length - 1; i++) {
                                         request = request + requestAndNonceSplit[i];
-                                        if (i != 0){
+                                        if (i > 2){
                                             description1 = description1 + requestAndNonceSplit[i];
                                         }
                                     }
 
-                                    if (nonceHandler.validRequest(Integer.parseInt(nonce),request)){
-                                        nonceHandler.addRequest(Integer.parseInt(nonce), request);
+                                    if (nonceHandler.validRequest(Integer.parseInt(requestAndNonceSplit[requestAndNonceSplit.length - 1]), request)){
+                                        nonceHandler.addRequest(Integer.parseInt(requestAndNonceSplit[requestAndNonceSplit.length - 1]), request);
                                         String answer = requestsHandler.handleRequestMakePayment(clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2] );
                                         out.writeUTF(secureMessageLibClient.protectMessage(answer));
                                     } else {

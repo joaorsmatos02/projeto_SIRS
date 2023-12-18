@@ -222,10 +222,10 @@ public class RequestsHandler {
 
                     String paymentResult = secureMessageLibDB.unprotectMessage(payment);
 
-                    byte[] paymentMessageDecoded = Base64.getDecoder().decode(result);
+                    byte[] paymentMessageDecoded = Base64.getDecoder().decode(paymentResult);
 
                     ObjectInputStream ois2 = new ObjectInputStream(new ByteArrayInputStream(paymentMessageDecoded));
-                    SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois.readObject();
+                    SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois2.readObject();
 
                     JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
 
@@ -233,7 +233,7 @@ public class RequestsHandler {
                     String ivAndEncryptedPaymentNumberStr = objectAccountPaymentDecrypted.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
                     byte[] ivAndEncryptedPaymentNumber = Base64.getDecoder().decode(ivAndEncryptedPaymentNumberStr);
 
-                    // Separate IV and encryptedBalance
+                    // Separate IV and encryptedPaymentNumber
                     byte[] iv = Arrays.copyOfRange(ivAndEncryptedPaymentNumber, 0, 16); // 16 bytes for the IV
 
                     JsonObject newPayment = new JsonObject();
@@ -259,7 +259,7 @@ public class RequestsHandler {
                     // Separate IV and encryptedBalance
                     byte[] iv2 = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
                     outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2)));
-                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv2)));
+                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv)));
                     outDB.flush();
 
                     String resultFromDB = secureMessageLibDB.unprotectMessage(inDB.readUTF());
@@ -314,9 +314,9 @@ public class RequestsHandler {
                     String date = paymentObject.getAsJsonPrimitive("date").getAsString();
                     double value = paymentObject.getAsJsonPrimitive("value").getAsDouble();
                     String description = paymentObject.getAsJsonPrimitive("description").getAsString();
-                    JsonArray users = paymentObject.getAsJsonPrimitive("destinyAccount").getAsJsonArray();
-                    String account = "";
+                    JsonArray users = paymentObject.getAsJsonArray("destinyAccount");
 
+                    String account = "";
                     for (int i = 0; i < users.size(); i++) {
                         if (i != users.size() - 1){
                             account = account + users.get(i) + "_";
