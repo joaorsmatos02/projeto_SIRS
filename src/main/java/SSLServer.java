@@ -234,7 +234,7 @@ class ServerThread extends Thread {
                                     String request = "";
                                     String description1 = "";
                                     for (int i = 0; i < requestAndNonceSplit.length - 1; i++) {
-                                        request = request + requestAndNonceSplit[i];
+                                        request = request + requestAndNonceSplit[i] + " ";
                                         if (i > 2){
                                             description1 = description1 + requestAndNonceSplit[i];
                                         }
@@ -243,7 +243,8 @@ class ServerThread extends Thread {
                                     if (nonceHandler.validRequest(Integer.parseInt(requestAndNonceSplit[requestAndNonceSplit.length - 1]), request)){
                                         nonceHandler.addRequest(Integer.parseInt(requestAndNonceSplit[requestAndNonceSplit.length - 1]), request);
                                         String answer = requestsHandler.handleRequestMakePayment(clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2] );
-                                        out.writeUTF(secureMessageLibClient.protectMessage(answer));
+                                        out.writeUTF(answer);
+                                        out.flush();
                                     } else {
                                         out.writeUTF(secureMessageLibClient.protectMessage("Freshness Attack"));
                                     }

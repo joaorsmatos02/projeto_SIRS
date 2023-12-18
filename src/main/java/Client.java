@@ -241,7 +241,7 @@ public class Client {
                                 out.flush();
                                 String nonce = secureMessageLib.unprotectMessage(in.readUTF());
                                 if(!nonce.equals("Wrong signature")){
-                                    out.writeUTF(secureMessageLib.protectMessage(userInput + nonce));
+                                    out.writeUTF(secureMessageLib.protectMessage(userInput + " " + nonce));
                                     out.flush();
                                     System.out.println(secureMessageLib.unprotectMessage(in.readUTF()));
                                     System.out.print("Next command: ");

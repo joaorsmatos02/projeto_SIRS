@@ -266,7 +266,7 @@ class DataBaseThread extends Thread {
                                         Document newPaymentDocument = Document.parse(encryptedValuesPayment.toString());
                                         // Create an update to push the new values to the "movements" array
                                         Document updatePayment = new Document("$push", new Document("payments", newPaymentDocument));
-                                        UpdateResult updatePaymentResult = userAccountCollection.updateOne(filterToAccount, updatePayment);
+                                        UpdateResult updatePaymentResult = userPaymentCollection.updateOne(filterToAccount, updatePayment);
 
                                         if (updatePaymentResult.getModifiedCount() > 0) {
                                             out.writeUTF(secureMessageLibServer.protectMessage("Payment done!"));

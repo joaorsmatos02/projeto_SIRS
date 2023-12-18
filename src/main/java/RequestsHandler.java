@@ -186,7 +186,7 @@ public class RequestsHandler {
 
     public String handleRequestMakePayment(String clientAccount, String value, String description, String destinyAccount){
         try{
-            if (clientAccount.split("_").length > 1){
+            if (clientAccount.split("_").length == 1) {
                 SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                 Date currentDate = new Date();
                 String date = dateFormat.format(currentDate);
@@ -218,6 +218,7 @@ public class RequestsHandler {
 
                 if(balance >= Double.parseDouble(value)){
                     outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
+                    outDB.flush();
                     String payment = inDB.readUTF();
 
                     String paymentResult = secureMessageLibDB.unprotectMessage(payment);
@@ -227,10 +228,10 @@ public class RequestsHandler {
                     ObjectInputStream ois2 = new ObjectInputStream(new ByteArrayInputStream(paymentMessageDecoded));
                     SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois2.readObject();
 
-                    JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
+                    //JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
+                    JsonObject objectAccountPaymentEncryptedOneLayer = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, false, "payment");
 
-
-                    String ivAndEncryptedPaymentNumberStr = objectAccountPaymentDecrypted.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
+                    String ivAndEncryptedPaymentNumberStr = objectAccountPaymentEncryptedOneLayer.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
                     byte[] ivAndEncryptedPaymentNumber = Base64.getDecoder().decode(ivAndEncryptedPaymentNumberStr);
 
                     // Separate IV and encryptedPaymentNumber
