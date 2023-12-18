@@ -650,9 +650,6 @@ public class SecureDocumentLib {
             payment.add("encryptedDestinyAccount", destinyAccountArray);
             payment.remove("destinyAccount");
 
-
-
-
             byte [] movement2Layer = encrypt(payment.toString().getBytes(), secretKey);
 
             return Base64.getEncoder().encodeToString(movement2Layer);
@@ -689,4 +686,51 @@ public class SecureDocumentLib {
     }
 
 
+    public String encryptPaymentNumber(int paymentNumber, String accountAlias, byte[] iv) {
+        try {
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey accountSecretKey = (SecretKey) ks.getKey(accountAlias + "_account_secret", keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, accountSecretKey, new IvParameterSpec(iv));
+
+            byte[] encryptedPaymentNumber = cipher.doFinal(String.valueOf(paymentNumber).getBytes());
+
+            byte[] ivAndEncryptedBalance = new byte[iv.length + encryptedPaymentNumber.length];
+            System.arraycopy(iv, 0, ivAndEncryptedBalance, 0, iv.length);
+            System.arraycopy(encryptedPaymentNumber, 0, ivAndEncryptedBalance, iv.length, encryptedPaymentNumber.length);
+
+            byte [] paymentNumber2Layer = encrypt(Base64.getEncoder().encode(ivAndEncryptedBalance), secretKey);
+
+            return Base64.getEncoder().encodeToString(paymentNumber2Layer);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String decryptPaymentNumber(String encryptedPaymentNumber) {
+        try {
+            KeyStore ks = KeyStore.getInstance("PKCS12");
+            ks.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+            SecretKey secretKey = (SecretKey) ks.getKey("server_db_secret", keyStorePass.toCharArray());
+
+            byte[] encryptedPayNumber = Base64.getDecoder().decode(encryptedPaymentNumber);
+
+            byte[] iv = Arrays.copyOfRange(encryptedPayNumber, 0, 16);
+            byte[] encryptedPayNumberBytes = Arrays.copyOfRange(encryptedPayNumber, iv.length, encryptedPayNumber.length);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            return new String(cipher.doFinal(encryptedPayNumberBytes));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

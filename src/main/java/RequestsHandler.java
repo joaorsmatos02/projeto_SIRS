@@ -250,6 +250,8 @@ public class RequestsHandler {
                     }
                     newPayment.add("destinyAccount", jsonArray);
 
+                    JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
+                    String paymentNumbers = objectAccountPaymentDecrypted.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
 
 
                     JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
@@ -260,6 +262,8 @@ public class RequestsHandler {
                     // Separate IV and encryptedBalance
                     byte[] iv2 = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
                     outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2)));
+                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPaymentNumber(Integer.parseInt(paymentNumbers) + 1, clientAccount, iv2)));
+
                     outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv)));
                     outDB.flush();
 
@@ -307,7 +311,9 @@ public class RequestsHandler {
 
                 JsonArray paymentsArray = accountObject.getAsJsonArray("payments");
 
-                String resultMessage = "";
+                String paymentNumber = accountObject.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
+
+                String resultMessage = "Total Payments: " + paymentNumber + "\n";
 
                 for (JsonElement paymentElement : paymentsArray) {
                     JsonObject paymentObject = paymentElement.getAsJsonObject();

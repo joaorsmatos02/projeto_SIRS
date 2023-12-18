@@ -262,6 +262,21 @@ class DataBaseThread extends Thread {
                                             break;
                                         }
 
+                                        //
+                                        String updatedPaymentNumber = secureDocumentLib.decryptPaymentNumber(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        Document filterToAccountPayment = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+
+                                        Document updatePayNumber = new Document("$set", new Document("encryptedBalance", updatedPaymentNumber));
+                                        UpdateResult updatePaymentNumberResult = userPaymentCollection.updateOne(filterToAccountPayment, updatePayNumber);
+
+                                        if (updatePaymentNumberResult.getModifiedCount() > 0) {
+                                            System.out.println("Payment Number updated successfully");
+                                        } else {
+                                            out.writeUTF("Error while performing movement.");
+                                            break;
+                                        }
+                                        //
+
                                         JsonObject encryptedValuesPayment = secureDocumentLib.decryptPayment(secureMessageLibServer.unprotectMessage(in.readUTF()));
                                         Document newPaymentDocument = Document.parse(encryptedValuesPayment.toString());
                                         // Create an update to push the new values to the "movements" array
