@@ -9,9 +9,6 @@ import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.cert.Certificate;
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
 import java.util.Random;
 
 public class SSLServer {
@@ -52,11 +49,12 @@ public class SSLServer {
             throw new RuntimeException(e);
         }
 
-
+        ObjectOutputStream outDB = null;
+        ObjectInputStream inDB = null;
 
         try {
-            ObjectOutputStream outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
-            ObjectInputStream inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
+            outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
+            inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
             //Send the Certificate (with HMAC) from Server to DB
             String serverRSAAlias = "serverrsa";
             KeyStore serverKS = KeyStore.getInstance("PKCS12");
@@ -94,9 +92,10 @@ public class SSLServer {
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
+
             while (true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                ServerThread st = new ServerThread(socket, dataBaseSocket, confirmPaymentHandler);
+                ServerThread st = new ServerThread(socket, dataBaseSocket, outDB, inDB, confirmPaymentHandler);
                 st.start();
             }
         } catch (Exception e1) {
@@ -121,16 +120,12 @@ class ServerThread extends Thread {
     private final ObjectInputStream inDB;
     private final ConfirmPaymentHandler confirmPaymentHandler;
 
-    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket, ConfirmPaymentHandler confirmPaymentHandler) {
+    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket, ObjectOutputStream outDB, ObjectInputStream inDB, ConfirmPaymentHandler confirmPaymentHandler) {
         this.socket = inSoc;
         this.dataBaseSocket = dataBaseSocket;
+        this.outDB = outDB;
+        this.inDB = inDB;
         this.confirmPaymentHandler = confirmPaymentHandler;
-        try {
-            this.outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
-            this.inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
     }
 

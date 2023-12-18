@@ -60,9 +60,12 @@ public class DataBase {
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             MongoClient mongoClient = MongoClients.create(connectionString);
             MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
+
             while(true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                DataBaseThread dbt = new DataBaseThread(socket, mongoDB);
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                DataBaseThread dbt = new DataBaseThread(mongoDB, out, in);
                 dbt.start();
             }
            } catch (Exception e1) {
@@ -81,19 +84,21 @@ class DataBaseThread extends Thread {
     private static final String trustStorePass = "dataBaseTrustStore";
     private static final String trustStorePath = "DataBase//dataBaseKeyStore//" + trustStoreName;
 
-    private final SSLSocket socket;
-    private final MongoDatabase mongoDB;
 
-    public DataBaseThread(SSLSocket inSoc, MongoDatabase mongoDB) {
-        this.socket = inSoc;
+    private final MongoDatabase mongoDB;
+    private final ObjectInputStream in;
+    private final ObjectOutputStream out;
+
+    public DataBaseThread(MongoDatabase mongoDB, ObjectOutputStream out, ObjectInputStream in) {
         this.mongoDB = mongoDB;
+        this.out = out;
+        this.in = in;
     }
 
     @Override
     public void run() {
 
-        try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-             ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
+        try{
 
             String secretKeyAlias = "server_db_secret";
             try (FileInputStream fis = new FileInputStream(keyStorePath)) {
@@ -183,6 +188,7 @@ class DataBaseThread extends Thread {
 
             MongoCollection<Document> userPaymentCollection = null;
             userPaymentCollection = mongoDB.getCollection("userAccountPayments");
+
 
             //actions
                 while(true) {
