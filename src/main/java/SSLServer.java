@@ -1,3 +1,5 @@
+import utils.RequestTable;
+
 import javax.crypto.Mac;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
@@ -10,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Random;
 
 public class SSLServer {
 
@@ -53,12 +56,10 @@ public class SSLServer {
         // create socket
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
 
-        NonceHandler nonceHandler = new NonceHandler();
-
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             while (true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                ServerThread st = new ServerThread(socket, dataBaseSocket, nonceHandler);
+                ServerThread st = new ServerThread(socket, dataBaseSocket);
                 st.start();
             }
         } catch (Exception e1) {
@@ -81,12 +82,10 @@ class ServerThread extends Thread {
     private final SSLSocket dataBaseSocket;
     private final ObjectOutputStream outDB;
     private final ObjectInputStream inDB;
-    private NonceHandler nonceHandler;
 
-    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket, NonceHandler nonceHandler) {
+    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket) {
         this.socket = inSoc;
         this.dataBaseSocket = dataBaseSocket;
-        this.nonceHandler = nonceHandler;
         try {
             this.outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             this.inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
@@ -224,7 +223,8 @@ class ServerThread extends Thread {
                                 break;
 
                             case "make_payment":
-                                String nonce = String.valueOf(nonceHandler.getNonce());
+                                Random rnd = new Random();
+                                String nonce = String.valueOf(rnd.nextInt());
                                 out.writeUTF(secureMessageLibClient.protectMessage(nonce));
                                 out.flush();
 
@@ -240,15 +240,16 @@ class ServerThread extends Thread {
                                         }
                                     }
 
-                                    if (nonceHandler.validRequest(Integer.parseInt(requestAndNonceSplit[requestAndNonceSplit.length - 1]), request)){
-                                        nonceHandler.addRequest(Integer.parseInt(requestAndNonceSplit[requestAndNonceSplit.length - 1]), request);
-                                        String answer = requestsHandler.handleRequestMakePayment(clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2] );
-                                        out.writeUTF(answer);
-                                        out.flush();
-                                    } else {
-                                        out.writeUTF(secureMessageLibClient.protectMessage("Freshness Attack"));
+                                    if (nonce.equals(requestAndNonceSplit[requestAndNonceSplit.length - 1])){
+                                        if (!RequestTable.hasEntry(request)) {
+                                            RequestTable.addEntry(request);
+                                            String answer = requestsHandler.handleRequestMakePayment(clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2]);
+                                            out.writeUTF(answer);
+                                            out.flush();
+                                        } else {
+                                            out.writeUTF(secureMessageLibClient.protectMessage("Freshness Attack"));
+                                        }
                                     }
-
                                 } else {
                                     out.writeUTF(secureMessageLibClient.protectMessage("Error verifying signature"));
                                 }
