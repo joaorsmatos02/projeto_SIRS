@@ -275,7 +275,7 @@ class ServerThread extends Thread {
                                 break;
 
                             case "confirm_payment":
-                                String resultPaymentConfirmation = requestsHandler.handleRequestConfirmPayment(clientAccount, userAndDevice.split("_")[0], userInput[1],confirmPaymentHandler);
+                                String resultPaymentConfirmation = requestsHandler.handleRequestConfirmPayment(clientAccount, userAndDevice.split("_")[0], userInput[1], confirmPaymentHandler);
                                 out.writeUTF(resultPaymentConfirmation);
                                 out.flush();
                                 break;
@@ -287,6 +287,7 @@ class ServerThread extends Thread {
                     }
                 } else {
                     out.writeUTF(secureMessageLibClient.protectMessage("Wrong signature"));
+                    out.flush();
                 }
 
             }

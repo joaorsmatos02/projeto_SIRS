@@ -256,6 +256,24 @@ public class Client {
                             }
                             break;
 
+                        case "confirm_payment":
+                            if(input.length == 2 && Integer.parseInt(input[1]) >= 0) {
+                                String encryptedPayload = secureMessageLib.protectMessage(userInput);
+                                if (!encryptedPayload.equals("Encryption Failed")){
+                                    out.writeUTF(encryptedPayload);
+                                    out.flush();
+                                    String answer = secureMessageLib.unprotectMessage(in.readUTF());
+                                    System.out.println(answer);
+                                    System.out.print("Next command: ");
+                                } else {
+                                    System.out.println("Encryption Failed");
+                                    printMenu(userAlias);
+                                }
+                            } else {
+                                System.out.println("Error: Unrecognized command. Please check your input.");
+                                printMenu(userAlias);
+                            }
+                            break;
 
                         case "exit":
                             System.out.print("Closing BlingBank...");
@@ -284,7 +302,9 @@ public class Client {
                 " - In order to see your movements, write the following command > movements\n" +
                 " - In order to make a movement, write the following command adding the value and the description > make_movement <value> <description>\n" +
                 " - In order to make a payment, write the following command adding the value, destiny account (alias name) and description make_payment > make_payment <value> <destinyAccount> <description>\n" +
-                " - In order to see your payments, write the following command > payments");
+                " - In order to see your payments, write the following command > payments\n" +
+                " - In order to see your pending payments, write the following command > payments_to_confirm\n" +
+                " - In order to confirm your pending payments, write the following command > confirm_payment <Payment ID>");
     }
 
     public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {

@@ -21,12 +21,18 @@ public class ConfirmPaymentHandler {
 
     public String paymentsToConfirm(String user) {
         String result = "Your Payments waiting for confirmation:\n";
+        boolean isEmpty = true;
         for (ConfirmPaymentDTO payment : this.paymentsWaitingForConfirmation){
             if (payment.usersToConfirm().contains(user)){
                 result = result + "Payment ID: " + payment.paymentID() + "\nValue: " + payment.value()
                         + "\nDestination account: " + payment.destinyAccount()
                         + "\nDescription: " + payment.description() + "\n\n";
+                isEmpty = false;
             }
+        }
+
+        if(isEmpty) {
+            return "You dont have any pending payments.";
         }
         return result;
     }
