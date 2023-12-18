@@ -357,7 +357,7 @@ class DataBaseThread extends Thread {
         String[] plainFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account.json",
                 "DataBase/initDataBase/plain_text/bob_account.json",
                 "DataBase/initDataBase/plain_text/mario_account.json",
-                "DataBase/initDataBase/plain_text/alcides_account.json" +
+                "DataBase/initDataBase/plain_text/alcides_account.json",
                 "DataBase/initDataBase/plain_text/alice_bob_account.json"};
 
         String[] plainPaymentsFilePaths = new String[]{"DataBase/initDataBase/plain_text/alice_account_payments.json",

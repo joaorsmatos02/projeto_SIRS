@@ -294,6 +294,6 @@ public class Client {
     }
 
     private static boolean existingAccountDifFromSelf(String currentClient, String paymentToAccount) {
-        return (paymentToAccount.equals("alice") || paymentToAccount.equals("bob") || paymentToAccount.equals("mario") || paymentToAccount.equals("alcides")) && !paymentToAccount.equals(currentClient);
+        return (paymentToAccount.equals("alice") || paymentToAccount.equals("bob") || paymentToAccount.equals("mario") || paymentToAccount.equals("alcides") || paymentToAccount.equals("alice_bob")) && !paymentToAccount.equals(currentClient);
     }
 }
