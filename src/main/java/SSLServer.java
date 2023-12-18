@@ -52,6 +52,42 @@ public class SSLServer {
             throw new RuntimeException(e);
         }
 
+
+
+        try {
+            ObjectOutputStream outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
+            ObjectInputStream inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
+            //Send the Certificate (with HMAC) from Server to DB
+            String serverRSAAlias = "serverrsa";
+            KeyStore serverKS = KeyStore.getInstance("PKCS12");
+            serverKS.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
+
+            Certificate serverCertificate = serverKS.getCertificate(serverRSAAlias);
+            SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());
+            //send the certificate and the associated HMAC
+            outDB.writeObject(serverCertificate);
+            outDB.writeObject(ServerThread.calculateHMac(secretKey, serverCertificate));
+            outDB.flush();
+
+            //Read the result flag > 0-Error; 1-Correct
+            String resultFlag = inDB.readUTF();
+            if(resultFlag.equals("0")) {
+                System.out.println("Certificate validation error.");
+                inDB.close();
+                outDB.close();
+                dataBaseSocket.close();
+                System.exit(1);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                dataBaseSocket.close();
+            } catch (IOException ex) {
+                System.out.println("DataBase connection closed");
+            }
+        }
+
         ConfirmPaymentHandler confirmPaymentHandler = new ConfirmPaymentHandler();
 
         // create socket
@@ -102,39 +138,7 @@ class ServerThread extends Thread {
     public void run() {
 
         System.out.println("Client connected");
-
-        try {
-            //Send the Certificate (with HMAC) from Server to DB
-            String serverRSAAlias = "serverrsa";
-            KeyStore serverKS = KeyStore.getInstance("PKCS12");
-            serverKS.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
-
-            Certificate serverCertificate = serverKS.getCertificate(serverRSAAlias);
-            SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());
-            //send the certificate and the associated HMAC
-            outDB.writeObject(serverCertificate);
-            outDB.writeObject(calculateHMac(secretKey, serverCertificate));
-            outDB.flush();
-
-            //Read the result flag > 0-Error; 1-Correct
-            String resultFlag = inDB.readUTF();
-            if(resultFlag.equals("0")) {
-                System.out.println("Certificate validation error.");
-                inDB.close();
-                outDB.close();
-                socket.close();
-                System.exit(1);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            try {
-                dataBaseSocket.close();
-            } catch (IOException ex) {
-                System.out.println("DataBase connection closed");
-            }
-        }
-
+        
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
