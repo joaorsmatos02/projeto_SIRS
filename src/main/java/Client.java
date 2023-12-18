@@ -284,7 +284,8 @@ public class Client {
                 " - In order to see your movements, write the following command > movements\n" +
                 " - In order to make a movement, write the following command adding the value and the description > make_movement <value> <description>\n" +
                 " - In order to make a payment, write the following command adding the value, destiny account (alias name) and description make_payment > make_payment <value> <destinyAccount> <description>\n" +
-                " - In order to see your payments, write the following command > payments");
+                " - In order to see your payments, write the following command > payments\n" +
+                " - In order to see your pending payments, write the following command > payments_to_confirm");
     }
 
     public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
