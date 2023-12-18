@@ -197,7 +197,7 @@ public class Client {
                 String[] input = userInput.split(" ");
                 if (input.length != 0){
                     switch (input[0]) {
-                        case "balance", "movements", "payments":
+                        case "balance", "movements", "payments", "payments_to_confirm":
                             if(input.length == 1) {
                                 String encryptedPayload = secureMessageLib.protectMessage(userInput);
                                 if (!encryptedPayload.equals("Encryption Failed")){

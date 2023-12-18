@@ -52,6 +52,7 @@ public class SSLServer {
             throw new RuntimeException(e);
         }
 
+        ConfirmPaymentHandler confirmPaymentHandler = new ConfirmPaymentHandler();
 
         // create socket
         ServerSocketFactory ssf = SSLServerSocketFactory.getDefault();
@@ -59,7 +60,7 @@ public class SSLServer {
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             while (true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                ServerThread st = new ServerThread(socket, dataBaseSocket);
+                ServerThread st = new ServerThread(socket, dataBaseSocket, confirmPaymentHandler);
                 st.start();
             }
         } catch (Exception e1) {
@@ -82,10 +83,12 @@ class ServerThread extends Thread {
     private final SSLSocket dataBaseSocket;
     private final ObjectOutputStream outDB;
     private final ObjectInputStream inDB;
+    private final ConfirmPaymentHandler confirmPaymentHandler;
 
-    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket) {
+    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket, ConfirmPaymentHandler confirmPaymentHandler) {
         this.socket = inSoc;
         this.dataBaseSocket = dataBaseSocket;
+        this.confirmPaymentHandler = confirmPaymentHandler;
         try {
             this.outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             this.inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
@@ -243,7 +246,7 @@ class ServerThread extends Thread {
                                     if (nonce.equals(requestAndNonceSplit[requestAndNonceSplit.length - 1])){
                                         if (!RequestTable.hasEntry(request)) {
                                             RequestTable.addEntry(request);
-                                            String answer = requestsHandler.handleRequestMakePayment(clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2]);
+                                            String answer = requestsHandler.handleRequestMakePayment(userAndDevice.split("_")[0], clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2], confirmPaymentHandler);
                                             out.writeUTF(answer);
                                             out.flush();
                                         } else {
@@ -261,6 +264,17 @@ class ServerThread extends Thread {
                                 out.flush();
                                 break;
 
+                            case "payments_to_confirm":
+                                String resultPaymentsToConfirm = requestsHandler.handleRequestPaymentsToConfirm(userAndDevice.split("_")[0], confirmPaymentHandler);
+                                out.writeUTF(resultPaymentsToConfirm);
+                                out.flush();
+                                break;
+
+                            case "confirm_payment":
+                                String resultPaymentConfirmation = requestsHandler.handleRequestConfirmPayment(clientAccount, userAndDevice.split("_")[0], userInput[1],confirmPaymentHandler);
+                                out.writeUTF(resultPaymentConfirmation);
+                                out.flush();
+                                break;
 
                             default:
                                 System.out.println("Error: Unrecognized command. Please check your input.");

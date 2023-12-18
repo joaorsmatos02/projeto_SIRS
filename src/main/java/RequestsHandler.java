@@ -9,18 +9,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
+import java.util.*;
 
 public class RequestsHandler {
     private final SecureMessageLib secureMessageLibDB;
     private final SecureMessageLib secureMessageLibClient;
-    private final  SecureDocumentLib secureDocumentLib ;
+    private final SecureDocumentLib secureDocumentLib;
     private final ObjectOutputStream outDB;
     private final ObjectInputStream inDB;
 
-    public RequestsHandler(SecureMessageLib secureMessageLibDB, SecureMessageLib secureMessageLibClient,  SecureDocumentLib secureDocumentLib,ObjectOutputStream outDB, ObjectInputStream inDB){
+    public RequestsHandler(SecureMessageLib secureMessageLibDB, SecureMessageLib secureMessageLibClient, SecureDocumentLib secureDocumentLib, ObjectOutputStream outDB, ObjectInputStream inDB) {
         this.secureMessageLibDB = secureMessageLibDB;
         this.secureMessageLibClient = secureMessageLibClient;
         this.secureDocumentLib = secureDocumentLib;
@@ -28,7 +26,7 @@ public class RequestsHandler {
         this.inDB = inDB;
     }
 
-    public String handleRequestBalance(String clientAccount){
+    public String handleRequestBalance(String clientAccount) {
         try {
             // Case 0, no update on DB, case 1, new DB update
             String updateDBFlag = secureMessageLibDB.protectMessage("0");
@@ -59,13 +57,13 @@ public class RequestsHandler {
                 return secureMessageLibClient.protectMessage(resultMessage);
 
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             return "Error";
         }
         return "Error";
     }
 
-    public String handleRequestMovements(String clientAccount){
+    public String handleRequestMovements(String clientAccount) {
         try {
             // Case 0, no update on DB, case 1, new DB update
             String updateDBFlag = secureMessageLibDB.protectMessage("0");
@@ -91,7 +89,7 @@ public class RequestsHandler {
                 JsonObject accountObject = object.getAsJsonObject("account");
 
                 JsonArray movementsArray = accountObject.getAsJsonArray("movements");
-                
+
                 String resultMessage = "";
 
                 for (JsonElement movementElement : movementsArray) {
@@ -106,7 +104,7 @@ public class RequestsHandler {
 
                 return secureMessageLibClient.protectMessage(resultMessage);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             return "Error";
         }
         return "Error";
@@ -128,7 +126,7 @@ public class RequestsHandler {
                 JsonObject movement = new JsonObject();
 
                 movement.addProperty("date", date);
-                movement.addProperty("value", "-"+value);
+                movement.addProperty("value", "-" + value);
                 movement.addProperty("description", description);
 
                 outDB.writeUTF(updateDBFlag);
@@ -152,7 +150,7 @@ public class RequestsHandler {
 
                 double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
 
-                if (balance >= Double.parseDouble(value)){
+                if (balance >= Double.parseDouble(value)) {
                     outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
 
                     JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
@@ -177,115 +175,144 @@ public class RequestsHandler {
                 }
 
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             return "Error";
         }
         return "Error";
     }
 
 
-    public String handleRequestMakePayment(String clientAccount, String value, String description, String destinyAccount){
-        try{
-            if (clientAccount.split("_").length == 1) {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                Date currentDate = new Date();
-                String date = dateFormat.format(currentDate);
+    public String handleRequestMakePayment(String userMakingPayment, String clientAccount, String value, String description, String destinyAccount, ConfirmPaymentHandler confirmPaymentHandler) {
 
-                String updateDBFlag = secureMessageLibDB.protectMessage("1");
-                String encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
-                String encryptedRequest = secureMessageLibDB.protectMessage("payment");
+        if (clientAccount.split("_").length == 1) {
+            return payment(clientAccount, value, description, destinyAccount);
+        } else {
 
-                outDB.writeUTF(updateDBFlag);
-                outDB.writeUTF(encryptedAccount);
-                outDB.writeUTF(encryptedRequest);
+            return waitingConfirm(userMakingPayment, clientAccount, value, description, destinyAccount, confirmPaymentHandler);
+        }
+    }
+
+    private String waitingConfirm(String userMakingPayment, String clientAccount, String value, String description, String destinyAccount, ConfirmPaymentHandler confirmPaymentHandler) {
+        String [] usersFromAccount = clientAccount.split("_");
+        List<String> usersToConfirm = new ArrayList<>();
+        for(String user : usersFromAccount){
+            if(!user.equals(userMakingPayment)){
+                usersToConfirm.add(user);
+            }
+        }
+
+        confirmPaymentHandler.addEntry(usersToConfirm, value, description, destinyAccount);
+        String result = "Waiting for ";
+
+        for (int i = 0; i < usersToConfirm.size(); i++) {
+            if (i < usersToConfirm.size() - 1) {
+                result = result + usersToConfirm + " and ";
+            } else {
+                result = result + usersToConfirm + " confirmation \n";
+            }
+        }
+
+        return secureMessageLibClient.protectMessage(result);
+    }
+
+
+    public String payment(String clientAccount, String value, String description, String destinyAccount) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Date currentDate = new Date();
+            String date = dateFormat.format(currentDate);
+
+            String updateDBFlag = secureMessageLibDB.protectMessage("1");
+            String encryptedAccount = secureMessageLibDB.protectMessage(clientAccount);
+            String encryptedRequest = secureMessageLibDB.protectMessage("payment");
+
+            outDB.writeUTF(updateDBFlag);
+            outDB.writeUTF(encryptedAccount);
+            outDB.writeUTF(encryptedRequest);
+            outDB.flush();
+
+            //get the account to get the iv
+            String account = inDB.readUTF();
+
+            String result = secureMessageLibDB.unprotectMessage(account);
+
+            byte[] messageDecoded = Base64.getDecoder().decode(result);
+
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
+            SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
+
+            JsonObject objectAccountDecrypted = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
+
+            JsonObject accountObject = objectAccountDecrypted.getAsJsonObject("account");
+
+            double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
+
+            if (balance >= Double.parseDouble(value)) {
+                outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
+                outDB.flush();
+                String payment = inDB.readUTF();
+
+                String paymentResult = secureMessageLibDB.unprotectMessage(payment);
+
+                byte[] paymentMessageDecoded = Base64.getDecoder().decode(paymentResult);
+
+                ObjectInputStream ois2 = new ObjectInputStream(new ByteArrayInputStream(paymentMessageDecoded));
+                SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois2.readObject();
+
+                //JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
+                JsonObject objectAccountPaymentEncryptedOneLayer = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, false, "payment");
+
+                String ivAndEncryptedPaymentNumberStr = objectAccountPaymentEncryptedOneLayer.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
+                byte[] ivAndEncryptedPaymentNumber = Base64.getDecoder().decode(ivAndEncryptedPaymentNumberStr);
+
+                // Separate IV and encryptedPaymentNumber
+                byte[] iv = Arrays.copyOfRange(ivAndEncryptedPaymentNumber, 0, 16); // 16 bytes for the IV
+
+                JsonObject newPayment = new JsonObject();
+
+                newPayment.addProperty("date", date);
+                newPayment.addProperty("value", "-" + value);
+                newPayment.addProperty("description", description);
+                JsonArray jsonArray = new JsonArray();
+
+                String[] usersDestiny = destinyAccount.split("_");
+                for (int i = 0; i < usersDestiny.length; i++) {
+                    jsonArray.add(usersDestiny[i]);
+                }
+                newPayment.add("destinyAccount", jsonArray);
+
+
+                JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
+                JsonObject paymentObject = objectAccountPaymentDecrypted.getAsJsonObject("account");
+
+                String paymentNumbers = paymentObject.getAsJsonPrimitive("payments_number").getAsString();
+
+
+                JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
+
+                String ivAndEncryptedBalanceStr = object.getAsJsonPrimitive("encryptedBalance").getAsString();
+                byte[] ivAndEncryptedBalance = Base64.getDecoder().decode(ivAndEncryptedBalanceStr);
+
+                // Separate IV and encryptedBalance
+                byte[] iv2 = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
+                outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2)));
+                outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPaymentNumber(Integer.parseInt(paymentNumbers) + 1, clientAccount, iv)));
+
+                outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv)));
                 outDB.flush();
 
-                //get the account to get the iv
-                String account = inDB.readUTF();
+                String resultFromDB = secureMessageLibDB.unprotectMessage(inDB.readUTF());
 
-                String result = secureMessageLibDB.unprotectMessage(account);
-
-                byte[] messageDecoded = Base64.getDecoder().decode(result);
-
-                ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(messageDecoded));
-                SignedObjectDTO signedObjectDTO = (SignedObjectDTO) ois.readObject();
-
-                JsonObject objectAccountDecrypted = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
-
-                JsonObject accountObject = objectAccountDecrypted.getAsJsonObject("account");
-
-                double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
-
-                if(balance >= Double.parseDouble(value)){
-                    outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
-                    outDB.flush();
-                    String payment = inDB.readUTF();
-
-                    String paymentResult = secureMessageLibDB.unprotectMessage(payment);
-
-                    byte[] paymentMessageDecoded = Base64.getDecoder().decode(paymentResult);
-
-                    ObjectInputStream ois2 = new ObjectInputStream(new ByteArrayInputStream(paymentMessageDecoded));
-                    SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois2.readObject();
-
-                    //JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
-                    JsonObject objectAccountPaymentEncryptedOneLayer = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, false, "payment");
-
-                    String ivAndEncryptedPaymentNumberStr = objectAccountPaymentEncryptedOneLayer.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
-                    byte[] ivAndEncryptedPaymentNumber = Base64.getDecoder().decode(ivAndEncryptedPaymentNumberStr);
-
-                    // Separate IV and encryptedPaymentNumber
-                    byte[] iv = Arrays.copyOfRange(ivAndEncryptedPaymentNumber, 0, 16); // 16 bytes for the IV
-
-                    JsonObject newPayment = new JsonObject();
-
-                    newPayment.addProperty("date", date);
-                    newPayment.addProperty("value", "-"+value);
-                    newPayment.addProperty("description", description);
-                    JsonArray jsonArray = new JsonArray();
-
-                    String [] usersDestiny = destinyAccount.split("_");
-                    for (int i = 0; i < usersDestiny.length ; i++) {
-                        jsonArray.add(usersDestiny[i]);
-                    }
-                    newPayment.add("destinyAccount", jsonArray);
-
-
-
-                    JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
-                    JsonObject paymentObject = objectAccountPaymentDecrypted.getAsJsonObject("account");
-
-                    String paymentNumbers = paymentObject.getAsJsonPrimitive("payments_number").getAsString();
-
-
-                    JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
-
-                    String ivAndEncryptedBalanceStr = object.getAsJsonPrimitive("encryptedBalance").getAsString();
-                    byte[] ivAndEncryptedBalance = Base64.getDecoder().decode(ivAndEncryptedBalanceStr);
-
-                    // Separate IV and encryptedBalance
-                    byte[] iv2 = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
-                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2)));
-                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPaymentNumber(Integer.parseInt(paymentNumbers) + 1, clientAccount, iv)));
-
-                    outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv)));
-                    outDB.flush();
-
-                    String resultFromDB = secureMessageLibDB.unprotectMessage(inDB.readUTF());
-
-                    return secureMessageLibClient.protectMessage(resultFromDB);
-                } else {
-                    outDB.writeUTF(secureMessageLibDB.protectMessage("stop"));
-                    return secureMessageLibClient.protectMessage("You dont have balance to make that movement");
-                }
+                return secureMessageLibClient.protectMessage(resultFromDB);
             } else {
-                //precisa confirmação
-                return "aguardando";
+                outDB.writeUTF(secureMessageLibDB.protectMessage("stop"));
+                return secureMessageLibClient.protectMessage("You dont have balance to make that movement");
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return "Error";
+        return null;
     }
 
     public String handleRequestPayments(String clientAccount) {
@@ -329,7 +356,7 @@ public class RequestsHandler {
 
                     String account = "";
                     for (int i = 0; i < users.size(); i++) {
-                        if (i != users.size() - 1){
+                        if (i != users.size() - 1) {
                             account = account + users.get(i) + "_";
                         } else {
                             account = account + users.get(i);
@@ -342,9 +369,31 @@ public class RequestsHandler {
 
                 return secureMessageLibClient.protectMessage(resultMessage);
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             return "Error";
         }
         return "Error";
+    }
+
+    public String handleRequestPaymentsToConfirm(String user, ConfirmPaymentHandler confirmPaymentHandler) {
+        return secureMessageLibClient.protectMessage(confirmPaymentHandler.paymentsToConfirm(user));
+    }
+
+    public String handleRequestConfirmPayment(String clientAccount, String user, String id,ConfirmPaymentHandler confirmPaymentHandler) {
+        if(confirmPaymentHandler.hasID(id)){
+            if(confirmPaymentHandler.lastConfirm(user, id)){
+                String value = confirmPaymentHandler.getValue(id);
+                String destinyAccount = confirmPaymentHandler.getDestinyAccount(id);
+                String description = confirmPaymentHandler.getDescription(id);
+                confirmPaymentHandler.remove(id);
+                return payment(clientAccount,value, description, destinyAccount);
+
+            } else {
+                return secureMessageLibClient.protectMessage(confirmPaymentHandler.removeUser(id, user));
+            }
+
+        } else {
+            return secureMessageLibClient.protectMessage("Invalid ID");
+        }
     }
 }
