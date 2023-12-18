@@ -266,7 +266,7 @@ class DataBaseThread extends Thread {
                                         String updatedPaymentNumber = secureDocumentLib.decryptPaymentNumber(secureMessageLibServer.unprotectMessage(in.readUTF()));
                                         Document filterToAccountPayment = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
-                                        Document updatePayNumber = new Document("$set", new Document("encryptedBalance", updatedPaymentNumber));
+                                        Document updatePayNumber = new Document("$set", new Document("encryptedPaymentNumbers", updatedPaymentNumber));
                                         UpdateResult updatePaymentNumberResult = userPaymentCollection.updateOne(filterToAccountPayment, updatePayNumber);
 
                                         if (updatePaymentNumberResult.getModifiedCount() > 0) {

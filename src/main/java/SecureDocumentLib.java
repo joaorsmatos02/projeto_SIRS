@@ -699,11 +699,11 @@ public class SecureDocumentLib {
 
             byte[] encryptedPaymentNumber = cipher.doFinal(String.valueOf(paymentNumber).getBytes());
 
-            byte[] ivAndEncryptedBalance = new byte[iv.length + encryptedPaymentNumber.length];
-            System.arraycopy(iv, 0, ivAndEncryptedBalance, 0, iv.length);
-            System.arraycopy(encryptedPaymentNumber, 0, ivAndEncryptedBalance, iv.length, encryptedPaymentNumber.length);
+            byte[] ivAndEncryptedPaymentNumber = new byte[iv.length + encryptedPaymentNumber.length];
+            System.arraycopy(iv, 0, ivAndEncryptedPaymentNumber, 0, iv.length);
+            System.arraycopy(encryptedPaymentNumber, 0, ivAndEncryptedPaymentNumber, iv.length, encryptedPaymentNumber.length);
 
-            byte [] paymentNumber2Layer = encrypt(Base64.getEncoder().encode(ivAndEncryptedBalance), secretKey);
+            byte [] paymentNumber2Layer = encrypt(Base64.getEncoder().encode(ivAndEncryptedPaymentNumber), secretKey);
 
             return Base64.getEncoder().encodeToString(paymentNumber2Layer);
 
