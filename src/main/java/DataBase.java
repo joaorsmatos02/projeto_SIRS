@@ -92,8 +92,6 @@ class DataBaseThread extends Thread {
     @Override
     public void run() {
 
-        System.out.println("Server connecting to DataBase");
-
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
