@@ -22,8 +22,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Objects;
-
 import static utils.utils.writeToFile;
+import static utils.utils.writeLogFile;
 
 public class DataBase {
 
@@ -46,6 +46,7 @@ public class DataBase {
 
     public static void main(String[] args) {
         System.out.println("Starting database server...");
+        writeLogFile("DataBase", "DataBase", "Starting database server...");
 
         // setup keystore
         File keyStore = new File(keyStorePath);
@@ -60,6 +61,7 @@ public class DataBase {
         try (SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(port)) {
             MongoClient mongoClient = MongoClients.create(connectionString);
             MongoDatabase mongoDB = mongoClient.getDatabase(databaseName);
+            writeLogFile("DataBase", "DataBase", "Starting connection...");
 
             while(true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
@@ -99,7 +101,7 @@ class DataBaseThread extends Thread {
     public void run() {
 
         try{
-
+            writeLogFile("DataBase", "DataBase", "Server connected");
             String secretKeyAlias = "server_db_secret";
             try (FileInputStream fis = new FileInputStream(keyStorePath)) {
                 KeyStore dbKeyStore = KeyStore.getInstance("PKCS12");
@@ -107,9 +109,9 @@ class DataBaseThread extends Thread {
 
                 // Check if the alias is present in the keystore
                 if (!dbKeyStore.containsAlias(secretKeyAlias)) {
+                    writeLogFile("DataBase", "DataBase", "Check if Secret Key between Server and DB is present in the DB keystore - FALSE");
                     System.out.println("Alias '" + secretKeyAlias + "' is not present in the keystore.");
 
-                    // Load another keystore (replace this with your actual logic)
                     String serverKeyStorePath = "Server//serverKeyStore//serverKeyStore";
                     String serverKeyStorePassword = "serverKeyStore";
 
@@ -128,6 +130,7 @@ class DataBaseThread extends Thread {
 
                         try (FileOutputStream fos = new FileOutputStream(keyStorePath)) {
                             dbKeyStore.store(fos, keyStorePass.toCharArray());
+                            writeLogFile("DataBase", "DataBase", "Secret Key between Server and DB added in the DB keystore.");
                         }
                     }
                 }
@@ -136,7 +139,9 @@ class DataBaseThread extends Thread {
             //Receive and verify the integrity of the Server Certificate
             //Receive the Certificate from Server
             Certificate serverCertificateReceived = (Certificate) in.readObject();
+            writeLogFile("Server", "DataBase", "Receive the Certificate from Server: " + serverCertificateReceived.toString());
             byte[] serverCertificateHMAC = (byte[]) in.readObject();
+            writeLogFile("Server", "DataBase", "Receive the HMAC of the Certificate from Server: " + serverCertificateHMAC.toString());
 
             //Get SecretKey associated to Server
             KeyStore dataBaseKS = KeyStore.getInstance("PKCS12");
@@ -144,6 +149,7 @@ class DataBaseThread extends Thread {
             SecretKey secretKey = (SecretKey) dataBaseKS.getKey("server_db_secret", keyStorePass.toCharArray());
 
             if(!verifyHMac(secretKey, serverCertificateReceived, serverCertificateHMAC)) {
+                writeLogFile("DataBase", "Server", "Corrupted Certificate. HMAC verification failed.");
                 System.out.println("Corrupted Certificate. HMAC verification failed.");
                 //Error flag.
                 out.writeUTF("0");
@@ -151,14 +157,17 @@ class DataBaseThread extends Thread {
                 out.close();
                 System.exit(1);
             }
+            writeLogFile("DataBase", "DataBase", "HMAC of the Server Certificate verified successfully");
 
             //Compare the Server Certificate in DataBase TrustStore with the received one
             KeyStore dataBaseTS = KeyStore.getInstance("PKCS12");
             dataBaseTS.load(new FileInputStream(new File(trustStorePath)), trustStorePass.toCharArray());
             Certificate serverCertificateFromDBTrustStore = dataBaseTS.getCertificate("serverrsa");
 
+            writeLogFile("DataBase", "DataBase", "Comparing the Server Certificate in DataBase TrustStore with the received one...");
             if(!serverCertificateReceived.equals(serverCertificateFromDBTrustStore)) {
                 System.out.println("Non-authentic Certificate.");
+                writeLogFile("DataBase", "Server", "Non-authentic Certificate.");
                 //Error flag.
                 out.writeUTF("0");
                 in.close();
@@ -166,12 +175,9 @@ class DataBaseThread extends Thread {
                 System.exit(1);
             }
 
-            //Verifiy if first time (Empty DataBase)
-            //if()
-
-
             //Send a confirmation flag > 0-Error; 1-Correct
             //All correct flag
+            writeLogFile("DataBase", "Server", "Authentic Certificate.");
             out.writeUTF("1");
             out.flush();
 
@@ -190,35 +196,54 @@ class DataBaseThread extends Thread {
             userPaymentCollection = mongoDB.getCollection("userAccountPayments");
 
 
-            //actions
+                //actions
+                writeLogFile("DataBase", "Database", "Waiting for actions...");
                 while(true) {
-                    String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(in.readUTF());
-                    String decryptedAccount = secureMessageLibServer.unprotectMessage(in.readUTF());
+                    String encryptedUpdateFlag = in.readUTF();
+                    String decryptedUpdateFlag = secureMessageLibServer.unprotectMessage(encryptedUpdateFlag);
+                    String encryptedAccount = in.readUTF();
+                    String decryptedAccount = secureMessageLibServer.unprotectMessage(encryptedAccount);
+                    writeLogFile("Server", "Database", "\nEncryptedUpdateFlag: " + encryptedUpdateFlag + "\nDecryptedUpdateFlag: " + decryptedUpdateFlag +
+                                                                        "\nEncryptedAccount: " + encryptedAccount + "\nDecryptedAccount:" + decryptedAccount);
 
                     if(!decryptedUpdateFlag.equals("Error verifying signature") && !decryptedUpdateFlag.equals("Decryption Failed")
                             && !decryptedAccount.equals("Decryption Failed") && !decryptedAccount.equals("Error verifying signature") && userAccountCollection != null) {
                         String[] clientsFromAccount = decryptedAccount.split("_");
                         if(decryptedUpdateFlag.equals("0")) {
-                            String docType = secureMessageLibServer.unprotectMessage(in.readUTF());
+                            String encryptedDocType = in.readUTF();
+                            String docType = secureMessageLibServer.unprotectMessage(encryptedDocType);
+                            writeLogFile("Server", "Database", "\nEncryptedDocType: " + encryptedDocType +
+                                    "\nDecryptedDocType" + docType);
+
                             if(docType.equals("account")){
                                 getAccount(userAccountCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
                             } else {
                                 getAccountPayment(userPaymentCollection,secureDocumentLib,secureMessageLibServer, out, clientsFromAccount);
                             }
 
-
-                            // Update db
+                        // Update db
                         } else {
-                            String request = secureMessageLibServer.unprotectMessage(in.readUTF());
+                            String encryptedRequest = in.readUTF();
+                            String request = secureMessageLibServer.unprotectMessage(encryptedRequest);
+                            writeLogFile("Server", "Database", "\nEncryptedRequest: " + encryptedRequest +
+                                    "\nDecryptedRequest" + request);
+
                             //tratar dos pedidos de update
                             String [] requestSplit = request.split(" ");
                             getAccount(userAccountCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
 
                             switch (requestSplit[0]) {
                                 case "movement":
-                                    if(secureMessageLibServer.unprotectMessage(in.readUTF()).equals("ok")){
-                                        String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(in.readUTF()));
-                                        //String updatedBalance = secureMessageLibServer.unprotectMessage(in.readUTF());
+                                    String encryptedConfirmationFlag = in.readUTF();
+                                    String decryptedConfirmationFlag = secureMessageLibServer.unprotectMessage(encryptedConfirmationFlag);
+                                    writeLogFile("Server", "Database", "(Movement)\nEncryptedConfirmationFlag: " + encryptedConfirmationFlag +
+                                            "\nDecryptedConfirmationFlag" + decryptedConfirmationFlag);
+
+                                    if(decryptedConfirmationFlag.equals("ok")){
+                                        String encryptedUpdatedBalance = in.readUTF();
+                                        String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(encryptedUpdatedBalance));
+                                        writeLogFile("Server", "Database", "\nEncryptedUpdatedBalance: " + encryptedUpdatedBalance +
+                                                "\nDecryptedUpdatedBalance" + updatedBalance);
 
                                         Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
@@ -227,32 +252,51 @@ class DataBaseThread extends Thread {
 
                                         if (updateBalanceResult.getModifiedCount() > 0) {
                                             System.out.println("Balance updated successfully");
+                                            writeLogFile("DataBase", "Database", "Balance updated successfully");
                                         } else {
                                             out.writeUTF("Error while performing movement.");
+                                            writeLogFile("DataBase", "Database", "Error while performing movement.");
                                             break;
                                         }
 
-                                        JsonObject encryptedValuesMovement = secureDocumentLib.decryptMovement(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        String encryptedValuesMovementString = in.readUTF();
+                                        JsonObject encryptedValuesMovement = secureDocumentLib.decryptMovement(secureMessageLibServer.unprotectMessage(encryptedValuesMovementString));
+                                        writeLogFile("Server", "Database", "\nEncryptedValuesMovement2Layer: " + encryptedValuesMovementString +
+                                                          "\nEncryptedValuesMovement1Layer: " + encryptedValuesMovement.toString());
+
                                         Document novoMovimentoDocument = Document.parse(encryptedValuesMovement.toString());
                                         // Create an update to push the new values to the "movements" array
                                         Document updateMovement = new Document("$push", new Document("movements", novoMovimentoDocument));
                                         UpdateResult updateMovementResult = userAccountCollection.updateOne(filterToAccount, updateMovement);
 
                                         if (updateMovementResult.getModifiedCount() > 0) {
-                                            out.writeUTF(secureMessageLibServer.protectMessage("Movement done!"));
+                                            String movementStatusEncrypted = secureMessageLibServer.protectMessage("Movement done!");
+                                            out.writeUTF(movementStatusEncrypted);
                                             out.flush();
+                                            writeLogFile("Database", "Server", "\nMovementStatusDecrypted: Movement done!\n" +
+                                                                "MovementStatusEncrypted:" + movementStatusEncrypted);
                                         } else {
-                                            out.writeUTF("Error while performing movement.");
+                                            String movementStatusEncrypted = secureMessageLibServer.protectMessage("Error while performing movement.");
+                                            out.writeUTF(movementStatusEncrypted);
+                                            writeLogFile("Database", "Server", "\nMovementStatusDecrypted: Error while performing movement.\n" +
+                                                    "MovementStatusEncrypted:" + movementStatusEncrypted);
                                         }
                                     }
-                                    //update db adicionando o novo movement enviar resposta se correu bem ou nao encriptada com secureMessageLib
                                     break;
 
                                 case "payment":
-                                    if(secureMessageLibServer.unprotectMessage(in.readUTF()).equals("ok")) {
+                                    String encryptedConfirmationFlagPayment = in.readUTF();
+                                    String decryptedConfirmationFlagPayment = secureMessageLibServer.unprotectMessage(encryptedConfirmationFlagPayment);
+                                    writeLogFile("Server", "Database", "(Payment)\nEncryptedConfirmationFlag: " + encryptedConfirmationFlagPayment +
+                                            "\nDecryptedConfirmationFlag" + decryptedConfirmationFlagPayment);
+
+                                    if(decryptedConfirmationFlagPayment.equals("ok")) {
                                         getAccountPayment(userPaymentCollection, secureDocumentLib, secureMessageLibServer, out, clientsFromAccount);
 
-                                        String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        String encryptedUpdatedBBalance = in.readUTF();
+                                        String updatedBalance = secureDocumentLib.decryptBalance(secureMessageLibServer.unprotectMessage(encryptedUpdatedBBalance));
+                                        writeLogFile("Server", "Database", "\nNewEncryptedBalance: " + encryptedUpdatedBBalance +
+                                                "\nNewDecryptedBalance" + updatedBalance);
 
                                         Document filterToAccount = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
@@ -266,9 +310,11 @@ class DataBaseThread extends Thread {
                                             break;
                                         }
 
-                                        //
-                                        String updatedPaymentNumber = secureDocumentLib.decryptPaymentNumber(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        String encryptedUpdatedPaymentNumber = in.readUTF();
+                                        String updatedPaymentNumber = secureDocumentLib.decryptPaymentNumber(secureMessageLibServer.unprotectMessage(encryptedUpdatedPaymentNumber));
                                         Document filterToAccountPayment = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
+                                        writeLogFile("Server", "Database", "\nEncryptedUpdatedPaymentNumber: " + encryptedUpdatedPaymentNumber +
+                                                "\nDecryptedUpdatedPaymentNumber" + updatedPaymentNumber);
 
                                         Document updatePayNumber = new Document("$set", new Document("encryptedPaymentNumbers", updatedPaymentNumber));
                                         UpdateResult updatePaymentNumberResult = userPaymentCollection.updateOne(filterToAccountPayment, updatePayNumber);
@@ -279,19 +325,28 @@ class DataBaseThread extends Thread {
                                             out.writeUTF("Error while performing movement.");
                                             break;
                                         }
-                                        //
 
-                                        JsonObject encryptedValuesPayment = secureDocumentLib.decryptPayment(secureMessageLibServer.unprotectMessage(in.readUTF()));
+                                        String encryptedValuesPayment2Layer = in.readUTF();
+                                        JsonObject encryptedValuesPayment = secureDocumentLib.decryptPayment(secureMessageLibServer.unprotectMessage(encryptedValuesPayment2Layer));
+                                        writeLogFile("Server", "Database", "\nEncryptedValuesPayment2Layer: " + encryptedValuesPayment2Layer +
+                                                "\nEncryptedValuesPayment1Layer" + encryptedValuesPayment.toString());
+
                                         Document newPaymentDocument = Document.parse(encryptedValuesPayment.toString());
                                         // Create an update to push the new values to the "movements" array
                                         Document updatePayment = new Document("$push", new Document("payments", newPaymentDocument));
                                         UpdateResult updatePaymentResult = userPaymentCollection.updateOne(filterToAccount, updatePayment);
 
                                         if (updatePaymentResult.getModifiedCount() > 0) {
-                                            out.writeUTF(secureMessageLibServer.protectMessage("Payment done!"));
+                                            String encryptedUpdatePaymentResult = secureMessageLibServer.protectMessage("Payment done!");
+                                            out.writeUTF(encryptedUpdatePaymentResult);
                                             out.flush();
+                                            writeLogFile("DataBase", "Server", "\nDecryptedUpdatePaymentResult: \"Payment done!" +
+                                                    "\nEncryptedUpdatePaymentResult" + encryptedUpdatePaymentResult);
                                         } else {
-                                            out.writeUTF("Error while performing movement.");
+                                            String encryptedUpdatePaymentResult = secureMessageLibServer.protectMessage("Error while performing movement.");
+                                            out.writeUTF(encryptedUpdatePaymentResult);
+                                            writeLogFile("DataBase", "Server", "\nDecryptedUpdatePaymentResult: \"Error while performing movement." +
+                                                    "\nEncryptedUpdatePaymentResult" + encryptedUpdatePaymentResult);
                                         }
                                     }
                                     break;
@@ -316,6 +371,7 @@ class DataBaseThread extends Thread {
 
         // Execute the query and get the first matching document
         Document matchingDocument = userAccountPaymentCollection.find(query).first();
+        writeLogFile("Database", "MongoDB", "Payment option - Get Payment File associated to the account query.");
 
         if (matchingDocument != null) {
             // Store the Document in a JSON file
@@ -331,6 +387,7 @@ class DataBaseThread extends Thread {
                 result = Base64.getEncoder().encodeToString(serializedObject);
                 out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in decryption ocurred")));
                 out.flush();
+                writeLogFile("Database", "Server", "\nPayment Account File: " + result);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -340,16 +397,16 @@ class DataBaseThread extends Thread {
     }
 
     private void getAccount(MongoCollection<Document> userAccountCollection, SecureDocumentLib secureDocumentLib, SecureMessageLib secureMessageLibServer, ObjectOutputStream out, String[] clientsFromAccount) {
-        //buscar conta singular
+        //Get singular account
         // Query to find the document where accountHolder is exactly equal to clientsFromAccount array
         Document query = new Document("accountHolder", new Document("$all", Arrays.asList(clientsFromAccount)));
 
         // Execute the query and get the first matching document
+        writeLogFile("Database", "MongoDB", "Account option - Get account query.");
         Document matchingDocument = userAccountCollection.find(query).first();
 
         if (matchingDocument != null) {
             // Store the Document in a JSON file
-
             JsonObject jsonObjectReceived = documentToJsonObject(matchingDocument);
             SignedObjectDTO protectedData = secureDocumentLib.protect(jsonObjectReceived,"",false, "account");
 
@@ -361,6 +418,7 @@ class DataBaseThread extends Thread {
                 result = Base64.getEncoder().encodeToString(serializedObject);
                 out.writeUTF(secureMessageLibServer.protectMessage(Objects.requireNonNullElse(result, "An error in decryption ocurred")));
                 out.flush();
+                writeLogFile("Database", "Server", "\nAccount File: " + result);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -471,8 +529,7 @@ class DataBaseThread extends Thread {
 
                 System.out.println("Documents inserted successfully!");
             }
-
-
+        writeLogFile("DataBase", "Database", "DataBase init successfully");
     }
     public static boolean verifyHMac(SecretKey secretKey, Certificate certificate, byte[] receivedHMac) throws Exception {
         Mac mac = Mac.getInstance("HmacSHA256");
@@ -482,6 +539,7 @@ class DataBaseThread extends Thread {
         byte[] expectedHMac = mac.doFinal(certificate.getEncoded());
 
         // Compare the calculated HMAC with the received HMAC
+        writeLogFile("DataBase", "DataBase", "Verifying the integrity of the Server Certificate.");
         return MessageDigest.isEqual(expectedHMac, receivedHMac);
     }
 
