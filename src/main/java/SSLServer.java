@@ -278,6 +278,7 @@ class ServerThread extends Thread {
                                 isWorking = false;
                                 in.close();
                                 out.close();
+                                break;
 
                             default:
                                 System.out.println("Error: Unrecognized command. Please check your input.");
