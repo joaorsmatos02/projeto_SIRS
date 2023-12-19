@@ -22,7 +22,6 @@ public class RequestTable {
     }
 
     public static boolean hasEntry(String value) {
-        System.out.println(table);
         return table.contains(value);
     }
 
