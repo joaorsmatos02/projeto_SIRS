@@ -24,7 +24,8 @@ public class ConfirmPaymentHandler {
         boolean isEmpty = true;
         for (ConfirmPaymentDTO payment : this.paymentsWaitingForConfirmation){
             if (payment.usersToConfirm().contains(user)){
-                result = result + "Payment ID: " + payment.paymentID() + "\nValue: " + payment.value()
+                result = result + "Payment ID: " + payment.paymentID() + "\n Source Account: " + payment.clientsAccount()
+                        + "\nValue: " + payment.value()
                         + "\nDestination account: " + payment.destinyAccount()
                         + "\nDescription: " + payment.description() + "\n\n";
                 isEmpty = false;
