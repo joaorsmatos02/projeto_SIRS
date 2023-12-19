@@ -95,7 +95,7 @@ public class SSLServer {
 
             while (true) {
                 SSLSocket socket = (SSLSocket) ss.accept();
-                ServerThread st = new ServerThread(socket, dataBaseSocket, outDB, inDB, confirmPaymentHandler);
+                ServerThread st = new ServerThread(socket, outDB, inDB, confirmPaymentHandler);
                 st.start();
             }
         } catch (Exception e1) {
@@ -115,14 +115,12 @@ class ServerThread extends Thread {
     private static final String trustStorePath = "Server//serverKeyStore//" + trustStoreName;
 
     private final SSLSocket socket;
-    private final SSLSocket dataBaseSocket;
     private final ObjectOutputStream outDB;
     private final ObjectInputStream inDB;
     private final ConfirmPaymentHandler confirmPaymentHandler;
 
-    public ServerThread(SSLSocket inSoc, SSLSocket dataBaseSocket, ObjectOutputStream outDB, ObjectInputStream inDB, ConfirmPaymentHandler confirmPaymentHandler) {
+    public ServerThread(SSLSocket inSoc, ObjectOutputStream outDB, ObjectInputStream inDB, ConfirmPaymentHandler confirmPaymentHandler) {
         this.socket = inSoc;
-        this.dataBaseSocket = dataBaseSocket;
         this.outDB = outDB;
         this.inDB = inDB;
         this.confirmPaymentHandler = confirmPaymentHandler;
@@ -191,7 +189,8 @@ class ServerThread extends Thread {
             RequestsHandler requestsHandler = new RequestsHandler(secureMessageLibDB, secureMessageLibClient, secureDocumentLib, this.outDB, this.inDB);
 
             //actions
-            while(true) {
+            boolean isWorking = true;
+            while(isWorking) {
                 String encryptedMessage = in.readUTF();
                 String decryptedMessage = secureMessageLibClient.unprotectMessage(encryptedMessage);
                 if (!decryptedMessage.equals("Error verifying signature")){
@@ -274,6 +273,11 @@ class ServerThread extends Thread {
                                 out.writeUTF(resultPaymentConfirmation);
                                 out.flush();
                                 break;
+
+                            case "exit":
+                                isWorking = false;
+                                in.close();
+                                out.close();
 
                             default:
                                 System.out.println("Error: Unrecognized command. Please check your input.");

@@ -340,7 +340,7 @@ public class RequestsHandler {
 
                 JsonObject accountObject = object.getAsJsonObject("account");
 
-                JsonArray usersArray = object.getAsJsonArray("accountHolder");
+                JsonArray usersArray = accountObject.getAsJsonArray("accountHolder");
 
                 String sourceAccount = "";
 
@@ -377,7 +377,7 @@ public class RequestsHandler {
 
 
                     resultMessage = resultMessage + "Payment\n" + "Source Account: " + sourceAccount + "\nDate: " + date + "\nValue: " + value + "\nDescription: "
-                            + description + "\nDestiny Account: " + account  + "\n\n";
+                            + description + "\nDestination Account: " + account  + "\n\n";
                 }
 
                 return secureMessageLibClient.protectMessage(resultMessage);

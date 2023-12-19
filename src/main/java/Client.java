@@ -277,6 +277,8 @@ public class Client {
 
                         case "exit":
                             System.out.print("Closing BlingBank...");
+                            out.writeUTF("exit");
+                            out.flush();
                             System.exit(0);
 
                         default:
