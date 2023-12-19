@@ -42,6 +42,7 @@ Esta medida garante autenticidade.
 
 #### 2.1.2. Implementation
 
+
 (_Detail the implementation process, including the programming language and cryptographic libraries used._)
 
 (_Include challenges faced and how they were overcome._)
