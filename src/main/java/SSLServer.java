@@ -280,12 +280,19 @@ class ServerThread extends Thread {
                                             String answer = requestsHandler.handleRequestMakePayment(userAndDevice.split("_")[0], clientAccount, requestAndNonceSplit[1], description1, requestAndNonceSplit[2], confirmPaymentHandler);
                                             out.writeUTF(answer);
                                             out.flush();
+                                            writeLogFile("Server", "Client", "Result: " + answer);
                                         } else {
-                                            out.writeUTF(secureMessageLibClient.protectMessage("Freshness Attack"));
+                                            String encryptedErrorMessage = secureMessageLibClient.protectMessage("Freshness Attack");
+                                            out.writeUTF(encryptedErrorMessage);
+                                            writeLogFile("Server", "Client", "EncryptedErrorMessage: " + encryptedErrorMessage
+                                                        + "DecryptedErrorMessage: Freshness Attack");
                                         }
                                     }
                                 } else {
-                                    out.writeUTF(secureMessageLibClient.protectMessage("Error verifying signature"));
+                                    String encryptedErrorMessage = secureMessageLibClient.protectMessage("Error verifying signature");
+                                    out.writeUTF(encryptedErrorMessage);
+                                    writeLogFile("Server", "Client", "EncryptedErrorMessage: " + encryptedErrorMessage
+                                            + "DecryptedErrorMessage: Error verifying signature");
                                 }
                                 break;
 
@@ -293,18 +300,21 @@ class ServerThread extends Thread {
                                 String resultPayments = requestsHandler.handleRequestPayments(clientAccount);
                                 out.writeUTF(resultPayments);
                                 out.flush();
+                                writeLogFile("Server", "Client", "ResultPayments: " + resultPayments);
                                 break;
 
                             case "payments_to_confirm":
                                 String resultPaymentsToConfirm = requestsHandler.handleRequestPaymentsToConfirm(userAndDevice.split("_")[0], confirmPaymentHandler);
                                 out.writeUTF(resultPaymentsToConfirm);
                                 out.flush();
+                                writeLogFile("Server", "Client", "resultPaymentsToConfirm: " + resultPaymentsToConfirm);
                                 break;
 
                             case "confirm_payment":
                                 String resultPaymentConfirmation = requestsHandler.handleRequestConfirmPayment(userAndDevice.split("_")[0], userInput[1], confirmPaymentHandler);
                                 out.writeUTF(resultPaymentConfirmation);
                                 out.flush();
+                                writeLogFile("Server", "Client", "resultPaymentConfirmation: " + resultPaymentConfirmation);
                                 break;
 
                             case "exit":
@@ -319,8 +329,11 @@ class ServerThread extends Thread {
                         }
                     }
                 } else {
-                    out.writeUTF(secureMessageLibClient.protectMessage("Wrong signature"));
+                    String encryptedError = secureMessageLibClient.protectMessage("Wrong signature");
+                    out.writeUTF(encryptedError);
                     out.flush();
+                    writeLogFile("Server", "Client", "EncryptedError: " + encryptedError
+                                + "DecryptedError: Wrong signature");
                 }
 
             }

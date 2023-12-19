@@ -285,9 +285,15 @@ public class RequestsHandler {
                     outDB.writeUTF(encryptedRequest);
                     outDB.flush();
 
+                    writeLogFile("Server", "DataBase", "EncryptedUpdateDBFlag: " + updateDBFlag +
+                            "\nDecryptedUpdateDBFlag: 1" +
+                            "\n----\nEncryptedAccount: " + encryptedAccount +
+                            "\nDecryptedAccount: " + clientAccount +
+                            "\n----\nEncryptedRequest: " + encryptedRequest +
+                            "\nDecryptedRequest: payment");
+
                     //get the account to get the iv
                     String account = inDB.readUTF();
-
                     String result = secureMessageLibDB.unprotectMessage(account);
 
                     byte[] messageDecoded = Base64.getDecoder().decode(result);
@@ -299,21 +305,28 @@ public class RequestsHandler {
 
                     JsonObject accountObject = objectAccountDecrypted.getAsJsonObject("account");
 
+                    writeLogFile("DataBase", "Server", "EncryptedAccount: " + account +
+                            "\nDecryptedAccount: " + accountObject.toString());
+
                     double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
 
                     if (balance >= Double.parseDouble(value)) {
-                        outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
+                        String encryptedConfirmationFlag = secureMessageLibDB.protectMessage("ok");
+                        outDB.writeUTF(encryptedConfirmationFlag);
                         outDB.flush();
-                        String payment = inDB.readUTF();
+                        writeLogFile("Server", "DataBase", "EncryptedConfirmationFlag: " + encryptedConfirmationFlag +
+                                "\nDecryptedConfirmationFlag: ok");
 
+                        String payment = inDB.readUTF();
                         String paymentResult = secureMessageLibDB.unprotectMessage(payment);
+                        writeLogFile("DataBase", "Server", "EncryptedPayment: " + payment +
+                                "\nDecryptedPayment: " + paymentResult);
 
                         byte[] paymentMessageDecoded = Base64.getDecoder().decode(paymentResult);
 
                         ObjectInputStream ois2 = new ObjectInputStream(new ByteArrayInputStream(paymentMessageDecoded));
                         SignedObjectDTO signedObjectDTOPayment = (SignedObjectDTO) ois2.readObject();
 
-                        //JsonObject objectAccountPaymentDecrypted = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, true, "payment");
                         JsonObject objectAccountPaymentEncryptedOneLayer = secureDocumentLib.unprotect(signedObjectDTOPayment, clientAccount, false, "payment");
 
                         String ivAndEncryptedPaymentNumberStr = objectAccountPaymentEncryptedOneLayer.getAsJsonPrimitive("encryptedPaymentNumbers").getAsString();
@@ -349,13 +362,24 @@ public class RequestsHandler {
 
                         // Separate IV and encryptedBalance
                         byte[] iv2 = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
-                        outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2)));
-                        outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPaymentNumber(Integer.parseInt(paymentNumbers) + 1, clientAccount, iv)));
 
-                        outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv)));
+                        String encryptedBalance = secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv2));
+                        outDB.writeUTF(encryptedBalance);
+                        writeLogFile("Server", "DataBase", "EncryptedBalance: " + encryptedBalance);
+
+                        String encryptedPaymentNumber = secureMessageLibDB.protectMessage(secureDocumentLib.encryptPaymentNumber(Integer.parseInt(paymentNumbers) + 1, clientAccount, iv));
+                        outDB.writeUTF(encryptedPaymentNumber);
+                        writeLogFile("Server", "DataBase", "EncryptedPaymentNumber: " + encryptedPaymentNumber);
+
+                        String encryptedPayment = secureMessageLibDB.protectMessage(secureDocumentLib.encryptPayment(newPayment, clientAccount, iv));
+                        outDB.writeUTF(encryptedPayment);
                         outDB.flush();
+                        writeLogFile("Server", "DataBase", "EncryptedPayment: " + encryptedPayment);
 
-                        String resultFromDB = secureMessageLibDB.unprotectMessage(inDB.readUTF());
+                        String encryptedResultFromDB = inDB.readUTF();
+                        String resultFromDB = secureMessageLibDB.unprotectMessage(encryptedResultFromDB);
+                        writeLogFile("DataBase", "Server", "EncryptedResultFromDB: " + encryptedResultFromDB
+                                    + "DecryptedResultFromDB: " + resultFromDB);
 
                         return secureMessageLibClient.protectMessage(resultFromDB);
                     } else {
@@ -386,9 +410,14 @@ public class RequestsHandler {
                         outDB.writeUTF(encryptedAccount);
                         outDB.writeUTF(encryptedDocType);
                         outDB.flush();
+                        writeLogFile("Server", "DataBase", "EncryptedUpdateDBFlag: " + updateDBFlag +
+                                "\nDecryptedUpdateDBFlag: 1" +
+                                "\n----\nEncryptedAccount: " + encryptedAccount +
+                                "\nDecryptedAccount: " + clientAccount +
+                                "\n----\nencryptedDocType: " + encryptedDocType +
+                                "\nDecryptedDocType: payment");
 
                         String payment = inDB.readUTF();
-
                         String result = secureMessageLibDB.unprotectMessage(payment);
 
                         byte[] messageDecoded = Base64.getDecoder().decode(result);
@@ -399,6 +428,9 @@ public class RequestsHandler {
                         JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "payment");
 
                         JsonObject accountObject = object.getAsJsonObject("account");
+
+                        writeLogFile("DataBase", "Server", "EncryptedPayment: " + payment +
+                                "\nDecryptedPayment: " + accountObject.toString());
 
                         JsonArray usersArray = accountObject.getAsJsonArray("accountHolder");
 
