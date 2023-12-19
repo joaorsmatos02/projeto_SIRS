@@ -158,6 +158,9 @@ public class Client {
         SocketFactory sf = SSLSocketFactory.getDefault();
         SSLSocket socket = null;
         try {
+            SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath,
+                    passwordStores, trustStorePath, userAlias + "_" + deviceName, userAlias + "rsa", "serverrsa");
+
             socket = (SSLSocket) sf.createSocket("localhost", 12345);
             //iniciar streams
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -182,15 +185,14 @@ public class Client {
                 out.writeUTF(userAlias + "_" + deviceName);
             }
 
-            out.writeUTF(account);
+            String encryptedAccount = secureMessageLib.protectMessage(account);
+            out.writeUTF(encryptedAccount);
 
             Scanner scanner = new Scanner(System.in);
 
             //Print Menu of commands
             printMenu(userAlias);
 
-            SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath,
-                    passwordStores, trustStorePath, userAlias + "_" + deviceName, userAlias + "rsa", "serverrsa");
             //Actions
             while(true) {
                 String userInput = scanner.nextLine();

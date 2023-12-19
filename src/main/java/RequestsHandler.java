@@ -11,6 +11,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static utils.utils.writeLogFile;
+
 public class RequestsHandler {
     private final SecureMessageLib secureMessageLibDB;
     private final SecureMessageLib secureMessageLibClient;
@@ -39,8 +41,14 @@ public class RequestsHandler {
                         outDB.writeUTF(encryptedAccount);
                         outDB.writeUTF(encryptedDocType);
                         outDB.flush();
-                        String account = inDB.readUTF();
+                        writeLogFile("Server", "DataBase", "EncryptedUpdateDBFlag: " + updateDBFlag +
+                                "\nDecryptedUpdateDBFlag: 0" +
+                                "\n----\nEncryptedAccount: " + encryptedAccount +
+                                "\nDecryptedAccount: " + clientAccount +
+                                "\n----\nEncryptedDocType: " + encryptedDocType +
+                                "\nDecryptedDocType: account");
 
+                        String account = inDB.readUTF();
                         String result = secureMessageLibDB.unprotectMessage(account);
 
                         byte[] messageDecoded = Base64.getDecoder().decode(result);
@@ -51,6 +59,9 @@ public class RequestsHandler {
                         JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
 
                         JsonObject accountObject = object.getAsJsonObject("account");
+
+                        writeLogFile("DataBase", "Server", "EncryptedAccount: " + account +
+                                "\nDecryptedAccount: " + accountObject.toString());
 
                         double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
 
@@ -80,9 +91,14 @@ public class RequestsHandler {
                     outDB.writeUTF(encryptedAccount);
                     outDB.writeUTF(encryptedDocType);
                     outDB.flush();
+                    writeLogFile("Server", "DataBase", "EncryptedUpdateDBFlag: " + updateDBFlag +
+                            "\nDecryptedUpdateDBFlag: 0" +
+                            "\n----\nEncryptedAccount: " + encryptedAccount +
+                            "\nDecryptedAccount: " + clientAccount +
+                            "\n----\nEncryptedDocType: " + encryptedDocType +
+                            "\nDecryptedDocType: account");
 
                     String account = inDB.readUTF();
-
                     String result = secureMessageLibDB.unprotectMessage(account);
 
                     byte[] messageDecoded = Base64.getDecoder().decode(result);
@@ -93,6 +109,9 @@ public class RequestsHandler {
                     JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, true, "account");
 
                     JsonObject accountObject = object.getAsJsonObject("account");
+
+                    writeLogFile("DataBase", "Server", "EncryptedAccount: " + account +
+                            "\nDecryptedAccount: " + accountObject.toString());
 
                     JsonArray movementsArray = accountObject.getAsJsonArray("movements");
 
@@ -145,10 +164,15 @@ public class RequestsHandler {
                         outDB.writeUTF(encryptedAccount);
                         outDB.writeUTF(encryptedRequest);
                         outDB.flush();
+                        writeLogFile("Server", "DataBase", "EncryptedUpdateDBFlag: " + updateDBFlag +
+                                "\nDecryptedUpdateDBFlag: 1" +
+                                "\n----\nEncryptedAccount: " + encryptedAccount +
+                                "\nDecryptedAccount: " + clientAccount +
+                                "\n----\nEncryptedRequest: " + encryptedRequest +
+                                "\nDecryptedRequest: movement");
 
                         //get the account to get the iv
                         String account = inDB.readUTF();
-
                         String result = secureMessageLibDB.unprotectMessage(account);
 
                         byte[] messageDecoded = Base64.getDecoder().decode(result);
@@ -160,10 +184,16 @@ public class RequestsHandler {
 
                         JsonObject accountObject = objectAccountDecrypted.getAsJsonObject("account");
 
+                        writeLogFile("DataBase", "Server", "EncryptedAccount: " + account +
+                                "\nDecryptedAccount: " + accountObject.toString());
+
                         double balance = accountObject.getAsJsonPrimitive("balance").getAsDouble();
 
                         if (balance >= Double.parseDouble(value)) {
-                            outDB.writeUTF(secureMessageLibDB.protectMessage("ok"));
+                            String encryptedConfirmationFlag = secureMessageLibDB.protectMessage("ok");
+                            outDB.writeUTF(encryptedConfirmationFlag);
+                            writeLogFile("Server", "DataBase", "EncryptedConfirmationFlag: " + encryptedConfirmationFlag +
+                                    "\nDecryptedConfirmationFlag: ok");
 
                             JsonObject object = secureDocumentLib.unprotect(signedObjectDTO, clientAccount, false, "account");
 
@@ -173,16 +203,23 @@ public class RequestsHandler {
                             // Separate IV and encryptedBalance
                             byte[] iv = Arrays.copyOfRange(ivAndEncryptedBalance, 0, 16); // 16 bytes for the IV
 
-                            //outDB.writeUTF(secureMessageLibDB.protectMessage(String.valueOf((balance - Double.parseDouble(value)))));
-                            outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv)));
-                            outDB.writeUTF(secureMessageLibDB.protectMessage(secureDocumentLib.encryptMovement(movement, clientAccount, iv)));
+                            String encryptedBalance = secureMessageLibDB.protectMessage(secureDocumentLib.encryptBalance(String.valueOf((balance - Double.parseDouble(value))), clientAccount, iv));
+                            outDB.writeUTF(encryptedBalance);
+                            String encryptedMovements = secureMessageLibDB.protectMessage(secureDocumentLib.encryptMovement(movement, clientAccount, iv));
+                            outDB.writeUTF(encryptedMovements);
                             outDB.flush();
+                            writeLogFile("Server", "DataBase", "EncryptedBalance: " + encryptedBalance
+                                        + "EncryptedMovements: " + encryptedMovements);
 
-                            String resultFromDB = secureMessageLibDB.unprotectMessage(inDB.readUTF());
+                            String encryptedResultFromDB = inDB.readUTF();
+                            String resultFromDB = secureMessageLibDB.unprotectMessage(encryptedResultFromDB);
+                            writeLogFile("DataBase", "Server", "ResultFromDB: " + encryptedResultFromDB);
 
                             return secureMessageLibClient.protectMessage(resultFromDB);
                         } else {
-                            outDB.writeUTF(secureMessageLibDB.protectMessage("stop"));
+                            String encryptedStopFlag = secureMessageLibDB.protectMessage("stop");
+                            outDB.writeUTF(encryptedStopFlag);
+                            writeLogFile("Server", "DataBase", "EncryptedStopFlag: " + encryptedStopFlag);
                             return secureMessageLibClient.protectMessage("You dont have balance to make that movement");
                         }
 

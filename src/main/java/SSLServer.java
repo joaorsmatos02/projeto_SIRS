@@ -11,6 +11,8 @@ import java.security.cert.Certificate;
 import javax.crypto.SecretKey;
 import java.util.Random;
 
+import static utils.utils.writeLogFile;
+
 public class SSLServer {
 
     private static final int port = 12345;
@@ -28,9 +30,7 @@ public class SSLServer {
     public static void main(String[] args) {
 
         System.out.println("Starting server...");
-
-        // setup keystore
-        File keyStore = new File(keyStorePath);
+        writeLogFile("Server", "Server", "Starting Server...");
 
         System.setProperty("javax.net.ssl.keyStoreType", "PKCS12");
         System.setProperty("javax.net.ssl.keyStore", keyStorePath);
@@ -41,9 +41,12 @@ public class SSLServer {
         System.setProperty("javax.net.ssl.trustStore", trustStorePath);
         System.setProperty("javax.net.ssl.trustStorePassword", trustStorePass);
 
+        SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
+
         SocketFactory sf = SSLSocketFactory.getDefault();
         SSLSocket dataBaseSocket = null;
         try {
+            writeLogFile("Server", "Server", "Connecting to DataBase Server...");
             dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -55,22 +58,30 @@ public class SSLServer {
         try {
             outDB = new ObjectOutputStream(dataBaseSocket.getOutputStream());
             inDB = new ObjectInputStream(dataBaseSocket.getInputStream());
-            //Send the Certificate (with HMAC) from Server to DB
+
             String serverRSAAlias = "serverrsa";
             KeyStore serverKS = KeyStore.getInstance("PKCS12");
             serverKS.load(new FileInputStream(keyStorePath), keyStorePass.toCharArray());
 
             Certificate serverCertificate = serverKS.getCertificate(serverRSAAlias);
             SecretKey secretKey = (SecretKey) serverKS.getKey("server_db_secret", keyStorePass.toCharArray());
-            //send the certificate and the associated HMAC
+
+            //Send the certificate and the associated HMAC
             outDB.writeObject(serverCertificate);
-            outDB.writeObject(ServerThread.calculateHMac(secretKey, serverCertificate));
+            byte[] HmacOfCertificate = ServerThread.calculateHMac(secretKey, serverCertificate);
+            outDB.writeObject(HmacOfCertificate);
             outDB.flush();
+            writeLogFile("Server", "DataBase", "Sending the certificate and the associated HMAC.\n" +
+                    "Certificate: \n " + serverCertificate + "\nAssociated HMAC: " + HmacOfCertificate.toString());
 
             //Read the result flag > 0-Error; 1-Correct
             String resultFlag = inDB.readUTF();
-            if(resultFlag.equals("0")) {
+            String decryptedResultFlag = secureMessageLibDB.unprotectMessage(resultFlag);
+            writeLogFile("DataBase", "Server", "Reading the result flag...\nEncyptedResultFlag: " + resultFlag +
+                            "\nDecryptedResultFlag: " + decryptedResultFlag);
+            if(decryptedResultFlag.equals("0")) {
                 System.out.println("Certificate validation error.");
+                writeLogFile("Server", "Server", "Certificate validation error.");
                 inDB.close();
                 outDB.close();
                 dataBaseSocket.close();
@@ -131,20 +142,25 @@ class ServerThread extends Thread {
     public void run() {
 
         System.out.println("Client connected");
-        
+        writeLogFile("Server", "Server", "Client connected");
+
+
         try (ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
              ObjectInputStream in = new ObjectInputStream(socket.getInputStream())) {
 
-            String clientIdentifier = in.readUTF();
             //userAlias + "_" + deviceName + "true(newDevice) "
+            String clientIdentifier = in.readUTF();
             String[] clientIdentifierSplitted = clientIdentifier.split(" ");
             String userAndDevice = clientIdentifierSplitted[0];
+            writeLogFile("Client", "Server", "ClientIdentifier: " + clientIdentifier);
 
 
             //2args == newDevice flag
             if(clientIdentifierSplitted.length == 2){
                 Certificate clientCertificate = (Certificate) in.readObject();
                 byte[] clientCertificateHMAC = (byte[]) in.readObject();
+                writeLogFile("Client", "Server", "ClientCertificate: " + clientCertificate.toString()
+                        + "\n clientCertificateHMAC: " + clientCertificateHMAC.toString());
 
                 //Get SecretKey associated to current client
                 KeyStore serverKS = KeyStore.getInstance("PKCS12");
@@ -158,13 +174,16 @@ class ServerThread extends Thread {
                 clientCertificateHMAC = Arrays.copyOf(clientCertificateHMAC, clientCertificateHMAC.length + testBytes.length);
                 System.arraycopy(testBytes, 0, clientCertificateHMAC, clientCertificateHMAC.length - testBytes.length, testBytes.length);*/
 
+                writeLogFile("Server", "Server", "Verifying the integrity of the received certificate...");
                 if(!verifyHMac(secretKey, clientCertificate, clientCertificateHMAC)) {
+                    writeLogFile("Server", "Server", "Corrupted Certificate. HMAC verification failed.");
                     System.out.println("Corrupted Certificate. HMAC verification failed.");
                     in.close();
                     out.close();
                     System.exit(1);
                 }
 
+                writeLogFile("Server", "Server", "HMAC verification > success.");
                 //Load the TrustStore and add the certificate if not exists yet
                 KeyStore serverTS = KeyStore.getInstance("PKCS12");
                 serverTS.load(new FileInputStream(new File(trustStorePath)), trustStorePass.toCharArray());
@@ -181,11 +200,15 @@ class ServerThread extends Thread {
                 }
             }
 
-
-            String clientAccount = in.readUTF();
             SecureMessageLib secureMessageLibClient = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, userAndDevice, "serverrsa",userAndDevice + "_cert" );
             SecureMessageLib secureMessageLibDB = new SecureMessageLib(keyStorePass, keyStorePath, trustStorePass, trustStorePath, "server_db", "serverrsa", "databasersa");
             SecureDocumentLib secureDocumentLib = new SecureDocumentLib(keyStoreName, keyStorePass, keyStorePath);
+
+            String encryptedClientAccount = in.readUTF();
+            String clientAccount = secureMessageLibClient.unprotectMessage(encryptedClientAccount);
+            writeLogFile("Client", "Server", "encryptedClientAccount: " + encryptedClientAccount +
+                            "\nDecryptedClientAccount: " + clientAccount);
+
             RequestsHandler requestsHandler = new RequestsHandler(secureMessageLibDB, secureMessageLibClient, secureDocumentLib, this.outDB, this.inDB);
 
             //actions
@@ -193,24 +216,26 @@ class ServerThread extends Thread {
             while(isWorking) {
                 String encryptedMessage = in.readUTF();
                 String decryptedMessage = secureMessageLibClient.unprotectMessage(encryptedMessage);
+                writeLogFile("Client", "Server", "EncryptedMessage: " + encryptedMessage +
+                        "\nDecryptedMessage: " + decryptedMessage);
+
                 if (!decryptedMessage.equals("Error verifying signature")){
                     String[] userInput = decryptedMessage.split(" ");
 
                     if (userInput.length != 0) {
-                        // Case 0, no update on DB, case 1, new DB update
-                        String updateDBFlag;
-                        String encryptedAccount;
                         switch (userInput[0]) {
                             case "balance":
                                 String resultBalance = requestsHandler.handleRequestBalance(clientAccount);
                                 out.writeUTF(resultBalance);
                                 out.flush();
+                                writeLogFile("Server", "Client", "ResultBalance: " + resultBalance);
                                 break;
 
                             case "movements":
                                 String resultMovements = requestsHandler.handleRequestMovements(clientAccount);
                                 out.writeUTF(resultMovements);
                                 out.flush();
+                                writeLogFile("Server", "Client", "resultMovements: " + resultMovements);
                                 break;
 
                             case "make_movement":
@@ -221,15 +246,23 @@ class ServerThread extends Thread {
                                 String resultMakeMovement = requestsHandler.handleRequestMakeMovement(clientAccount,userInput[1], description);
                                 out.writeUTF(resultMakeMovement);
                                 out.flush();
+                                writeLogFile("Server", "Client", "ResultMakeMovement: " + resultMakeMovement);
                                 break;
 
                             case "make_payment":
                                 Random rnd = new Random();
                                 String nonce = String.valueOf(rnd.nextInt());
-                                out.writeUTF(secureMessageLibClient.protectMessage(nonce));
+                                String encryptedNonce = secureMessageLibClient.protectMessage(nonce);
+                                out.writeUTF(encryptedNonce);
                                 out.flush();
+                                writeLogFile("Server", "Client", "EncryptedNonce: " + encryptedNonce +
+                                                "\nDecryptedNonce: " + nonce);
 
-                                String requestAndNonce = secureMessageLibClient.unprotectMessage(in.readUTF());
+                                String requestAndNonceEncrypted = in.readUTF();
+                                String requestAndNonce = secureMessageLibClient.unprotectMessage(requestAndNonceEncrypted);
+                                writeLogFile("Client", "Server", "RequestAndNonceEncrypted: " + requestAndNonceEncrypted +
+                                        "\nRequestAndNonceDecrypted: " + requestAndNonce);
+
                                 if(!requestAndNonce.equals("Error verifying signature")){
                                     String [] requestAndNonceSplit = requestAndNonce.split(" ");
                                     String request = "";
