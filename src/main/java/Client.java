@@ -12,6 +12,8 @@ import javax.crypto.SecretKey;
 import java.security.KeyStore.SecretKeyEntry;
 import java.util.Scanner;
 
+import static utils.utils.writeLogFile;
+
 public class Client {
 
     public static void main(String[] args) {
@@ -173,20 +175,33 @@ public class Client {
 
                 //userAlias + "_" + deviceName + "true(newDevice) "
                 out.writeUTF(userAlias + "_" + deviceName + " true");
+                writeLogFile("Client", "Server", "ClientIdentifier: " + userAlias + "_" + deviceName);
+
 
                 Certificate clientCertificate = clientKS.getCertificate(userAlias+"rsa");
                 SecretKey secretKey = (SecretKey) clientKS.getKey(userAlias + "_" + deviceName + "_secret", (userAlias + "_" + deviceName).toCharArray());
 
+                byte [] HmacOfCertificate = calculateHMac(secretKey, clientCertificate);
                 //send the certificate and the associated HMAC
                 out.writeObject(clientCertificate);
-                out.writeObject(calculateHMac(secretKey, clientCertificate));
+                out.writeObject(HmacOfCertificate);
                 out.flush();
+
+                writeLogFile("Client", "Server", "Sending the certificate and the associated HMAC.\n" +
+                        "Certificate: \n " + clientCertificate + "\nAssociated HMAC: " + HmacOfCertificate.toString());
+
             } else {
                 out.writeUTF(userAlias + "_" + deviceName);
+                out.flush();
+                writeLogFile("Client", "Server", "ClientIdentifier: " + userAlias + "_" + deviceName);
             }
 
             String encryptedAccount = secureMessageLib.protectMessage(account);
             out.writeUTF(encryptedAccount);
+            out.flush();
+
+            writeLogFile("Client", "Server", "encryptedClientAccount: " + encryptedAccount +
+                    "\nDecryptedClientAccount: " + account);
 
             Scanner scanner = new Scanner(System.in);
 
@@ -205,7 +220,12 @@ public class Client {
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
                                     out.flush();
-                                    String answer = secureMessageLib.unprotectMessage(in.readUTF());
+                                    writeLogFile("Client", "Server", "EncryptedPayload: " + encryptedPayload +
+                                            "\nDecryptedPayload: " + userInput);
+                                    String encryptedAnswer = in.readUTF();
+                                    String answer = secureMessageLib.unprotectMessage(encryptedAnswer);
+                                    writeLogFile("Server", "Client", "EncryptedPayload: " + encryptedAnswer +
+                                            "\nDecryptedPayload: " + answer);
                                     System.out.println(answer);
                                     System.out.print("Next command: ");
                                 } else {
@@ -224,7 +244,12 @@ public class Client {
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
                                     out.flush();
-                                    String answer = secureMessageLib.unprotectMessage(in.readUTF());
+                                    writeLogFile("Client", "Server", "EncryptedPayload: " + encryptedPayload +
+                                            "\nDecryptedPayload: " + userInput);
+                                    String encryptedAnswer = in.readUTF();
+                                    String answer = secureMessageLib.unprotectMessage(encryptedAnswer);
+                                    writeLogFile("Server", "Client", "EncryptedPayload: " + encryptedAnswer +
+                                            "\nDecryptedPayload: " + answer);
                                     System.out.println(answer);
                                     System.out.print("Next command: ");
                                 } else {
@@ -239,13 +264,28 @@ public class Client {
 
                         case "make_payment":
                             if(input.length >= 4 && (input[1].matches("\\d+(\\.\\d{1,2})?") && Double.parseDouble(input[1]) > 0) && existingAccountDifFromSelf(userAlias, input[2])) {
-                                out.writeUTF(secureMessageLib.protectMessage("make_payment"));
+                                String encryptedPayload = secureMessageLib.protectMessage("make_payment");
+                                out.writeUTF(encryptedPayload);
                                 out.flush();
-                                String nonce = secureMessageLib.unprotectMessage(in.readUTF());
+                                writeLogFile("Client", "Server", "EncryptedPayload: " + encryptedPayload +
+                                        "\nDecryptedPayload: make_payment");
+                                String encryptedNonce = in.readUTF();
+                                String nonce = secureMessageLib.unprotectMessage(encryptedNonce);
+                                writeLogFile("Server", "Client", "EncryptedPayload: " + encryptedNonce +
+                                        "\nDecryptedPayload: " + nonce);
                                 if(!nonce.equals("Wrong signature")){
-                                    out.writeUTF(secureMessageLib.protectMessage(userInput + " " + nonce));
+                                    String encryptedPayloadWithNonce = secureMessageLib.protectMessage(userInput + " " + nonce);
+                                    out.writeUTF(encryptedPayloadWithNonce);
                                     out.flush();
-                                    System.out.println(secureMessageLib.unprotectMessage(in.readUTF()));
+                                    writeLogFile("Client", "Server", "EncryptedPayload: " + encryptedPayloadWithNonce +
+                                            "\nDecryptedPayload: " + userInput + " " + nonce);
+                                    String encryptedAnswer = in.readUTF();
+                                    String answer = secureMessageLib.unprotectMessage(encryptedAnswer);
+
+                                    writeLogFile("Server", "Client", "EncryptedPayload: " + encryptedAnswer +
+                                            "\nDecryptedPayload: " + answer);
+
+                                    System.out.println(answer);
                                     System.out.print("Next command: ");
                                 } else {
                                     System.out.println(nonce);
@@ -264,7 +304,14 @@ public class Client {
                                 if (!encryptedPayload.equals("Encryption Failed")){
                                     out.writeUTF(encryptedPayload);
                                     out.flush();
-                                    String answer = secureMessageLib.unprotectMessage(in.readUTF());
+
+                                    writeLogFile("Client", "Server", "EncryptedPayload: " + encryptedPayload +
+                                            "\nDecryptedPayload: " + userInput);
+
+                                    String encryptedAnswer = in.readUTF();
+                                    String answer = secureMessageLib.unprotectMessage(encryptedAnswer);
+                                    writeLogFile("Server", "Client", "EncryptedPayload: " + encryptedAnswer +
+                                            "\nDecryptedPayload: " + answer);
                                     System.out.println(answer);
                                     System.out.print("Next command: ");
                                 } else {
@@ -279,8 +326,13 @@ public class Client {
 
                         case "exit":
                             System.out.print("Closing BlingBank...");
-                            out.writeUTF(secureMessageLib.protectMessage("exit"));
+                            String encryptedPayload = secureMessageLib.protectMessage("exit");
+                            out.writeUTF(encryptedPayload);
                             out.flush();
+
+                            writeLogFile("Client", "Server", "EncryptedPayload: " + encryptedPayload +
+                                    "\nDecryptedPayload: exit");
+
                             System.exit(0);
 
                         default:
