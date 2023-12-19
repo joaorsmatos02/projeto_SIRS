@@ -13,10 +13,10 @@ public class ConfirmPaymentHandler {
 
 
 
-    public void addEntry(List<String> usersToConfirm, String value, String description, String destinyAccount) {
+    public void addEntry(List<String> usersToConfirm, String value, String description, String destinyAccount, String clientsAccount) {
         int id = counter;
         counter ++;
-        this.paymentsWaitingForConfirmation.add(new ConfirmPaymentDTO(id, usersToConfirm, value, description, destinyAccount));
+        this.paymentsWaitingForConfirmation.add(new ConfirmPaymentDTO(id, usersToConfirm, value, description, destinyAccount, clientsAccount));
     }
 
     public String paymentsToConfirm(String user) {
@@ -83,6 +83,17 @@ public class ConfirmPaymentHandler {
         }
         return null;
     }
+
+    public String getUsersAccount(String id) {
+        for (int i = 0; i < paymentsWaitingForConfirmation.size(); i++) {
+            if(paymentsWaitingForConfirmation.get(i).paymentID() == Integer.parseInt(id)){
+                return paymentsWaitingForConfirmation.get(i).clientsAccount();
+            }
+        }
+        return null;
+    }
+
+
 
     public String removeUser(String id, String user) {
         String result = "Waiting for ";

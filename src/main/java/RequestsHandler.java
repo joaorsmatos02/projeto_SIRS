@@ -201,7 +201,7 @@ public class RequestsHandler {
             }
         }
 
-        confirmPaymentHandler.addEntry(usersToConfirm, value, description, destinyAccount);
+        confirmPaymentHandler.addEntry(usersToConfirm, value, description, destinyAccount, clientAccount);
         String result = "Waiting for ";
 
         for (int i = 0; i < usersToConfirm.size(); i++) {
@@ -340,6 +340,18 @@ public class RequestsHandler {
 
                 JsonObject accountObject = object.getAsJsonObject("account");
 
+                JsonArray usersArray = object.getAsJsonArray("accountHolder");
+
+                String sourceAccount = "";
+
+                for (int i = 0; i < usersArray.size(); i++) {
+                    if (i < usersArray.size() - 1){
+                        sourceAccount = sourceAccount + usersArray.get(i) + "_";
+                    } else {
+                        sourceAccount = sourceAccount + usersArray.get(i);
+                    }
+                }
+
                 JsonArray paymentsArray = accountObject.getAsJsonArray("payments");
 
                 String paymentNumber = accountObject.getAsJsonPrimitive("payments_number").getAsString();
@@ -364,7 +376,8 @@ public class RequestsHandler {
                     }
 
 
-                    resultMessage = resultMessage + "Payment\n" + "Date: " + date + "\nValue: " + value + "\nDescription: " + description + "\nDestiny Account: " + account + "\n\n";
+                    resultMessage = resultMessage + "Payment\n" + "Source Account: " + sourceAccount + "\nDate: " + date + "\nValue: " + value + "\nDescription: "
+                            + description + "\nDestiny Account: " + account  + "\n\n";
                 }
 
                 return secureMessageLibClient.protectMessage(resultMessage);
@@ -379,14 +392,15 @@ public class RequestsHandler {
         return secureMessageLibClient.protectMessage(confirmPaymentHandler.paymentsToConfirm(user));
     }
 
-    public String handleRequestConfirmPayment(String clientAccount, String user, String id,ConfirmPaymentHandler confirmPaymentHandler) {
+    public String handleRequestConfirmPayment(String user, String id,ConfirmPaymentHandler confirmPaymentHandler) {
         if(confirmPaymentHandler.hasID(id)){
             if(confirmPaymentHandler.lastConfirm(user, id)){
                 String value = confirmPaymentHandler.getValue(id);
                 String destinyAccount = confirmPaymentHandler.getDestinyAccount(id);
                 String description = confirmPaymentHandler.getDescription(id);
+                String clientsAccount = confirmPaymentHandler.getUsersAccount(id);
                 confirmPaymentHandler.remove(id);
-                return payment(clientAccount,value, description, destinyAccount);
+                return payment(clientsAccount,value, description, destinyAccount);
 
             } else {
                 return secureMessageLibClient.protectMessage(confirmPaymentHandler.removeUser(id, user));
