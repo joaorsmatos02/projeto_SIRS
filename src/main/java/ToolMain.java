@@ -19,9 +19,9 @@ public class ToolMain {
         System.out.println("""
                 Welcome to BlingBank!
                 Available commands:
-                 - BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)
+                 - BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath) (documentType)
                  - BlingBank check (inputFile)
-                 - BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)
+                 - BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath) (documentType)
                  
                  If necessary, use 'BlingBank help' to see more details about each command.
                  
@@ -74,7 +74,7 @@ public class ToolMain {
                 BlingBank help
                 Displays help information for all available commands.
 
-                BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)
+                BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath) (documentType)
                 Encrypts sensitive data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
@@ -84,13 +84,14 @@ public class ToolMain {
                    - (keyStoreName): KeyStore name > Two options only: KeyStore Name from the Server or from the DataBase Server.
                    - (keyStorePass) KeyStore Password > Two options only: KeyStore Password from the Server or from the DataBase Server.
                    - (keyStorePath) KeyStore Path > Two options only: KeyStore Path from the Server or from the DataBase Server.
+                   - (documentType) Input file document type > Two options only: 'account' or 'payment'
                    
                 BlingBank check (inputFile)
                 Checks the integrity of the specified file containing protected data.
                 Arguments:
                    - (inputFile): Path to the input file.
 
-                BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)
+                BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath) (documentType)
                 Decrypts the protected data in the specified file and writes the result.
                 Arguments:
                    - (inputFile): Path to the input file.
@@ -99,7 +100,8 @@ public class ToolMain {
                    - (flagTwoLayerEncryption): If this flag is set, the full document will be decrypted before the sensitive fields of the JSON document will be decrypted individually.
                    - (keyStoreName): KeyStore name > Two options only: KeyStore Name from the Server or from the DataBase Server.
                    - (keyStorePass) KeyStore Password > Two options only: KeyStore Password from the Server or from the DataBase Server.
-                   - (keyStorePath) KeyStore Path > Two options only: KeyStore Path from the Server or from the DataBase Server.""");
+                   - (keyStorePath) KeyStore Path > Two options only: KeyStore Path from the Server or from the DataBase Server.
+                   - (documentType) Input file document type > Two options only: 'account' or 'payment'""");
 
 
         System.out.print("Insert command: ");
@@ -107,7 +109,7 @@ public class ToolMain {
     }
 
     private static void prepareProtect(String[] args) throws Exception {
-        if(args.length != 9) {
+        if(args.length != 10) {
             throw new IllegalArgumentException();
         }
 
@@ -132,9 +134,10 @@ public class ToolMain {
         String KeyStoreName = args[6];
         String keyStorePass = args[7];
         String keyStorePath = args[8];
+        String docType = args[9];
 
         SecureDocumentLib secureDocLib = new SecureDocumentLib(KeyStoreName, keyStorePass, keyStorePath);
-        writeToFile(outputFile, secureDocLib.protect(rootJson, userAccount, flagTwoLayerEncryption, "account"));
+        writeToFile(outputFile, secureDocLib.protect(rootJson, userAccount, flagTwoLayerEncryption, docType));
     }
 
     private static boolean prepareCheck(String[] args) {
@@ -158,7 +161,7 @@ public class ToolMain {
     }
 
     private static void prepareUnprotect(String[] args) throws Exception{
-        if(args.length != 9) {
+        if(args.length != 10) {
             throw new IllegalArgumentException();
         }
 
@@ -183,9 +186,10 @@ public class ToolMain {
         String KeyStoreName = args[6];
         String keyStorePass = args[7];
         String keyStorePath = args[8];
+        String docType = args[9];
 
         SecureDocumentLib secureDocLib = new SecureDocumentLib(KeyStoreName, keyStorePass, keyStorePath);
-        writeToFile(outputFile, secureDocLib.unprotect(signedObjectDTO, userAccount, flagTwoLayerEncryption, "account"));
+        writeToFile(outputFile, secureDocLib.unprotect(signedObjectDTO, userAccount, flagTwoLayerEncryption, docType));
 
     }
 
@@ -193,7 +197,7 @@ public class ToolMain {
         switch (command) {
             case "protect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)");
+                System.out.println("Usage: BlingBank protect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath) (documentType)");
                 System.out.print("Insert command: ");
                 break;
             case "check":
@@ -203,7 +207,7 @@ public class ToolMain {
                 break;
             case "unprotect":
                 System.out.println("Invalid arguments for command: " + command);
-                System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath)");
+                System.out.println("BlingBank unprotect (inputFile) (outputFile) (accountAlias) (flagTwoLayerEncryption) (keyStoreName) (keyStorePass) (keyStorePath) (documentType)");
                 System.out.print("Insert command: ");
                 break;
         }
