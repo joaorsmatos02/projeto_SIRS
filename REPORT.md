@@ -70,7 +70,49 @@ No âmbito da implementação da biblioteca criptográfica, destacamos a prátic
 (_Justify the choice of technologies for each server._)
 
 #### 2.2.2. Server Communication Security
+Comunicação segura é uma parte vital da arquitetura de segurança, assegurando a troca de dados confidenciais entre entidades, incluindo comunicações Cliente <-> Servodor e Servidor-Base de Dados. A nossa implementação adota uma abordagem baseada em sockets SSL (Secure Sockets Layer) para garantir as propriedades de segurança pretendidas perante as informações a serem transmitidas. Abaixo, descrevemos as estratégias e desafios associados a esta implementação.
+Primeiramente, é de grande relevância relatar o trabalho de administrador de sistemas que será necessário executar, de modo a obter o bom funcionamento do sistema. Mais precisamente, foi necessário executar as seguintes ações: (Nota: tal trata-se de um trabalho ao encargo de um administrador de sistemas, onde este o executa excecionalmente, numa fase prévia ao respetivo deployment da aplicação)
+Foi utilizada a ferramenta de gestão de chaves e certificados, parte do JDK, keytool.
+(SERVIDOR)
+1 – Gerar Keystore do Servidor juntamente com a geração do par de chave pública e privada RSA do mesmo
+- keytool -genkeypair -alias serverRSA -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore serverKeyStore
+  2 – Extrair o Certificado associado à chave pública do Servidor
+  - keytool -exportcert -alias serverrsa -storetype PKCS12 -keystore serverKeyStore -file serverCert.cer
+  2.1 – Este Certificado é guardado num diretório denominado CAserver, de forma a simular uma Certification Authority, ou seja, este pode ser considerado um certificado de confiança.
+  3 – Gerar Truststore do Servidor vazia (necessário iniciar com uma chave, mas é apagada de seguida)
+  - keytool -genseckey -alias toDeleteKey -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverTrustStore
+- keytool -delete -alias toDeleteKey -storetype PKCS12 -keystore serverTrustStore
+  4 – Gerar chaves simétricas assumidas pelo enunciado. Existência de uma por conta, apenas conhecida por Cliente + Dispositivo e Servidor. Utilizadas na comunicação Cliente <-> Servidor. Exemplo de geração:
+  - keytool -genseckey -alias alice_iphone_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+- keytool -genseckey -alias alice_computador_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+  5 – Uma vez assumido o conhecimento de chaves simétricas entre Cliente e Banco, foram, também, previamente geradas as chaves simétricas associadas à conta e não ao Cliente + dispositivo. Mais precisamente, cada conta terá uma chave simétrica conhecida apenas pelo Servidor e Base de Dados, de forma a habilitar a comunicação segura entre estes. Exemplo de geração:
+  - keytool -genseckey -alias alice_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+    (Para contas partilhadas)
+-	keytool -genseckey -alias alice_bob_account_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
+     6 – Gerar e adicionar chave simétrica conhecida entre Servidor e Base de Dados à Keystore do Servidor.
+     - keytool -genseckey -alias server_db_secret -keyalg AES -keysize 256 -storetype PKCS12 -keystore serverKeyStore
 
+(Base de Dados)
+7 - Gerar Keystore da Base de Dados juntamente com a geração do par de chave pública e privada RSA do mesmo.
+- keytool -genkeypair -alias dataBaseRSA -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore dataBaseKeyStore
+8 - Extrair o Certificado associado à chave pública da Base de Dados
+- keytool -exportcert -alias databasersa -storetype PKCS12 -keystore dataBaseKeyStore -file dataBaseCert.cer
+9 - Copiar chave simétrica server_db_secret para Keystore (realizado em tempo de execução, não realizado pelo administrador de sistemas, mas importante fazer referência, também, aqui. A ser abordado mais à frente).
+10 - Gerar Truststore da Base de Dados vazia (necessário iniciar com uma chave, mas é apagada de seguida)
+- keytool -genseckey -alias toDeleteKey -keyalg AES -keysize 256 -storetype PKCS12 -keystore dataBaseTrustStore
+- keytool -delete -alias toDeleteKey -storetype PKCS12 -keystore dataBaseTrustStore
+  11 - Importar certificado da Base de Dados para a TrustStore do Servidor
+  - keytool -importcert -alias databasersa -file ../../DataBase/dataBaseKeyStore/dataBaseCert.cer -storetype PKCS12 -keystore serverTrustStore
+  12 - Importar certificado do Servidor para a TrustStore da Base de Dados
+  - keytool -importcert -alias serverrsa -file ../../CAserver/serverCert.cer -storetype PKCS12 -keystore dataBaseTrustStore
+
+Posto isto, é agora importante realçar o porquê das escolhas tomadas. A decisão de utilizar a ferramenta keytool para a geração de chaves simétricas e assimétricas é respaldada por diversos motivos que contribuem para a segurança e interoperabilidade do sistema. Para chaves assimétricas, utilizou-se o algoritmo RSA, sendo este amplamente utilizado para criptografia assimétrica, acabando por oferecer robustez em termos da obtenção de uma comunicação segura entre entidades. O tamanho de 2048 bits é considerado seguro e é uma escolha comum para aplicações que exigem um equilíbrio entre segurança e desempenho. Relativamente às chaves simétricas, foi utilizado o algoritmo AES com 256 bits, pelos mesmos motivos anteriormente referidos. A escolha do formato PKCS12 para armazenamento de chaves no sistema foi fundamentada em benefícios significativos como portabilidade, já que se trata de um formato amplamente aceite, proporcionando portabilidade e interoperabilidade além do ecossistema Java. Este também suporta o armazenamento de diferentes dados de segurança e define a necessidade de autenticação, via password, de forma aceder ao seu conteúdo.
+Com isto, dá-se por concluído o trabalho inicial do admnistrador de sistemas.
+
+Passando agora à explicação da implementação do código-fonte responsável por, em conjunto com os SSL Sockets, assegurar a confidencialidade, integridade e autenticidade das informações transmitidas. A classe SecureMessageLib desempenha um papel crucial na garantia de comunicações seguras sobre sockets SSL. Os principais aspetos da implementação:
+- Cifragem de Mensagens: o método protectMessage é responsável por cifrar uma mensagem antes de ser enviada. Utiliza uma chave secreta compartilhada entre duas entidades apenas, obtida a partir de uma keystore segura. A cifragem é realizada com o algoritmo AES em modo CBC (Cipher Block Chaining), de forma a garantir confidencialidade (decisão com o mesmo fundamento anteriormente apresentado). De forma a garantir integridade e autenticidade da mensagem a ser transmitida, é feita uma assinatura, a partir da chave privada do emissor em questão, aos dados cifrados (ou melhor, ao hash dos dados cifrados). Esta é, consequentemente, concatenada a estes para posterior verificação. Posto isto, é feita a codificação para Base64 dos dados em questão.
+- Verificação de Assinatura Digital: O método unprotectMessage decifra e autentica mensagens recebidas. Este divide a mensagem recebida em duas partes, as quais, a com o conteúdo cifrado, e a com a respetiva assinatura. Primeiramente, verifica-se a integridade e autenticidade dos dados recebidos, a partir do método Signature.verify, onde este verifica a assinatura digital utilizando a chave pública do remetente, garantindo assim as propriedades pretendidas. Caso seja verificado, é então feita a decifra dos dados (com tudo o que essa ação implica, extração de IV, etc. – já explicado na secção 2.1.2).
+Nota: Foi utilizada a mesma lógica e algoritmos de cifra, decifra, IV e assinatura nas duas libs desenvolvidas, daí a carência de detalhe nesta secção.
 
 (_Discuss how server communications were secured, including the secure channel solutions implemented and any challenges encountered._)
 
