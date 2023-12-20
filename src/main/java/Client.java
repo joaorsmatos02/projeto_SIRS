@@ -32,6 +32,20 @@ public class Client {
         String deviceName = args[3];
         String account = args[4];
 
+        String [] usersFromAccount = account.split("_");
+
+        boolean validUser = false;
+
+        for (int i = 0; i < usersFromAccount.length; i++) {
+            if(usersFromAccount[i].equals(userAlias)){
+                validUser = true;
+            }
+        }
+
+        if (!validUser){
+            System.exit(1);
+        }
+
         String userStoresFolder = "Client//" + userAlias + "_" + deviceName;
         String keyStoreName = userAlias + "_" + deviceName + "_KeyStore";
         String keyStorePath = userStoresFolder + "//" + keyStoreName;
