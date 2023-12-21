@@ -1,0 +1,736 @@
+================================================================================
+From: DataBase, To: DataBase
+Message: Starting database server...
+================================================================================
+
+
+================================================================================
+From: DataBase, To: DataBase
+Message: Starting connection...
+================================================================================
+
+
+================================================================================
+From: Server, To: Server
+Message: Starting Server...
+================================================================================
+
+
+================================================================================
+From: Server, To: Server
+Message: Connecting to DataBase Server...
+================================================================================
+
+
+================================================================================
+From: DataBase, To: DataBase
+Message: Server connected
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: Receive the Certificate from Server: [
+[
+  Version: V3
+  Subject: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  Signature Algorithm: SHA256withRSA, OID = 1.2.840.113549.1.1.11
+
+  Key:  Sun RSA public key, 2048 bits
+  params: null
+  modulus: 25779561905750510373419739059923559439627324708376322507804615103656903684569011864142545713836950421022896468440624800814235386749694890437106289350239420807056843598248641935271009646711475698826139649251736500847597861476501688109619588444329015038214742466499696343219011900786134810491528012291032559463539862529050448481783377694412041041072373390793364908581421164275756518358247663142330564168137475770981865610115204366077708321885742174381614555072097086988198379586260131691795591933940553824396324788464997566125132257782538476376089969164708118951553811166150270067683299226459913072568510259882294581757
+  public exponent: 65537
+  Validity: [From: Sun Dec 10 16:14:43 WET 2023,
+               To: Sat Mar 09 16:14:43 WET 2024]
+  Issuer: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  SerialNumber: [    20beb20c c77b51d4]
+
+Certificate Extensions: 1
+[1]: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 42 13 9F DA BD 59 1C E6   CC 00 F7 76 81 A2 7A 2B  B....Y.....v..z+
+0010: 4F DE B8 48                                        O..H
+]
+]
+
+]
+  Algorithm: [SHA256withRSA]
+  Signature:
+0000: C8 54 95 93 D2 9D 7F 73   6C 75 F8 63 FC CC 98 9C  .T.....slu.c....
+0010: 5D BE 3A A0 00 07 BA 38   72 33 C4 C4 20 30 36 50  ].:....8r3.. 06P
+0020: AE 8F E3 D9 2D A2 95 AD   A9 0A 5E 99 1B CE 76 CA  ....-.....^...v.
+0030: 0C 8B B3 A4 00 10 62 2B   99 5D B4 CD EA 1B 20 C8  ......b+.].... .
+0040: 99 23 AD 56 E1 FE AA 92   DA E3 32 08 37 03 2B 03  .#.V......2.7.+.
+0050: 81 45 22 D4 3A 7E 5D 19   79 E9 F2 6A CA 7D F1 F8  .E".:.].y..j....
+0060: 53 E9 E7 6A 3F 25 CA 64   93 D3 68 8D 04 80 A2 38  S..j?%.d..h....8
+0070: D0 2F CE 2E EC 19 AE D0   C4 77 EC 40 70 A0 A3 CB  ./.......w.@p...
+0080: 70 18 6C 59 2C E8 F6 50   C4 7B D0 99 2B 6A FF 10  p.lY,..P....+j..
+0090: 50 57 25 43 CF 28 35 CE   7F 6B F4 43 52 18 22 F1  PW%C.(5..k.CR.".
+00A0: B5 58 AE F2 EF D7 24 31   76 D5 48 F7 9A 9D 50 3A  .X....$1v.H...P:
+00B0: E8 5E EB 1E E4 C0 62 8A   B8 53 D9 9C EB F3 33 3F  .^....b..S....3?
+00C0: 0B 78 11 8A 0A 55 D0 2C   5B 10 5E CE 0C BC D2 09  .x...U.,[.^.....
+00D0: BA 6D 54 49 7D D2 27 98   36 BF 8B A6 BA 82 22 A2  .mTI..'.6.....".
+00E0: F1 B1 75 13 0D 68 4D 38   E3 89 AD F9 01 9D 31 57  ..u..hM8......1W
+00F0: 69 8A 21 1B 55 5C A4 57   82 1B 1B 77 5A 39 0D 0E  i.!.U\.W...wZ9..
+
+]
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: Receive the HMAC of the Certificate from Server: [B@7231b9f9
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: Sending the certificate and the associated HMAC.
+Certificate: 
+ [
+[
+  Version: V3
+  Subject: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  Signature Algorithm: SHA256withRSA, OID = 1.2.840.113549.1.1.11
+
+  Key:  Sun RSA public key, 2048 bits
+  params: null
+  modulus: 25779561905750510373419739059923559439627324708376322507804615103656903684569011864142545713836950421022896468440624800814235386749694890437106289350239420807056843598248641935271009646711475698826139649251736500847597861476501688109619588444329015038214742466499696343219011900786134810491528012291032559463539862529050448481783377694412041041072373390793364908581421164275756518358247663142330564168137475770981865610115204366077708321885742174381614555072097086988198379586260131691795591933940553824396324788464997566125132257782538476376089969164708118951553811166150270067683299226459913072568510259882294581757
+  public exponent: 65537
+  Validity: [From: Sun Dec 10 16:14:43 WET 2023,
+               To: Sat Mar 09 16:14:43 WET 2024]
+  Issuer: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  SerialNumber: [    20beb20c c77b51d4]
+
+Certificate Extensions: 1
+[1]: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 42 13 9F DA BD 59 1C E6   CC 00 F7 76 81 A2 7A 2B  B....Y.....v..z+
+0010: 4F DE B8 48                                        O..H
+]
+]
+
+]
+  Algorithm: [SHA256withRSA]
+  Signature:
+0000: C8 54 95 93 D2 9D 7F 73   6C 75 F8 63 FC CC 98 9C  .T.....slu.c....
+0010: 5D BE 3A A0 00 07 BA 38   72 33 C4 C4 20 30 36 50  ].:....8r3.. 06P
+0020: AE 8F E3 D9 2D A2 95 AD   A9 0A 5E 99 1B CE 76 CA  ....-.....^...v.
+0030: 0C 8B B3 A4 00 10 62 2B   99 5D B4 CD EA 1B 20 C8  ......b+.].... .
+0040: 99 23 AD 56 E1 FE AA 92   DA E3 32 08 37 03 2B 03  .#.V......2.7.+.
+0050: 81 45 22 D4 3A 7E 5D 19   79 E9 F2 6A CA 7D F1 F8  .E".:.].y..j....
+0060: 53 E9 E7 6A 3F 25 CA 64   93 D3 68 8D 04 80 A2 38  S..j?%.d..h....8
+0070: D0 2F CE 2E EC 19 AE D0   C4 77 EC 40 70 A0 A3 CB  ./.......w.@p...
+0080: 70 18 6C 59 2C E8 F6 50   C4 7B D0 99 2B 6A FF 10  p.lY,..P....+j..
+0090: 50 57 25 43 CF 28 35 CE   7F 6B F4 43 52 18 22 F1  PW%C.(5..k.CR.".
+00A0: B5 58 AE F2 EF D7 24 31   76 D5 48 F7 9A 9D 50 3A  .X....$1v.H...P:
+00B0: E8 5E EB 1E E4 C0 62 8A   B8 53 D9 9C EB F3 33 3F  .^....b..S....3?
+00C0: 0B 78 11 8A 0A 55 D0 2C   5B 10 5E CE 0C BC D2 09  .x...U.,[.^.....
+00D0: BA 6D 54 49 7D D2 27 98   36 BF 8B A6 BA 82 22 A2  .mTI..'.6.....".
+00E0: F1 B1 75 13 0D 68 4D 38   E3 89 AD F9 01 9D 31 57  ..u..hM8......1W
+00F0: 69 8A 21 1B 55 5C A4 57   82 1B 1B 77 5A 39 0D 0E  i.!.U\.W...wZ9..
+
+]
+Associated HMAC: [B@43a0cee9
+================================================================================
+
+
+================================================================================
+From: DataBase, To: DataBase
+Message: Verifying the integrity of the Server Certificate.
+================================================================================
+
+
+================================================================================
+From: DataBase, To: DataBase
+Message: HMAC of the Server Certificate verified successfully
+================================================================================
+
+
+================================================================================
+From: DataBase, To: DataBase
+Message: Comparing the Server Certificate in DataBase TrustStore with the received one...
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: (Authentic Certificate.) EncryptedAllCorrectFlag: d/kqusBXPfwT1b57fOTCPjBJ0ULKg2K0ZarH+6hJQrI=|KQRcSu31uwc0uJAAHqyu1hEINC5bPL6RFZsYK7xu5a4uzKYblxruCUlGp7Nw43wdiqRGNPmV0/+/UV2mK5yq/Wn9E8Ulv5BTJux9F+o0owucZsNvJ6Kpx99YIQy8vN3zDmIO1JQgqV1oLnWzebWYT++D+4jprh/x+BYuwc1qt3ZVe0GXWorG0IOZuwLEdxC+AALG0p8CvMTGvDxCHvfSv845nsFDnhtA2jC1mfF4HGQz2RcCrW9Kwo2whSdMTnMKh8vKBYArlsodg84qtbWdmUTXIiK07wG6X6ma61ac1njmrEKiHbQx0M3bIdtgJSxozpyZNUhUZh8ftNw3iMYQxg==
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: Reading the result flag...
+EncyptedResultFlag: d/kqusBXPfwT1b57fOTCPjBJ0ULKg2K0ZarH+6hJQrI=|KQRcSu31uwc0uJAAHqyu1hEINC5bPL6RFZsYK7xu5a4uzKYblxruCUlGp7Nw43wdiqRGNPmV0/+/UV2mK5yq/Wn9E8Ulv5BTJux9F+o0owucZsNvJ6Kpx99YIQy8vN3zDmIO1JQgqV1oLnWzebWYT++D+4jprh/x+BYuwc1qt3ZVe0GXWorG0IOZuwLEdxC+AALG0p8CvMTGvDxCHvfSv845nsFDnhtA2jC1mfF4HGQz2RcCrW9Kwo2whSdMTnMKh8vKBYArlsodg84qtbWdmUTXIiK07wG6X6ma61ac1njmrEKiHbQx0M3bIdtgJSxozpyZNUhUZh8ftNw3iMYQxg==
+DecryptedResultFlag: 1
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Database
+Message: DataBase init successfully
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Database
+Message: Waiting for actions...
+================================================================================
+
+
+================================================================================
+From: Server, To: Server
+Message: Client connected
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: ClientIdentifier: alice_iphone
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: Sending the certificate and the associated HMAC.
+Certificate: 
+ [
+[
+  Version: V3
+  Subject: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  Signature Algorithm: SHA256withRSA, OID = 1.2.840.113549.1.1.11
+
+  Key:  Sun RSA public key, 2048 bits
+  params: null
+  modulus: 21288654065876820770713930543624990668368766448751787020566714450959103640587269977370398527728450224557700817024555302086705032377962095487147588219274894734030039874280775114951891319260061281111006342801555763793656191267275289773328854387904988951512294489644225488427804220718995886093231413223773916160991307908316068814940451639875263901016834552536792709931492579244317558404608856381646583900670982720917819153033591106562957949404416055333238174582007963163599120834025327876988093640171447440776194161007443858149018611508483595940917138044321396985392603786860782435560583967017047231659759775149558242657
+  public exponent: 65537
+  Validity: [From: Thu Dec 21 09:41:21 WET 2023,
+               To: Wed Mar 20 09:41:21 WET 2024]
+  Issuer: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  SerialNumber: [    9f904c7b 2ebe8812]
+
+Certificate Extensions: 1
+[1]: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 7F F0 9E 1E 39 50 29 08   B5 48 A1 42 7B 42 94 6B  ....9P)..H.B.B.k
+0010: 4B F4 E8 83                                        K...
+]
+]
+
+]
+  Algorithm: [SHA256withRSA]
+  Signature:
+0000: 36 AF 93 E9 F4 82 07 49   13 77 36 0D 71 A4 54 CA  6......I.w6.q.T.
+0010: C1 0F 71 2B 62 14 50 53   F7 B8 AB EB 3B DF BF A0  ..q+b.PS....;...
+0020: D4 EC 9F 9A 83 DC EF 81   76 EA B9 09 CE 68 1E 34  ........v....h.4
+0030: 63 81 F4 12 EC B4 ED C9   E3 98 F7 59 2F AE 35 67  c..........Y/.5g
+0040: CE C7 E0 A1 13 CE 1B 54   A5 04 7D 6C 1A 44 DF C3  .......T...l.D..
+0050: 51 BB A9 F0 96 65 85 CF   DC E1 53 A0 43 28 EF 2C  Q....e....S.C(.,
+0060: 10 34 87 09 6D 68 43 E6   2C D0 8F 64 E7 C6 2A 81  .4..mhC.,..d..*.
+0070: D1 EB 47 FC EC 84 3E 7F   A0 C8 69 01 4D EA 19 56  ..G...>...i.M..V
+0080: DF 40 64 50 14 96 9A 49   FA B2 12 FA 09 87 CF DD  .@dP...I........
+0090: C3 2C 90 A1 82 69 07 D6   AC 38 D1 34 79 86 B5 7B  .,...i...8.4y...
+00A0: AB 23 D2 07 CF CE E3 A6   E0 AA 9D 8C 8B FB 36 6A  .#............6j
+00B0: 89 E8 F5 8A 20 7B CE 62   93 09 16 61 4C 40 E5 BC  .... ..b...aL@..
+00C0: 86 41 50 70 08 B6 93 C2   AD C4 B0 E3 F7 1D 21 1E  .APp..........!.
+00D0: 17 7E AE 62 4D 93 C3 47   B6 AA ED FB 56 C3 77 39  ...bM..G....V.w9
+00E0: 87 C8 89 2D 73 F7 12 6B   F8 2C 04 13 DA D8 7F 61  ...-s..k.,.....a
+00F0: 85 29 7D 82 8E 8B 8B BE   5D 79 5F 19 0F FF 4A FB  .)......]y_...J.
+
+]
+Associated HMAC: [B@6d3af739
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: ClientIdentifier: alice_iphone true
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: ClientCertificate: [
+[
+  Version: V3
+  Subject: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  Signature Algorithm: SHA256withRSA, OID = 1.2.840.113549.1.1.11
+
+  Key:  Sun RSA public key, 2048 bits
+  params: null
+  modulus: 21288654065876820770713930543624990668368766448751787020566714450959103640587269977370398527728450224557700817024555302086705032377962095487147588219274894734030039874280775114951891319260061281111006342801555763793656191267275289773328854387904988951512294489644225488427804220718995886093231413223773916160991307908316068814940451639875263901016834552536792709931492579244317558404608856381646583900670982720917819153033591106562957949404416055333238174582007963163599120834025327876988093640171447440776194161007443858149018611508483595940917138044321396985392603786860782435560583967017047231659759775149558242657
+  public exponent: 65537
+  Validity: [From: Thu Dec 21 09:41:21 WET 2023,
+               To: Wed Mar 20 09:41:21 WET 2024]
+  Issuer: CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown
+  SerialNumber: [    9f904c7b 2ebe8812]
+
+Certificate Extensions: 1
+[1]: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: 7F F0 9E 1E 39 50 29 08   B5 48 A1 42 7B 42 94 6B  ....9P)..H.B.B.k
+0010: 4B F4 E8 83                                        K...
+]
+]
+
+]
+  Algorithm: [SHA256withRSA]
+  Signature:
+0000: 36 AF 93 E9 F4 82 07 49   13 77 36 0D 71 A4 54 CA  6......I.w6.q.T.
+0010: C1 0F 71 2B 62 14 50 53   F7 B8 AB EB 3B DF BF A0  ..q+b.PS....;...
+0020: D4 EC 9F 9A 83 DC EF 81   76 EA B9 09 CE 68 1E 34  ........v....h.4
+0030: 63 81 F4 12 EC B4 ED C9   E3 98 F7 59 2F AE 35 67  c..........Y/.5g
+0040: CE C7 E0 A1 13 CE 1B 54   A5 04 7D 6C 1A 44 DF C3  .......T...l.D..
+0050: 51 BB A9 F0 96 65 85 CF   DC E1 53 A0 43 28 EF 2C  Q....e....S.C(.,
+0060: 10 34 87 09 6D 68 43 E6   2C D0 8F 64 E7 C6 2A 81  .4..mhC.,..d..*.
+0070: D1 EB 47 FC EC 84 3E 7F   A0 C8 69 01 4D EA 19 56  ..G...>...i.M..V
+0080: DF 40 64 50 14 96 9A 49   FA B2 12 FA 09 87 CF DD  .@dP...I........
+0090: C3 2C 90 A1 82 69 07 D6   AC 38 D1 34 79 86 B5 7B  .,...i...8.4y...
+00A0: AB 23 D2 07 CF CE E3 A6   E0 AA 9D 8C 8B FB 36 6A  .#............6j
+00B0: 89 E8 F5 8A 20 7B CE 62   93 09 16 61 4C 40 E5 BC  .... ..b...aL@..
+00C0: 86 41 50 70 08 B6 93 C2   AD C4 B0 E3 F7 1D 21 1E  .APp..........!.
+00D0: 17 7E AE 62 4D 93 C3 47   B6 AA ED FB 56 C3 77 39  ...bM..G....V.w9
+00E0: 87 C8 89 2D 73 F7 12 6B   F8 2C 04 13 DA D8 7F 61  ...-s..k.,.....a
+00F0: 85 29 7D 82 8E 8B 8B BE   5D 79 5F 19 0F FF 4A FB  .)......]y_...J.
+
+]
+ clientCertificateHMAC: [B@23854010
+================================================================================
+
+
+================================================================================
+From: Server, To: Server
+Message: Verifying the integrity of the received certificate...
+================================================================================
+
+
+================================================================================
+From: Server, To: Server
+Message: HMAC verification > success.
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: encryptedClientAccount: zazpyzPDoAl47dhcgFmUdNizrxUYVOgOt2aNgOUGlZw=|obkTBHTtYOFP8fkApCn/lrADF8dM8pskWl4fmL00bGfAa4TxE1Srosu6XWBDVFBcQQvzwxbDPPgKVdyHJcQDrb6pkKJYqvcFZVOTnzp3bWlU7h71lrX6VpsXjO1kuAXdUYgZIzG2hBZLpaA/CStVQEpn7GC2Gk+npGwQmwydxcObLq6Vy2oUC8OFRVS4Fcm5S7TLRncIBpNwH3pLG0PJuINRKZKDM9HPvUxonwurOreklUYrpcSaMjtpi9QuL9Jkrj7oN3b3iC8/n+6KKLvP3bf3EdaLopQn8BEoEQ3TrLeF09/fxGUnPYSKIStgkv11rncSM7BlE/1W2NPOCnuqKg==
+DecryptedClientAccount: alice
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: encryptedClientAccount: zazpyzPDoAl47dhcgFmUdNizrxUYVOgOt2aNgOUGlZw=|obkTBHTtYOFP8fkApCn/lrADF8dM8pskWl4fmL00bGfAa4TxE1Srosu6XWBDVFBcQQvzwxbDPPgKVdyHJcQDrb6pkKJYqvcFZVOTnzp3bWlU7h71lrX6VpsXjO1kuAXdUYgZIzG2hBZLpaA/CStVQEpn7GC2Gk+npGwQmwydxcObLq6Vy2oUC8OFRVS4Fcm5S7TLRncIBpNwH3pLG0PJuINRKZKDM9HPvUxonwurOreklUYrpcSaMjtpi9QuL9Jkrj7oN3b3iC8/n+6KKLvP3bf3EdaLopQn8BEoEQ3TrLeF09/fxGUnPYSKIStgkv11rncSM7BlE/1W2NPOCnuqKg==
+DecryptedClientAccount: alice
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedPayload: /JNqTi+ND57+XUM7wvFj3QyFV/T9Zf02XTbRK2/CxyI=|JioKxxkV9rDF5FbTf+A0ZeJdfD6jlrCOMkcQrjkCp3nCN768Bau/6GfRQiagl1AtL9myQQdeyYhnsQSz1B+WFhVOM/IgH1wReK3eWYgwXh5CQN4Fe8mKVLEsCMTCm6kdagf1HuQpcNR9YC+trwI6VfTyUTRKjQQtHHxI2Rp53jxeb8tdllLCz2r4HzC2SWgG04wkMqqyfscfR+Yl2wwT1pU3U3u4ixr8UP++ZuyeGcvgTkcyObfd9iExjx4y4J6vorw0xdt3A9T00Bn61zR2Wyb9B1Wn2N1yy3Roj9Az/gP5y4L9Rw2/HvubIcQTg3ov5YFvESMeqM+y2EiPvMnluQ==
+DecryptedPayload: movements
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedMessage: /JNqTi+ND57+XUM7wvFj3QyFV/T9Zf02XTbRK2/CxyI=|JioKxxkV9rDF5FbTf+A0ZeJdfD6jlrCOMkcQrjkCp3nCN768Bau/6GfRQiagl1AtL9myQQdeyYhnsQSz1B+WFhVOM/IgH1wReK3eWYgwXh5CQN4Fe8mKVLEsCMTCm6kdagf1HuQpcNR9YC+trwI6VfTyUTRKjQQtHHxI2Rp53jxeb8tdllLCz2r4HzC2SWgG04wkMqqyfscfR+Yl2wwT1pU3U3u4ixr8UP++ZuyeGcvgTkcyObfd9iExjx4y4J6vorw0xdt3A9T00Bn61zR2Wyb9B1Wn2N1yy3Roj9Az/gP5y4L9Rw2/HvubIcQTg3ov5YFvESMeqM+y2EiPvMnluQ==
+DecryptedMessage: movements
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: EncryptedUpdateDBFlag: or3B9llS2l0FuiEw0CycWrPtWWykA0WQRqy1dbPIkgk=|aqVM6FMrfWvHx+3x11FEg4oxBWaQt/a4FKTxhA7rWBBHdP0fCqDC4gEaGgLbMrYdbvcoKq7AeSVrW5GaXXsFDuzYAXavmEosGqms1F+qeaQGyynHhcEizuDImP/sa08dPNK8LzI7De9lZTXk9zXU3BGbDH1+/dgQ0ppsloCp5lfkNSIYwTJ9Yf+Hj15geUAZ/MncJm4I10rsMzCMuv/7SHE6zUx6hhHlb7nc767Ki9PDfK5JgKTFTNgAG8Iaix916z4TZjG0r5SHxQnmhutbti+ennkQAjK6TsxfiCN234KY21z6HxQaVE9jEYtguaoIgcqkK8gpOwR2S22oDa53/Q==
+DecryptedUpdateDBFlag: 0
+----
+EncryptedAccount: q1Lw64MwQYPdgiEaWZYsWXEb12au3+RXBQNKUsxrhYo=|GpQ/jgNPETFb1lfILzr5KoZPeELuap4hAIwlW0XCTfq87vfHmQvVUdvSSxOVZY9mutOV5YeiMD5YluT1CrLDx/exfZOt/UtcIu5HjJx6Yiklj9gyE+bzbKuVsV5+xOVVQpqdkEi/MjtM/REO9Kl/rFGDHZ2Cs4fN10ywEjKh1I/uIJs09IHdhMQFfAvewXJXUYEjQiCHn54qmrpmT8aFt1A/IPTvYSPIoJFxr19MCD2ID0T5ouyl7caVIyVZ3+OlMEkE6bKRrwo/x7pYVUBbAX0dhDnDhKePbEPoFI9GsU+yICbmWgtaPDhTfnpsYg2+BZZuviMBHMVN2yVnt0BXVw==
+DecryptedAccount: alice
+----
+EncryptedDocType: LIDSx2Yx8wRM7Z670sw5V3aQZJXhNYTIlM+jpUwFE8s=|eQviLnpAIUnOeXzFE8SH2JyL48C/+vkWoCpHpmFTlU2r+Fc359wvco4rnly+F2bAZxvitJ04+5kTSKbslh77/lWs14nfJsnztH0TB72n9qyTs9NSJBOHa5DAWReEr2lZ84H+p8MY0HV5Yi8qzFQfSmegAB20tnmaPsH5v0kxJztDUBLT84zBQJEwHr+8WbDBRwwjG8vBOA7+/ALbUStYNHxfZi2+Yf0NV1kmZYsiNha3fxF2nVDs8GvxxmyuWdd8xDVo+s9Jf2zhAOIiZ3yoz/8/obZLY2PRQTVZrX6/txO0TrbLjjWsTU+Smn9+0CEsoia1ef636SkmUdbfIChvdw==
+DecryptedDocType: account
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedUpdateFlag: or3B9llS2l0FuiEw0CycWrPtWWykA0WQRqy1dbPIkgk=|aqVM6FMrfWvHx+3x11FEg4oxBWaQt/a4FKTxhA7rWBBHdP0fCqDC4gEaGgLbMrYdbvcoKq7AeSVrW5GaXXsFDuzYAXavmEosGqms1F+qeaQGyynHhcEizuDImP/sa08dPNK8LzI7De9lZTXk9zXU3BGbDH1+/dgQ0ppsloCp5lfkNSIYwTJ9Yf+Hj15geUAZ/MncJm4I10rsMzCMuv/7SHE6zUx6hhHlb7nc767Ki9PDfK5JgKTFTNgAG8Iaix916z4TZjG0r5SHxQnmhutbti+ennkQAjK6TsxfiCN234KY21z6HxQaVE9jEYtguaoIgcqkK8gpOwR2S22oDa53/Q==
+DecryptedUpdateFlag: 0
+EncryptedAccount: q1Lw64MwQYPdgiEaWZYsWXEb12au3+RXBQNKUsxrhYo=|GpQ/jgNPETFb1lfILzr5KoZPeELuap4hAIwlW0XCTfq87vfHmQvVUdvSSxOVZY9mutOV5YeiMD5YluT1CrLDx/exfZOt/UtcIu5HjJx6Yiklj9gyE+bzbKuVsV5+xOVVQpqdkEi/MjtM/REO9Kl/rFGDHZ2Cs4fN10ywEjKh1I/uIJs09IHdhMQFfAvewXJXUYEjQiCHn54qmrpmT8aFt1A/IPTvYSPIoJFxr19MCD2ID0T5ouyl7caVIyVZ3+OlMEkE6bKRrwo/x7pYVUBbAX0dhDnDhKePbEPoFI9GsU+yICbmWgtaPDhTfnpsYg2+BZZuviMBHMVN2yVnt0BXVw==
+DecryptedAccount: alice
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedDocType: LIDSx2Yx8wRM7Z670sw5V3aQZJXhNYTIlM+jpUwFE8s=|eQviLnpAIUnOeXzFE8SH2JyL48C/+vkWoCpHpmFTlU2r+Fc359wvco4rnly+F2bAZxvitJ04+5kTSKbslh77/lWs14nfJsnztH0TB72n9qyTs9NSJBOHa5DAWReEr2lZ84H+p8MY0HV5Yi8qzFQfSmegAB20tnmaPsH5v0kxJztDUBLT84zBQJEwHr+8WbDBRwwjG8vBOA7+/ALbUStYNHxfZi2+Yf0NV1kmZYsiNha3fxF2nVDs8GvxxmyuWdd8xDVo+s9Jf2zhAOIiZ3yoz/8/obZLY2PRQTVZrX6/txO0TrbLjjWsTU+Smn9+0CEsoia1ef636SkmUdbfIChvdw==
+DecryptedDocType: account
+================================================================================
+
+
+================================================================================
+From: Database, To: Database
+Message: Account option - Get account query.
+================================================================================
+
+
+================================================================================
+From: Database, To: Server
+Message: 
+Account File: rO0ABXNyABNkdG8uU2lnbmVkT2JqZWN0RFRPAAAAAAAAAAACAAJMAAtjZXJ0aWZpY2F0ZXQAIExqYXZhL3NlY3VyaXR5L2NlcnQvQ2VydGlmaWNhdGU7TAAMc2lnbmVkT2JqZWN0dAAcTGphdmEvc2VjdXJpdHkvU2lnbmVkT2JqZWN0O3hwcHNyABpqYXZhLnNlY3VyaXR5LlNpZ25lZE9iamVjdAn/vWgqPNX/AgADWwAHY29udGVudHQAAltCWwAJc2lnbmF0dXJlcQB+AAVMAAx0aGVhbGdvcml0aG10ABJMamF2YS9sYW5nL1N0cmluZzt4cHVyAAJbQqzzF/gGCFTgAgAAeHAAAAR6rO0ABXNyABVkdG8uU2VjdXJlRG9jdW1lbnREVE8AAAAAAAAAAAIAAkwACGRvY3VtZW50dAASTGphdmEvbGFuZy9TdHJpbmc7TAAJdGltZXN0YW1wdAAQTGphdmEvbGFuZy9Mb25nO3hwdAPAc0pXbHNtUi9CaDd2L1dqeml6YVpiV1pSUUhVdGJRYXJiT3kwcSs5VExJTmxEYjVidTMrTWRJSmxjOUpDNnlqZjFHdmJvT3QvcUR4T3F0TUVxSW1LbHdUWEU5eTNrUHdjVWlxL0FJQkdJVVZQY0lWMmhMUzFuZXM5YmZKQlpTNEtEby9iVjg5ZStCSTFQc3ptTXBLVFIrNEN1V2c2c013VjhnbWsvZmdpVFY5bnFLOER6OVl2dTAyRUQ0MGtpdDBKbG54NXFQaU9JbE1KTTRGZE5kOC9iZGVUYi81WXA0OEcrUTh6V2ppamZ1ZDhZOUkxY2JxQU16UUdOU0E1bDI0NWtETTBhR3ZXOWVPUGVValpCRkN4VUx2amE3bnJXSXZMbTdWR0FFWmtaczE5VEVoQU9TK292b2JyajZ2MzZDVG1aOFQ5TXUrcytnVE9MZ2oxUW55OFd1YVVneGxvdlNEa3o3OHVLL0ZtSnlkMFFjemVlMkRWWmp2ZDB3U3UvQ3dzekIwMzloOWFPT3BZU2diOTlOTmlhUVdFMDlFY0ZFa2JvbE1MUE15YUcxZU1RazgrUVcyM21hRUdOb0E4Y01uWk9Ja1c1b3VnaWlUTDA1VGQzM3VVR1ZBSCswSk4rdW15S2MzSFQ4b1lpSHpVSEgwNHVUQlFJcTZLVitLblltNHJ5TFpCdTRaM0lteitmbzdWQURCRjRkSW9jQndHZDRmamE4RWtCRTFQZ250NjN2ZXJuTnh4dlJSU0RtVUNDNXVrck1oNXJyRkFpRFpqZkVPZzJYK3Q1R3lpREk2Q2R5ZUJCVVpON2kvWVptSmlrWSt6VE4rSm5jRm1HMmhoOXpESGRRWDVvQ2dXOGszdUdvWm9jdFNBa2xRbTd2aitRa0tIc3REUmgweDBMNDZPZGR6YVAzRWZwL0k2TGxzVkNNaXFDa3lFZ0hjMWJKZFI3ckJTQ3Ayc2F5dFpjVjhPMjdIVzk3L0xKTVkyS0p0RWMxRVV3N29zNjlMaU5USTBRdXBlejZSVHZYZGZhL0o2ZVJJRzR3VWVkY3FQcGRPUVBqeXNjMS9tR3d2b3VrU3g5Q29YTzd3WHJ3QUh1Y2VyOHlnS2h5UmRoaXJtMjFRd2lOa210SUZsMXJSb2QwZGF0MnFXdHk4R3hhRnp6TCtSclBsUE4yS3RLcmtaNUorT3BTZUFUMU05L2t6S1c0UGJZanA2ZUtYS0R5cTl5b2xtT2JIRlN1SnB6M0E3REhDdzN6UUc0WmVYWHo5bWUxRW9Zektvc3IADmphdmEubGFuZy5Mb25nO4vkkMyPI98CAAFKAAV2YWx1ZXhyABBqYXZhLmxhbmcuTnVtYmVyhqyVHQuU4IsCAAB4cAAAAYyLyQCldXEAfgAIAAABABVIKALJtsQej0d749txUgvZrhdEwKOroLD4s3fMy79lwH8suLMLu3YyJD14ycgOwzdkLaw5JbqxqOuYkm2b4BMXdBLNEx8I5lLgrlYRRyRmOJtfPQS1r77RKw9917xr4diQYcr/2NtrukWwTXurP7QEyCW38wGRZslUMjwTD1ow8NQ0grUdmrze/Svc8+xgAJnymocSjo2Y3v7nxcN1hbKt2EQHMg7R2j/wBhTRTAQRWe5nKUhI+3F1TN0CBhJsbOPqbU8habxUpcq5QXtrrkRnIQk2DzR/HLFjs+Tk98r82/VQb433Ni6vyAay7N0r/OpcKCrG+wqZHgquQBUcgcR0AA1TSEEyNTZ3aXRoUlNB
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: EncryptedAccount: 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
+DecryptedAccount: {"accountHolder":["alice"],"balance":872.22,"currency":"EUR","movements":[{"date":"09/11/2023","value":1000.00,"description":"Salary"},{"date":"15/11/2023","value":-77.78,"description":"Electricity bill"},{"date":"22/11/2023","value":-50.00,"description":"ATM Withdrawal"}]}
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: resultMovements: ViY3YEdX6NitbWr0X22ZuPrOKMc4NgmH8v7AdGrrUOZF3UDv4h2R/0kEQmFsEroWQanveu5bD0dcICv/C4ZGt4sJ+WpXieFGx13Vy5fSuzk39Iw/fRS4tD6oFPY0RXs3m36p1yYSiwYg56qVywwkfrQKUeacA5aBdCpQCorwNM0Sx8cZQwtpWSzK6bsu5e9usahj+sGr4EWKzhPAtxAiuuD5oeHd6Br4UAIuL6ZzXJ3+Zj9iNRTEquyTucsjv0+VPDLo5USJLL1ek0prLcJYvDKWngbTZOXCyqxdbRchvHo=|MGe3vessMnIsXMeyD6Gi2jkLeiyCs4uL8qXOSgGnGVlo9iII+yU+EPS6YwXMNBSbHnxA6GMN4xizMebGieOQuCQVK/4ylS14so9tVJH6e626JbeNEkj0Co1D7bRAv34va7RLQ60HzT3iGsCxpi7Cd/J0TS/xJELIPM8QYu8z2wf8oLTQQGGeAOqBfRnf71a3ZFegz/w/8itmoZy5NvHM3p3HrLORfyNLX3aICWiZPom9ZLc+Ti235JlnlG1vC8hyAdhHLSWdIbCBwt8K/gpnXszMZzyWAO8f43YBkQtCs93rW/0cih9QOtwRKezfy3SnoibsTPWPd7QxrZTNw3ppag==
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: EncryptedPayload: ViY3YEdX6NitbWr0X22ZuPrOKMc4NgmH8v7AdGrrUOZF3UDv4h2R/0kEQmFsEroWQanveu5bD0dcICv/C4ZGt4sJ+WpXieFGx13Vy5fSuzk39Iw/fRS4tD6oFPY0RXs3m36p1yYSiwYg56qVywwkfrQKUeacA5aBdCpQCorwNM0Sx8cZQwtpWSzK6bsu5e9usahj+sGr4EWKzhPAtxAiuuD5oeHd6Br4UAIuL6ZzXJ3+Zj9iNRTEquyTucsjv0+VPDLo5USJLL1ek0prLcJYvDKWngbTZOXCyqxdbRchvHo=|MGe3vessMnIsXMeyD6Gi2jkLeiyCs4uL8qXOSgGnGVlo9iII+yU+EPS6YwXMNBSbHnxA6GMN4xizMebGieOQuCQVK/4ylS14so9tVJH6e626JbeNEkj0Co1D7bRAv34va7RLQ60HzT3iGsCxpi7Cd/J0TS/xJELIPM8QYu8z2wf8oLTQQGGeAOqBfRnf71a3ZFegz/w/8itmoZy5NvHM3p3HrLORfyNLX3aICWiZPom9ZLc+Ti235JlnlG1vC8hyAdhHLSWdIbCBwt8K/gpnXszMZzyWAO8f43YBkQtCs93rW/0cih9QOtwRKezfy3SnoibsTPWPd7QxrZTNw3ppag==
+DecryptedPayload: Movement
+Date: 09/11/2023
+Value: 1000.0
+Description: Salary
+
+Movement
+Date: 15/11/2023
+Value: -77.78
+Description: Electricity bill
+
+Movement
+Date: 22/11/2023
+Value: -50.0
+Description: ATM Withdrawal
+
+
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedPayload: F5UxBgwa4sLdshtwIZJQuCKg/KfgIZWOTau1/0K51pclNIAr7ai6A4c9yiQ40BI9v3LvEPUrTyilZdum+TNbZA==|FXxqQFS2WhEMrWDM3tehDhXWGfdRdPg4/1xvKWatL4rPgc8mHMl2PHfmuyKNU5EzuUzYDMQ1illfJvO+qeUz5ct7xSKkOG5BVCS2kErnwIOzynlKqH/UH/kWdBU5jRb0rQmVIuJOQNkXsjRTVL9v14uXlxoG7iQR3LuqoO51jHJP7dZokarOmt2oHhA1ZWu67U4OyFZgxaJvIr9bHVmfGq52ryuMn9iy7DeoftyEKlj/wnSLq8rKRKMr41jcjuQXXOuL1uarnieWjWCmn5RywYk8/cd4/26SeqxI3xtCzCq0sPrtvvnoNxTgeWMgzo9bQ9arfkrqeOAv8phJRG/Pkw==
+DecryptedPayload: make_movement 50 Electricity bill
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedMessage: F5UxBgwa4sLdshtwIZJQuCKg/KfgIZWOTau1/0K51pclNIAr7ai6A4c9yiQ40BI9v3LvEPUrTyilZdum+TNbZA==|FXxqQFS2WhEMrWDM3tehDhXWGfdRdPg4/1xvKWatL4rPgc8mHMl2PHfmuyKNU5EzuUzYDMQ1illfJvO+qeUz5ct7xSKkOG5BVCS2kErnwIOzynlKqH/UH/kWdBU5jRb0rQmVIuJOQNkXsjRTVL9v14uXlxoG7iQR3LuqoO51jHJP7dZokarOmt2oHhA1ZWu67U4OyFZgxaJvIr9bHVmfGq52ryuMn9iy7DeoftyEKlj/wnSLq8rKRKMr41jcjuQXXOuL1uarnieWjWCmn5RywYk8/cd4/26SeqxI3xtCzCq0sPrtvvnoNxTgeWMgzo9bQ9arfkrqeOAv8phJRG/Pkw==
+DecryptedMessage: make_movement 50 Electricity bill
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: EncryptedUpdateDBFlag: 6mNSTtcz99BIko47piRMBUr3z4/N3NXKFXL6i6s4C2s=|cKXT6D5opeH2N4OgvIxKCgM0etsWwH37T3oc1jqtAjeYEw67n9M1NpqiWhttClqcoK+DCrbcJ17Lc1+QeV0jfAKg1O2smMPrc7egS6xFGLNyIkTAjx0YylApL0joy5BWtuQHon6t6vzX04SMB/nKyW952uNs/Ik6z8rteU8Bg+1dkfBYj5DYc4wVk7fLFycrSmgMsfV3x70rX0ebP3s1pPJMVcggrcvjs3dSj+uGaPim9BNq133KCggUS5Om1hrGKWiWsAyHqL4wsZ+K2ocoL2gIDQn+2WaXAAGihPbC/o+OVUNpd2NPyBKZ+Rm/YlyOJag1B2Y2rHi977nckI5S7g==
+DecryptedUpdateDBFlag: 1
+----
+EncryptedAccount: jVapfHqiJFwsbmgqa/fCXQgbEejYKrJ2krqKBYzb5wQ=|faIP89P6CT2dXOM1xlHRL6QhanozGKDxVGlVU3q7RpQfG0Wu14SE3F65CRQQ431UiT9sdxcrHr7bGLxyMk2ZaxNdzR/HJQxCYFX4GpPgj4xUxYZwR/fHSf+BTEh81FPiaxs80B+9J9T20RkJSzasDYSqYnKxmtI7DDzFqCcYeh6DAD5kFXKQn1pFgS6RTklrcY/TgC8XMqDsnyB/MJsDJHzNgSQTXtgGDqgtLikon3i9andIIoGCD73DakpPxYvupJ07XEZdBmyIa0WzxuQGReC9CdMt33xgFmvUyq6yjqmYvfo8oQ5RK7ARvAJG7GEGB6s1UMPO+2y6ZUkhQqMf+Q==
+DecryptedAccount: alice
+----
+EncryptedRequest: 7PGOV2PDBWljd7kAZUzmsFYJU48CCI8wjF9oJ2Ny8oY=|rVHLenubnwKAL2dk3l9ZQtI9gM17VtcfuEh6W0Ge3do6CyU2OVKBhmc7aKoeb+27Poh3OisnGuGjUX3nI1Tw8095MIsoivPNTVQOlWUGR32PnFJnAoBBKxJfS4+/S3J3dzSPoA9w0hPRcM9D7cCKOfJ2ONg99vi0UjOnvgOpA+0vFt61Tl8cMa9Mvli5fh1Os/mleSVjRwCTNrlHjBQ7W8u5vG1SuxnBKaydHaJRC4CeeLLC6PPberTi3cDWNcc6UHdaiYfJPprBlBghdZ+qeQm8MHse6eqDiNkfOanTUZlRoETC7ACIEn+N5JotgBQCY0xjUQPMfYepG8blPCk+Sg==
+DecryptedRequest: movement
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedUpdateFlag: 6mNSTtcz99BIko47piRMBUr3z4/N3NXKFXL6i6s4C2s=|cKXT6D5opeH2N4OgvIxKCgM0etsWwH37T3oc1jqtAjeYEw67n9M1NpqiWhttClqcoK+DCrbcJ17Lc1+QeV0jfAKg1O2smMPrc7egS6xFGLNyIkTAjx0YylApL0joy5BWtuQHon6t6vzX04SMB/nKyW952uNs/Ik6z8rteU8Bg+1dkfBYj5DYc4wVk7fLFycrSmgMsfV3x70rX0ebP3s1pPJMVcggrcvjs3dSj+uGaPim9BNq133KCggUS5Om1hrGKWiWsAyHqL4wsZ+K2ocoL2gIDQn+2WaXAAGihPbC/o+OVUNpd2NPyBKZ+Rm/YlyOJag1B2Y2rHi977nckI5S7g==
+DecryptedUpdateFlag: 1
+EncryptedAccount: jVapfHqiJFwsbmgqa/fCXQgbEejYKrJ2krqKBYzb5wQ=|faIP89P6CT2dXOM1xlHRL6QhanozGKDxVGlVU3q7RpQfG0Wu14SE3F65CRQQ431UiT9sdxcrHr7bGLxyMk2ZaxNdzR/HJQxCYFX4GpPgj4xUxYZwR/fHSf+BTEh81FPiaxs80B+9J9T20RkJSzasDYSqYnKxmtI7DDzFqCcYeh6DAD5kFXKQn1pFgS6RTklrcY/TgC8XMqDsnyB/MJsDJHzNgSQTXtgGDqgtLikon3i9andIIoGCD73DakpPxYvupJ07XEZdBmyIa0WzxuQGReC9CdMt33xgFmvUyq6yjqmYvfo8oQ5RK7ARvAJG7GEGB6s1UMPO+2y6ZUkhQqMf+Q==
+DecryptedAccount: alice
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedRequest: 7PGOV2PDBWljd7kAZUzmsFYJU48CCI8wjF9oJ2Ny8oY=|rVHLenubnwKAL2dk3l9ZQtI9gM17VtcfuEh6W0Ge3do6CyU2OVKBhmc7aKoeb+27Poh3OisnGuGjUX3nI1Tw8095MIsoivPNTVQOlWUGR32PnFJnAoBBKxJfS4+/S3J3dzSPoA9w0hPRcM9D7cCKOfJ2ONg99vi0UjOnvgOpA+0vFt61Tl8cMa9Mvli5fh1Os/mleSVjRwCTNrlHjBQ7W8u5vG1SuxnBKaydHaJRC4CeeLLC6PPberTi3cDWNcc6UHdaiYfJPprBlBghdZ+qeQm8MHse6eqDiNkfOanTUZlRoETC7ACIEn+N5JotgBQCY0xjUQPMfYepG8blPCk+Sg==
+DecryptedRequestmovement
+================================================================================
+
+
+================================================================================
+From: Database, To: Database
+Message: Account option - Get account query.
+================================================================================
+
+
+================================================================================
+From: Database, To: Server
+Message: 
+Account File: rO0ABXNyABNkdG8uU2lnbmVkT2JqZWN0RFRPAAAAAAAAAAACAAJMAAtjZXJ0aWZpY2F0ZXQAIExqYXZhL3NlY3VyaXR5L2NlcnQvQ2VydGlmaWNhdGU7TAAMc2lnbmVkT2JqZWN0dAAcTGphdmEvc2VjdXJpdHkvU2lnbmVkT2JqZWN0O3hwcHNyABpqYXZhLnNlY3VyaXR5LlNpZ25lZE9iamVjdAn/vWgqPNX/AgADWwAHY29udGVudHQAAltCWwAJc2lnbmF0dXJlcQB+AAVMAAx0aGVhbGdvcml0aG10ABJMamF2YS9sYW5nL1N0cmluZzt4cHVyAAJbQqzzF/gGCFTgAgAAeHAAAAR6rO0ABXNyABVkdG8uU2VjdXJlRG9jdW1lbnREVE8AAAAAAAAAAAIAAkwACGRvY3VtZW50dAASTGphdmEvbGFuZy9TdHJpbmc7TAAJdGltZXN0YW1wdAAQTGphdmEvbGFuZy9Mb25nO3hwdAPAVzYzSmg0RWpvVW9tZW5nTC9YcWg4QVZpeVh1cnNoUFo4QjFOcmVNL2krRDBUaGpFamk4cXNYc1g3UWtvaUdTMFJsL2xSemhxRnZOM1l3U3ZqYm9GTCszc3hqZkdYaGJ2MllvbzlFWGtMWUwrR091K1gyeUl2djdONmFPU2k2WVZLaGkzU1lRc2RJVHFVSHVuR2ZmRW1UYXhDTTZBRUhyNWkvR3RYZ1VhSVVaeUcxcXBOVGd1SHQwZHNVb1drVjA0SW1WNGhuSk5ycjEvZmp4WXBzb2hPT1FyakVxQXMwblcrOFZ2WVU0TFlXYjRid3VzdHRCVUFJTnJMelQ4dlBMZDltNHluUjB3YjhlZmNUSnBrOHU2b0Q0aDRhZ1NKeFpjTlk5enh6bjN2Rm5oRS8zZ1FiYXFnUUhKV0tndVRaR3FjdU5ra09RdHVVbGFKSDVlTTh6dzB2Nit3b1hCQVJKOWZCYUVaVzh5bE1kY1J2Z1pxTkJ5c2FLU3U1K0cyQmxPcnRyUGhOcFY3MDNjNEhyeitxUEh5MmRVSGphNC9lTFVnMEJvcnNqRkZaeEp1SXpIbERMbStwK3Iwc1NoTm5zUHIyWmVmU05MWlNiODBNclhKZGlwNlZWc0ZwTktyWm9uNUtpVEorL0wwYyt3NHJsL3FGZlpTTEc1cW9vNTB3bjdvSG5GVi9QTHRjK3B5UTVHanlKK1pIQjVKcGQwT2NwTHlKU0JPYkc1b0haUC9VVU9GRm5vUTBMR3puNkw3a1RyVjNPUGlrdiszYUJNL2ZVOXY0eUlkdnF2WlhzTTJWVC9vYUVGS3dFaXZzL1A5cGFIS3NxSU1hcTB6WTdndE93WHVDcTJ4L2MrN3NCL0MzTktGbUNVK3hpcU12TGZoNHd2azJOZ0xkc3dKUEI4RTBDSjlTeCt4T2ROUlZpb3huTzJ5aS9pOGZ3cFU2ZTJtVTlWNEovdmVrMWlzLzlGUTd1R0p1YlpYMnU1bnNFTU5KL2VScjAyR2tLdlZkWW5mOWc4QVQ2NmlCdVk1Ly9mU2VwL1BhOUdodmZyYXdHTS84a1VXQ3pEMDdhR2xiQm5tZTA3K21yRWxPaEdqQmlzSlJENEkvREd1V0I1aVdjK3FLalVwMUgzM0Jxc1dnM3ZtdHBNQk1OZVV5UTYvd1p6RHFYODlJSHJISHpTWTBoa3lVK2F2STVkRXQ5UStpaVF1M1BOekVKcXYyc1hQQVFLTUZxb3hGNUZPMHI4aHNDQjRUdkRDN0ZZNWwyQmNoQ251NnYrc3IADmphdmEubGFuZy5Mb25nO4vkkMyPI98CAAFKAAV2YWx1ZXhyABBqYXZhLmxhbmcuTnVtYmVyhqyVHQuU4IsCAAB4cAAAAYyLzUffdXEAfgAIAAABAC3dZc6sxyGvg8bjvnxPWJItlMzr1lM8Rtdefz35ymGoOrVPPxzf/CifrJBCbMmWJ+wYE0wHg1SbOhdpj0OXubd+NKSZgRQW5BxOrHLVd6SKIsME4EoxXYv6mOWKroG9nPYUoZkwPElIfhhWHOdEIYSOfKHDCi4hNaJ6exfP+3LiKq9DMtrcdsiifpt8FExP7GizzpBGj3TxrKF4lDo2RlnrLNThO+zXZ+O3xvy0nXGWHyLjlfJTzNfzxeEZot76uKQ51+W9HWQbPV2Fq924E/PY9ZDW9KjgqhiJQwjKEYzcqX0P3Q01GAOUdfW4H/FhtZTaAzJx+fGRdSylujGJW3Z0AA1TSEEyNTZ3aXRoUlNB
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: EncryptedAccount: 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
+DecryptedAccount: {"accountHolder":["alice"],"balance":872.22,"currency":"EUR","movements":[{"date":"09/11/2023","value":1000.00,"description":"Salary"},{"date":"15/11/2023","value":-77.78,"description":"Electricity bill"},{"date":"22/11/2023","value":-50.00,"description":"ATM Withdrawal"}]}
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: EncryptedConfirmationFlag: 2Goq6vFExmighbqBPeF0pH3ZxhTte3bA3IluyeT0EVc=|enPT8J4XlkU7CqkwFl+OP00SX4jOuaRYsO1MYF4iWH6RAOj5nnPCqDrukSjI2LrtDV+HDKPWMnwtbv9tOo2Z5nDiJMJUANi6BVpnfyeFgQPxhBXdaXv7i4XtboGrE1XeLPQ5D7a929gZqfTimmYSJ/kiYX7advfdi7kGMAtOWcvBuUMkYLvrMItBDXh8DiJVtKIjmeYIcfR8WZF4qOXOhVweOcKO3zQJ/O5c1ITmxdLDBo4QypLBA+IKda6uUo8q0/k7Syae+fcOJXD2YetfM0Fhe7PNDffuXfBCM1OO+8ISwjq3Q+sB8pKE4u9bck0nXVy9wIv/TxOi+J/9A1pvnw==
+DecryptedConfirmationFlag: ok
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: EncryptedBalance: CgthFnmCtT8COwT5Qjpv3svg4Fm9ZQ1yn8cpcPasyCLhr0keOR1sTu9ts7gki37X57zvurfB2JtMTCTv4uWmpwSLk1oogEx7NZO/pbDr2LC6ON8UbhfV77PiBfSqVH61aUFx7KTW8XvM+O7FR1vN5Q==|t4bO+2fF2ukayM66pR770cRgyBRpddllbG/XHKlDskTiELPulbMEiHUW62ylMZNFOi8VgFIlJy7pi8iJv1pk8QZIYjh6RmY1UD21j6CEeh2W5f01wQUreCG4BRktYL0PA+r/6gPFJmnYAmVsW5Gd3b2DQZkXEwCMh/v5DUjUsQ3V5caB7woHVpsistqks47VRpb2TbM+6SBx343BoBk0Tper7FTNve8oC+QCabcn/7BQaw7beJDnU8WFO7jwHNK9EmVa4BSXaTv/cTE1o1acJSNuQBhO6smTh9ROjkwdngliYl+uHuOyLGlPsoQuwLUw0PhwGR9iThuAl5EFKOQnYQ==EncryptedMovements: acWuPO0r9SCY5l3GWoMnP/S0hC6ohZm96XXSaRLyRla1qt8JKlcFQBz92aLtVnnsa+1oNKF0KG3xJfzfQb4LXTpRWD21A0N4nQInrPfxBOkJ8Fo+gZJmK0FW7YZ5eesqZNvnTzOEaJGum8zQgIyLzH9I4xulcFb1zv+ZMdowjA50Mp8aPyMXyLpuMNx/dTEClpgPuSfphE6fj4Tz0++jmwagPbkYzvwni44FI55kkL6fVlNep8pOWGXAIMc1jyMJpv1sFKVqCihHnjvEHDQuVaqX5WjfepU2SaNxcZwmBVoWB4e+Rhuvy73IeD9V7kYfffTu1kjwbhK8W1NP1hcL/+dr1SpCuatIZIoAGhdyz/rj0adKcdbt99OIEUnUcMBDyC4m0nf9AewACX9LN3GBCA==|wEcVWUk/FpkVPWC87gz5ilAIN+ZUfMlpzQ+WgNkg5BOnYUBRVIWDjHtrUoR5ZsyPlC393bF+qIyGPaa/nJ/Rd/AwvmOIIexr/uNHJV3nHaE0zBaThlABauZOJXO2cDVxsbUbH1WUpZUL0LaxoqDcskOKrs9m/bj91ulxnqE0eY2fhugd1R654JXF7Tu+JFzXlWV4D5E0PAzX4hUUsUzw2VbcBSazt7oc8wod3mS8m6UrnQ8MFAWj0R2NGaEYXexM8ykSrg1wy6wtq1cJtHLuTB0DDfV8ihkkzLpcQxJvHOpt9WTRY0rdd5q8DXHn1bAIipU7Q7erOk50Cul2lvXGAQ==
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: (Movement)
+EncryptedConfirmationFlag: 2Goq6vFExmighbqBPeF0pH3ZxhTte3bA3IluyeT0EVc=|enPT8J4XlkU7CqkwFl+OP00SX4jOuaRYsO1MYF4iWH6RAOj5nnPCqDrukSjI2LrtDV+HDKPWMnwtbv9tOo2Z5nDiJMJUANi6BVpnfyeFgQPxhBXdaXv7i4XtboGrE1XeLPQ5D7a929gZqfTimmYSJ/kiYX7advfdi7kGMAtOWcvBuUMkYLvrMItBDXh8DiJVtKIjmeYIcfR8WZF4qOXOhVweOcKO3zQJ/O5c1ITmxdLDBo4QypLBA+IKda6uUo8q0/k7Syae+fcOJXD2YetfM0Fhe7PNDffuXfBCM1OO+8ISwjq3Q+sB8pKE4u9bck0nXVy9wIv/TxOi+J/9A1pvnw==
+DecryptedConfirmationFlagok
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedUpdatedBalance: CgthFnmCtT8COwT5Qjpv3svg4Fm9ZQ1yn8cpcPasyCLhr0keOR1sTu9ts7gki37X57zvurfB2JtMTCTv4uWmpwSLk1oogEx7NZO/pbDr2LC6ON8UbhfV77PiBfSqVH61aUFx7KTW8XvM+O7FR1vN5Q==|t4bO+2fF2ukayM66pR770cRgyBRpddllbG/XHKlDskTiELPulbMEiHUW62ylMZNFOi8VgFIlJy7pi8iJv1pk8QZIYjh6RmY1UD21j6CEeh2W5f01wQUreCG4BRktYL0PA+r/6gPFJmnYAmVsW5Gd3b2DQZkXEwCMh/v5DUjUsQ3V5caB7woHVpsistqks47VRpb2TbM+6SBx343BoBk0Tper7FTNve8oC+QCabcn/7BQaw7beJDnU8WFO7jwHNK9EmVa4BSXaTv/cTE1o1acJSNuQBhO6smTh9ROjkwdngliYl+uHuOyLGlPsoQuwLUw0PhwGR9iThuAl5EFKOQnYQ==
+DecryptedUpdatedBalanceRDKk2Hu6I+OeBCYFVpmSFxEhimJMzFNWopDFLPoGfds=
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Database
+Message: Balance updated successfully
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedValuesMovement2Layer: acWuPO0r9SCY5l3GWoMnP/S0hC6ohZm96XXSaRLyRla1qt8JKlcFQBz92aLtVnnsa+1oNKF0KG3xJfzfQb4LXTpRWD21A0N4nQInrPfxBOkJ8Fo+gZJmK0FW7YZ5eesqZNvnTzOEaJGum8zQgIyLzH9I4xulcFb1zv+ZMdowjA50Mp8aPyMXyLpuMNx/dTEClpgPuSfphE6fj4Tz0++jmwagPbkYzvwni44FI55kkL6fVlNep8pOWGXAIMc1jyMJpv1sFKVqCihHnjvEHDQuVaqX5WjfepU2SaNxcZwmBVoWB4e+Rhuvy73IeD9V7kYfffTu1kjwbhK8W1NP1hcL/+dr1SpCuatIZIoAGhdyz/rj0adKcdbt99OIEUnUcMBDyC4m0nf9AewACX9LN3GBCA==|wEcVWUk/FpkVPWC87gz5ilAIN+ZUfMlpzQ+WgNkg5BOnYUBRVIWDjHtrUoR5ZsyPlC393bF+qIyGPaa/nJ/Rd/AwvmOIIexr/uNHJV3nHaE0zBaThlABauZOJXO2cDVxsbUbH1WUpZUL0LaxoqDcskOKrs9m/bj91ulxnqE0eY2fhugd1R654JXF7Tu+JFzXlWV4D5E0PAzX4hUUsUzw2VbcBSazt7oc8wod3mS8m6UrnQ8MFAWj0R2NGaEYXexM8ykSrg1wy6wtq1cJtHLuTB0DDfV8ihkkzLpcQxJvHOpt9WTRY0rdd5q8DXHn1bAIipU7Q7erOk50Cul2lvXGAQ==
+EncryptedValuesMovement1Layer: {"encryptedValue":"G5azVyBJIPR/cFJrQGgFVw==","encryptedDate":"Ss9skX4cugImy9M7gMOkSADcpU2vnLJwW2MyUghI8Cs=","encryptedDescription":"7wWDqpcmqU3Hmt6U8B8oCFcrqsmtJIqPzUxgBjjgwQ0="}
+================================================================================
+
+
+================================================================================
+From: Database, To: Server
+Message: 
+MovementStatusDecrypted: Movement done!
+MovementStatusEncrypted:x3St9HFMnohb+0sn88bedpUAD05vow/4sAh6jqMaeGE=|ojnX7NwrlrS6Z3+4npiEoREWrVW9zJNWGzRPBL3DBmUUFoN/YeUmkU5h5yqZKTgqIuEn+kia/VSFxLD6VaNUtHW2p4PxCGAWErPA0OwCIdYS2etdySZEImVZ+CE9wkAcng5uIWwMam1jf+e4htKrQvFbKRU9ijeMxytp3qE7GRf3nCbR8s8Rwx6ZPeumD4IhfmDbKZVNhE5YsBopSCYSMheczxDkHVA6eOvb1vxqegercL+XWDBeXjq+BogBKX83eojFhj5O5AUpwW4VQuqwFZvBpQxjvLvWpv9h84O++VvYW6a1ExJmrxtBY+iNA5/FPBVSo8kIK8vp0AMOTKh9tg==
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: ResultFromDB: x3St9HFMnohb+0sn88bedpUAD05vow/4sAh6jqMaeGE=|ojnX7NwrlrS6Z3+4npiEoREWrVW9zJNWGzRPBL3DBmUUFoN/YeUmkU5h5yqZKTgqIuEn+kia/VSFxLD6VaNUtHW2p4PxCGAWErPA0OwCIdYS2etdySZEImVZ+CE9wkAcng5uIWwMam1jf+e4htKrQvFbKRU9ijeMxytp3qE7GRf3nCbR8s8Rwx6ZPeumD4IhfmDbKZVNhE5YsBopSCYSMheczxDkHVA6eOvb1vxqegercL+XWDBeXjq+BogBKX83eojFhj5O5AUpwW4VQuqwFZvBpQxjvLvWpv9h84O++VvYW6a1ExJmrxtBY+iNA5/FPBVSo8kIK8vp0AMOTKh9tg==
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: ResultMakeMovement: 2cvWoulLTZV2RVyDhzrmakCt1LaJrQssTkd5wrDO8EQ=|qh73sFLvg65NwBKZfbNDO9hk1mIu0JNL9JHrdw9hPigbd8klsM1mOWNDEQnZixVp58Ef2xKB+OxaqPLpl3boJ79RiaehtrAxNflHeeThRcMocZkdloDsSjFKlmNKvu7VyFdMOv+NBPy1ltNRIfMMP7jFGQwY72qYAqCwaBwYmaMsGn98SZkjwflJ3kEQ+liTmw01uPD9Snt3BNnU+F54kd28MERRDm/0/5deI2NodDuHGbI85Ep39apyQEgK8Lgi8VPh6gePiJChHL7lL4tY9TakcnjShKIyBKuerHcgu9fCiCCShecPQxku8ghFV99T3O79gRg1X42P2qB1W+2A6g==
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: EncryptedPayload: 2cvWoulLTZV2RVyDhzrmakCt1LaJrQssTkd5wrDO8EQ=|qh73sFLvg65NwBKZfbNDO9hk1mIu0JNL9JHrdw9hPigbd8klsM1mOWNDEQnZixVp58Ef2xKB+OxaqPLpl3boJ79RiaehtrAxNflHeeThRcMocZkdloDsSjFKlmNKvu7VyFdMOv+NBPy1ltNRIfMMP7jFGQwY72qYAqCwaBwYmaMsGn98SZkjwflJ3kEQ+liTmw01uPD9Snt3BNnU+F54kd28MERRDm/0/5deI2NodDuHGbI85Ep39apyQEgK8Lgi8VPh6gePiJChHL7lL4tY9TakcnjShKIyBKuerHcgu9fCiCCShecPQxku8ghFV99T3O79gRg1X42P2qB1W+2A6g==
+DecryptedPayload: Movement done!
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedPayload: GopficgD6xjTnLVZdpcj3ZF2QuMYUQoD9vGjR+jqqzs=|hm3boyjwqnLzLsN8ZMEi66j1G7dpJqD4SCfO7sF4jeSU5Y22EnKYff8VYT49/TtMwSWl7inp54za0bNB0SubG6GaCL0GbIMtGomim+V0wLxV5/I2nCpfY8X6xXO/O4sje7MPSTMRUBggzqEho+3JXh5kbfwRseRkLFn3LwZQEGjivkxCz2ZWOz5Rh6rJ3xfwHYX/d/Ch+pvjuR+NNRBHV5SrC215/P0rTdziGIDSSZ1w0TyTEuaQHgaP40KgqdBhLWyW670Oal9esho33fRpYjfwoiB85azkKpgMGfA9pAfV/TKda39oOQL22IhUrWUc+gpzEeeJqmrpNJjLx6+tSQ==
+DecryptedPayload: balance
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedMessage: GopficgD6xjTnLVZdpcj3ZF2QuMYUQoD9vGjR+jqqzs=|hm3boyjwqnLzLsN8ZMEi66j1G7dpJqD4SCfO7sF4jeSU5Y22EnKYff8VYT49/TtMwSWl7inp54za0bNB0SubG6GaCL0GbIMtGomim+V0wLxV5/I2nCpfY8X6xXO/O4sje7MPSTMRUBggzqEho+3JXh5kbfwRseRkLFn3LwZQEGjivkxCz2ZWOz5Rh6rJ3xfwHYX/d/Ch+pvjuR+NNRBHV5SrC215/P0rTdziGIDSSZ1w0TyTEuaQHgaP40KgqdBhLWyW670Oal9esho33fRpYjfwoiB85azkKpgMGfA9pAfV/TKda39oOQL22IhUrWUc+gpzEeeJqmrpNJjLx6+tSQ==
+DecryptedMessage: balance
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: EncryptedUpdateDBFlag: wrCpa8cKkafzPkOGoBx9r31AHsrFSyVFsvPTYHN6x8I=|RsPx/Ca46Uh16lIkbANZz/sh2zolBRuuy3mAj9ATTt+CDnetID52un+gRFSW194ptXv5tca/dsiwfXrT2VvXd+Rr5VcYne8g2sbkXg7uqnPaltbwRZgBb3os6sTBdffSUvp9zkbLTrEspkBlrzceuaeS54cbzFeOK2KwKhrjwfxBCVQuepSQ+HS84qKU4Ay5iblkRrbwLYCn/Mr1b2cPynE0yACvfGwDJYDW9PywztK3IaoWZAt+r+MuwV68nTno0QmJ+m3HoWV35gfNKFmZtxK3SWSK3aCu3o46m0PdYm1ISWVGpqhI6KX3TiFq64GyuzKQrH7Cyz7xYvchDDYE5g==
+DecryptedUpdateDBFlag: 0
+----
+EncryptedAccount: ri4jNkLmc78rtv+jCMG9Hkxz1UU7qkiY5pAGEslNqr0=|XXWJwMDdbQUM64svZnel4IEkSa4iELZHmWm+CeuztBbOKZ/rO7/8pFxkEC73p53wj9jUYyGVm7RY0JXZ29hqtudgXHK0hesUjh1STmOjK8WD/rU51Z3cGGZps7q6Ro/5GbQiy8FHPluPbcIgW0Hf+3JM+t9sxctgDMFkj3qZc8rl7gm5ndccCJuHNiONk5ZHArHFEwzDwEVU5D4YY5KjKG9MqAh9EZjgWk1MlTV3aSHq79AcUN3a5tb315yn0FMAxe9AidfXVIOvQIkQuPdJUNiL6PF+7Kn+lO5kJ5LR5FSIsiLcMdXjImVgkerC4CJg5Xi0kwSZL1ZVASpb4iPO1w==
+DecryptedAccount: alice
+----
+EncryptedDocType: DSuiq4viLPrMXj9wtvH5exMVCK5CfdlHh9eDXk6M38A=|UseAteqXjEAMPBnVgomUrE5Og/bidwupz2HEGK5HAw9WFUkgPGmGMjufj27/IE7J5hI8gbweWGbVuQk87SxOxw5XuPWtl8ayCKb6tMIGMZWFeRhhI/G6r/vLNmW4nHTaV+MCHosdEttoASmyBuK5OzQTFwcHVybMq7Fc8//bUjWeFIFhkL7wYcti0at2ASCzmZ21gLwqAXIgEfbSE3kTmsDeG6wg+uFkeM3YT3Pj6w0nB8SSabSv3xDCbaV0io+gL2TgsU/781sK9wHcL3OidExgnDAAfSVqnWf0/vjBjei7gj3lKKDDSm69aAvEyRUydpGHr8+HFbruaNdpmAO9gw==
+DecryptedDocType: account
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedUpdateFlag: wrCpa8cKkafzPkOGoBx9r31AHsrFSyVFsvPTYHN6x8I=|RsPx/Ca46Uh16lIkbANZz/sh2zolBRuuy3mAj9ATTt+CDnetID52un+gRFSW194ptXv5tca/dsiwfXrT2VvXd+Rr5VcYne8g2sbkXg7uqnPaltbwRZgBb3os6sTBdffSUvp9zkbLTrEspkBlrzceuaeS54cbzFeOK2KwKhrjwfxBCVQuepSQ+HS84qKU4Ay5iblkRrbwLYCn/Mr1b2cPynE0yACvfGwDJYDW9PywztK3IaoWZAt+r+MuwV68nTno0QmJ+m3HoWV35gfNKFmZtxK3SWSK3aCu3o46m0PdYm1ISWVGpqhI6KX3TiFq64GyuzKQrH7Cyz7xYvchDDYE5g==
+DecryptedUpdateFlag: 0
+EncryptedAccount: ri4jNkLmc78rtv+jCMG9Hkxz1UU7qkiY5pAGEslNqr0=|XXWJwMDdbQUM64svZnel4IEkSa4iELZHmWm+CeuztBbOKZ/rO7/8pFxkEC73p53wj9jUYyGVm7RY0JXZ29hqtudgXHK0hesUjh1STmOjK8WD/rU51Z3cGGZps7q6Ro/5GbQiy8FHPluPbcIgW0Hf+3JM+t9sxctgDMFkj3qZc8rl7gm5ndccCJuHNiONk5ZHArHFEwzDwEVU5D4YY5KjKG9MqAh9EZjgWk1MlTV3aSHq79AcUN3a5tb315yn0FMAxe9AidfXVIOvQIkQuPdJUNiL6PF+7Kn+lO5kJ5LR5FSIsiLcMdXjImVgkerC4CJg5Xi0kwSZL1ZVASpb4iPO1w==
+DecryptedAccount: alice
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedDocType: DSuiq4viLPrMXj9wtvH5exMVCK5CfdlHh9eDXk6M38A=|UseAteqXjEAMPBnVgomUrE5Og/bidwupz2HEGK5HAw9WFUkgPGmGMjufj27/IE7J5hI8gbweWGbVuQk87SxOxw5XuPWtl8ayCKb6tMIGMZWFeRhhI/G6r/vLNmW4nHTaV+MCHosdEttoASmyBuK5OzQTFwcHVybMq7Fc8//bUjWeFIFhkL7wYcti0at2ASCzmZ21gLwqAXIgEfbSE3kTmsDeG6wg+uFkeM3YT3Pj6w0nB8SSabSv3xDCbaV0io+gL2TgsU/781sK9wHcL3OidExgnDAAfSVqnWf0/vjBjei7gj3lKKDDSm69aAvEyRUydpGHr8+HFbruaNdpmAO9gw==
+DecryptedDocType: account
+================================================================================
+
+
+================================================================================
+From: Database, To: Database
+Message: Account option - Get account query.
+================================================================================
+
+
+================================================================================
+From: Database, To: Server
+Message: 
+Account File: rO0ABXNyABNkdG8uU2lnbmVkT2JqZWN0RFRPAAAAAAAAAAACAAJMAAtjZXJ0aWZpY2F0ZXQAIExqYXZhL3NlY3VyaXR5L2NlcnQvQ2VydGlmaWNhdGU7TAAMc2lnbmVkT2JqZWN0dAAcTGphdmEvc2VjdXJpdHkvU2lnbmVkT2JqZWN0O3hwcHNyABpqYXZhLnNlY3VyaXR5LlNpZ25lZE9iamVjdAn/vWgqPNX/AgADWwAHY29udGVudHQAAltCWwAJc2lnbmF0dXJlcQB+AAVMAAx0aGVhbGdvcml0aG10ABJMamF2YS9sYW5nL1N0cmluZzt4cHVyAAJbQqzzF/gGCFTgAgAAeHAAAAVmrO0ABXNyABVkdG8uU2VjdXJlRG9jdW1lbnREVE8AAAAAAAAAAAIAAkwACGRvY3VtZW50dAASTGphdmEvbGFuZy9TdHJpbmc7TAAJdGltZXN0YW1wdAAQTGphdmEvbGFuZy9Mb25nO3hwdASsTCtBWGVJTXVoZ2hMQ0RwYlZ2MWVINXFaNG5LWGRhdlZxVzlmMFh3SGRmWE5UWHdycWQ4V1VVc3V4S1BRYk5GbFdkeHViRHZzMzNTSDJKRndjOXl6dk1nT0tMazNhbFI3TDg0TW14WVBYdlFKcGdNQ3psNGhSS2RXeWdVV0xGaEk5ZFNuKzVYYWdMQjlHVVBoem56azhtU3Bub3RQdCtIeWVPMUZXMk1pbXliZEQ2Y0ZkTG1tUzcrVWZ3L0ExbjJqTTJKN3g3N0hUK3JGVEl1L2RUMWJtZEl1YkRqUDVISnhESXZZRG5yYjNyNFp0ZXduRVlqTDl5Snhrc08zTFJvWVNsUlpwUHAzalh4dWFGREo1TmVXNVQ3TURNeGd5T1g3OEUxVjdUaFhXZkIray9NTnNSSEdVUmxUSDd6OFNzbVFEc0FOb3FWbW0zYXRnWnJCWEcwclJDODd2VGlOeEJMZTdsSmFCbmpUVTBZSDlRZTlsYVp1SUVKeU5oa3Iyb3M3YUFJelYvbWVUVnZYbllteWVMV0lNVWVPa0RvaHhUd3ZWWnIvTzBPemx1YWJsSVpuWDFnaGZjSi9aMk1JTzF5UmRNU2dLUmd6enpmRlNBOVFLM294bmFBK1lQcUpGM2I2cEVYcy8zaUdXMS91MlNBZ2xEbWhVazhsUGZwVWkvaDBQbk5SOW5NYWhKQktubFM5SEFJMVFyWk9JQURERHlmR0xXL1IyV1ZtODV6NlZFcWN2eXE2MEJkb1RKcW9KYXBSV3NCNWc4NFIvL3RuQnBML1paRytaYSsxcStBY2RzekUvT1l6eU93SkdpUzYyWmNXSTVkZ3E4bDkxcFpRMldwUGk2RFRpbmUxM3NhbWZVVHNLNUhQRzUzK0NVREpzZnVVVmJDSFc4MTZDZlU3b3I0MWNBZzdqUG5KUzlQVEQzaHhnL3hEWEUvaWwzNVBNQnA0NklSREllWm9RK3pRWnA2bmNkMHBFTDVkdStXd1hUZVhSMUtCemJ4RUE1LzVWY01Yei9EbGs5czlJekJVV0FMaGNnNzEwbzJiRGZXZVhLb3ExRm9OR3NQQU1GWnVpK2doaU1naE9DVzBjcWNsZUQrcElKM3p0V2hMMzFGL0l1NVpyRVhpcDJqV2xXUkFOQkxMaFY5MHpSNnpDUFNpaEUwYTVvUkg5NElNaXVybDV0N2JSU01YNlhVU0dzM0FHaS8reTZITUgwNmE5aE5XQVBDOXgyd1BNQjNiOEFRN3dkT0grV01JL3dEWWViZlhaTGMyTUM4Z1BKWjI4SVJPbGwzak9hTldSNUQzdEhqK3RIcm5OYWxzbWlLNzk3amw4cG4vTUNsYW9OT0hrOUQrdTlyV2p3bC9NeFpibjhQamZjblVjK0ZldG95dFo1ZTBOb0p5ckxLR3lkL1VKdjVSaUQ0ZktUUkFwZForRDJOYVBMZ3MwY0FOR0N1WjRVbVJjMkpZanc0S1EwLzdRRkc0RWw1NjJOVjJXTFVaeXRDV2RLNWxqcnpUR1pNcGJ3ckVCQTM1ZzNIalVQSjRpcVI1UVVuUDB3VnREUWJydDFmUExOUVppdVpST0s0Q0NGcz1zcgAOamF2YS5sYW5nLkxvbmc7i+SQzI8j3wIAAUoABXZhbHVleHIAEGphdmEubGFuZy5OdW1iZXKGrJUdC5TgiwIAAHhwAAABjIvYB4V1cQB+AAgAAAEAmZCN0KvHTNJ2z4FKmyKZtWzeBwGYwmULlMFSDvEvf1xr/VwV8ay6MfjdZITvyu8EsfCuD+ky7hEDIXvEhj4q1nUpxKdteZh05c7axJkJevqvFOfm0KijuIezCtX+I6IwzwtS3BTr2NK0qmF5mkUXQhuRIAfV2x48EhFhWoEpzzFDjpCEq8ushz6gBFaGyJvQSH/vLxay+INi993ISQn+8mI4xFAtQgU2bKbadECejE2Mi3JcA0L18JsMLVdKYYKaBM4MhUb8zwB9pmk2qXlzegs5IBge+PDXvSSR48GmG1QpdUfDBBwZ8STDKS6nNCDm33AEY3kIdTTDGZpaH6HKjnQADVNIQTI1NndpdGhSU0E=
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: EncryptedAccount: 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
+DecryptedAccount: {"accountHolder":["alice"],"balance":822.22,"currency":"EUR","movements":[{"date":"09/11/2023","value":1000.00,"description":"Salary"},{"date":"15/11/2023","value":-77.78,"description":"Electricity bill"},{"date":"22/11/2023","value":-50.00,"description":"ATM Withdrawal"},{"date":"21/12/2023","value":-50.00,"description":"Electricity bill "}]}
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: ResultBalance: XDbRpOPKZgsEeFwKBaqG9NPMA+1MtLxCgTavA5AK52W914A3+uGpd1UinaMSsBis|w8jjPyFRzmnsfQVW89AzVTwsUYs6n52f+QBzDiYFYg9f6S2KSmRsGRY9v66PeOWIyCM56LA8/14iQUxwk1uJkSEQ+sKmLbGwhRyCxmfo1Nfslcro24J2gAWnoealK/LxqrrvhzO3hh/YWOUkNHK69oxrmCpXI4+XMCoqSvZk1b4KMFmA4sip35j7Y4pdlek6Vuaw7+vP54IUchFy3E2vWGl37R7GGmpMyHDH8Beagji6TWe3oEJEm0l1DAMm8jQwrfHR7WB7hf4lXB9U4cmjCnN82aSb3164sM5OKMC4MG++y1bX9XupUXi3rQXFg9LjbSgEy8zNrbNGZaw0WhoCiw==
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: EncryptedPayload: XDbRpOPKZgsEeFwKBaqG9NPMA+1MtLxCgTavA5AK52W914A3+uGpd1UinaMSsBis|w8jjPyFRzmnsfQVW89AzVTwsUYs6n52f+QBzDiYFYg9f6S2KSmRsGRY9v66PeOWIyCM56LA8/14iQUxwk1uJkSEQ+sKmLbGwhRyCxmfo1Nfslcro24J2gAWnoealK/LxqrrvhzO3hh/YWOUkNHK69oxrmCpXI4+XMCoqSvZk1b4KMFmA4sip35j7Y4pdlek6Vuaw7+vP54IUchFy3E2vWGl37R7GGmpMyHDH8Beagji6TWe3oEJEm0l1DAMm8jQwrfHR7WB7hf4lXB9U4cmjCnN82aSb3164sM5OKMC4MG++y1bX9XupUXi3rQXFg9LjbSgEy8zNrbNGZaw0WhoCiw==
+DecryptedPayload: Your balance is: 822.22
+
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedPayload: En3FCIYXD8f6PQ/u+gGzRM5cy02x+VrpF2mpi+x3dpA=|Jgu7LMqrIQI4sQzur5jqo6oEaoLgS/7JKFJQ7qwA7cpMU+m/0l11/fg78ztQvAfXtlwPbB4IiXKoKlWk5Q9ExkHNFP+4cofC0Q7iqIIXr1hrC7rHg+rsoVs1daTe5R312iH4krXwZaVNbqkPzO9/zwloly0T9zaNQplFxVfANJLQc8skhu3Ifu+AWRkzadLVjOoNpEv7zVwcuERg+DAkxj+fA1SZu1XMOhZ6ISkKcr0Qy4j8+Em/RBTH+Hp/dueK+3JCON9kEDX9YYYMjpGFMKWykEYtPKzlQsG15LiLWqtVQ8TyKPygcIdkUU28A1+dwqeCQv3z+LGobM4PFu6c9w==
+DecryptedPayload: movements
+================================================================================
+
+
+================================================================================
+From: Client, To: Server
+Message: EncryptedMessage: En3FCIYXD8f6PQ/u+gGzRM5cy02x+VrpF2mpi+x3dpA=|Jgu7LMqrIQI4sQzur5jqo6oEaoLgS/7JKFJQ7qwA7cpMU+m/0l11/fg78ztQvAfXtlwPbB4IiXKoKlWk5Q9ExkHNFP+4cofC0Q7iqIIXr1hrC7rHg+rsoVs1daTe5R312iH4krXwZaVNbqkPzO9/zwloly0T9zaNQplFxVfANJLQc8skhu3Ifu+AWRkzadLVjOoNpEv7zVwcuERg+DAkxj+fA1SZu1XMOhZ6ISkKcr0Qy4j8+Em/RBTH+Hp/dueK+3JCON9kEDX9YYYMjpGFMKWykEYtPKzlQsG15LiLWqtVQ8TyKPygcIdkUU28A1+dwqeCQv3z+LGobM4PFu6c9w==
+DecryptedMessage: movements
+================================================================================
+
+
+================================================================================
+From: Server, To: DataBase
+Message: EncryptedUpdateDBFlag: hs92asvXsn/C1xzLv7ULMgD3c9q5+ijZaEQHnbQMm1c=|iJpT58MeuM4fzYWfvhmtgFPtZyAEpP3SybpfLBZ5NPePjp5Gu8WzPvRUzQqwPcCASePv6E9U04jHSgMsSunLg0KUT70lQ8LPgjmlAvaGdQYK8DFcjAdERWaNMElv0QaqevOgXrp+zAqvBA63JEgMO//Sql+ql6/uRK5fc/UFbNZ/A8b8d/KWCRtpmBAURnRRRHcqYPm5SvyzZtlUZAjr/kOeXDGWAXKC4Uom1nSlrj/417VOhUQJGzgZ03pIWr29HxGSqpt0eV/krbXofTwa9O08Y4Iz93MoRdafn0MbgpkanfUgvEqp9HWGUhENqqxpI+YvihL+rwtEq8HBzPXqyA==
+DecryptedUpdateDBFlag: 0
+----
+EncryptedAccount: 39FcNiMwkut73Y+FUwTzw7GEMaMy7eoLdxRXJU/phFM=|YN8SiDNhRL3GFerwcFa7HbnhtMnc1vRvWmnBYEGIcBViRZ3+5anIM8qrHgV5gNC+e1kMdDYj9QdSgQ/H56uKpz9TzArB0KiApZqcn9t265IN0txLtAjmnF3R87ymZbF0q9IUWKUvRXvvFJpJfIVfZSYL39B2hCV0CETf6KtDC+vMYxefuKWZqqUz25kG8xvhz4xIjkAsj8068GKJ0yMOMw/BUQU/M79fD6Tx3R4oGybLsyAnjIgKBK3Dzl03ZRnpt8HJjLhfX3Srd9kVmDarQD732XEwkc7eFljg0CdsBAHcZTNjGPBhRysh2Qi1a66xaOjxlP3PoxTMTlTblhHTkg==
+DecryptedAccount: alice
+----
+EncryptedDocType: CWFfj4rI3AAm+TuAo56L8ciyrk7qLNG8zFLZcImPiyY=|ar3Vpa+zlq2jPrmvY8EOTbQsEtnlfMJ7ZQz1NEX88Z/qoi6pgzBg1HxCgVBoDmoox+4Fy8h1XIAJuZzQMufQ0BesmHOw520/eKgonxVIZcEy92qnrLxi8pMXggEjsbVARLZDxSz08OGceQi9jKtK/pixD+OEYXwJcRFK2fXwZZ5416qP0U1HmHw3FXvY2ThUf+gk3tNQiHFwrczXlRw0XZvmKi/xVilA+C47DbmIAYWCfZRYzauuox6fjBjW7hG8zFeTZbwS6E37owbBzCwcHNAjsyh43X3U1iRKsMY4dnNvqpMB3YUj6NQzxETa8cwP8RNT//9aabztRDYpJkn1Tw==
+DecryptedDocType: account
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedUpdateFlag: hs92asvXsn/C1xzLv7ULMgD3c9q5+ijZaEQHnbQMm1c=|iJpT58MeuM4fzYWfvhmtgFPtZyAEpP3SybpfLBZ5NPePjp5Gu8WzPvRUzQqwPcCASePv6E9U04jHSgMsSunLg0KUT70lQ8LPgjmlAvaGdQYK8DFcjAdERWaNMElv0QaqevOgXrp+zAqvBA63JEgMO//Sql+ql6/uRK5fc/UFbNZ/A8b8d/KWCRtpmBAURnRRRHcqYPm5SvyzZtlUZAjr/kOeXDGWAXKC4Uom1nSlrj/417VOhUQJGzgZ03pIWr29HxGSqpt0eV/krbXofTwa9O08Y4Iz93MoRdafn0MbgpkanfUgvEqp9HWGUhENqqxpI+YvihL+rwtEq8HBzPXqyA==
+DecryptedUpdateFlag: 0
+EncryptedAccount: 39FcNiMwkut73Y+FUwTzw7GEMaMy7eoLdxRXJU/phFM=|YN8SiDNhRL3GFerwcFa7HbnhtMnc1vRvWmnBYEGIcBViRZ3+5anIM8qrHgV5gNC+e1kMdDYj9QdSgQ/H56uKpz9TzArB0KiApZqcn9t265IN0txLtAjmnF3R87ymZbF0q9IUWKUvRXvvFJpJfIVfZSYL39B2hCV0CETf6KtDC+vMYxefuKWZqqUz25kG8xvhz4xIjkAsj8068GKJ0yMOMw/BUQU/M79fD6Tx3R4oGybLsyAnjIgKBK3Dzl03ZRnpt8HJjLhfX3Srd9kVmDarQD732XEwkc7eFljg0CdsBAHcZTNjGPBhRysh2Qi1a66xaOjxlP3PoxTMTlTblhHTkg==
+DecryptedAccount: alice
+================================================================================
+
+
+================================================================================
+From: Server, To: Database
+Message: 
+EncryptedDocType: CWFfj4rI3AAm+TuAo56L8ciyrk7qLNG8zFLZcImPiyY=|ar3Vpa+zlq2jPrmvY8EOTbQsEtnlfMJ7ZQz1NEX88Z/qoi6pgzBg1HxCgVBoDmoox+4Fy8h1XIAJuZzQMufQ0BesmHOw520/eKgonxVIZcEy92qnrLxi8pMXggEjsbVARLZDxSz08OGceQi9jKtK/pixD+OEYXwJcRFK2fXwZZ5416qP0U1HmHw3FXvY2ThUf+gk3tNQiHFwrczXlRw0XZvmKi/xVilA+C47DbmIAYWCfZRYzauuox6fjBjW7hG8zFeTZbwS6E37owbBzCwcHNAjsyh43X3U1iRKsMY4dnNvqpMB3YUj6NQzxETa8cwP8RNT//9aabztRDYpJkn1Tw==
+DecryptedDocType: account
+================================================================================
+
+
+================================================================================
+From: Database, To: Database
+Message: Account option - Get account query.
+================================================================================
+
+
+================================================================================
+From: Database, To: Server
+Message: 
+Account File: rO0ABXNyABNkdG8uU2lnbmVkT2JqZWN0RFRPAAAAAAAAAAACAAJMAAtjZXJ0aWZpY2F0ZXQAIExqYXZhL3NlY3VyaXR5L2NlcnQvQ2VydGlmaWNhdGU7TAAMc2lnbmVkT2JqZWN0dAAcTGphdmEvc2VjdXJpdHkvU2lnbmVkT2JqZWN0O3hwcHNyABpqYXZhLnNlY3VyaXR5LlNpZ25lZE9iamVjdAn/vWgqPNX/AgADWwAHY29udGVudHQAAltCWwAJc2lnbmF0dXJlcQB+AAVMAAx0aGVhbGdvcml0aG10ABJMamF2YS9sYW5nL1N0cmluZzt4cHVyAAJbQqzzF/gGCFTgAgAAeHAAAAVmrO0ABXNyABVkdG8uU2VjdXJlRG9jdW1lbnREVE8AAAAAAAAAAAIAAkwACGRvY3VtZW50dAASTGphdmEvbGFuZy9TdHJpbmc7TAAJdGltZXN0YW1wdAAQTGphdmEvbGFuZy9Mb25nO3hwdASsb1ArRk10eDB6UC90TWJaamk3WWZHMERNU25nZE1kbXZ1VXE3dmYvMXVOSzFvSnh3WURuNFhTOWVKdXU0MXJyU2F0cmRYaHdFUktQN2M0Mkp0cHFQVHpXbXdIN2xYRzkwb1ZYUDlQQ2FvN3QySHQ3Q3Qra2xud2JQUXI1dHdOQjVrQTdsNDM0VndGZnBtQmNoN3J4eGc0S0VibXRYVXJMdWNjWEdCNTdDSmswcDFCc1NraTZocWVJbWZSNTh1NWhCQlZzMWJuL04vZGxTdW1NbHU4UzR4Z3VIOVlpVERDUzBHTnl6R2tyMVFEM3Y1Yk13MnZMdDF2SUJDK21tWXNUNXkrUW50S29QblRyWm1WOWFTcTRkeUdZRE91Yzd0cSs1Z0hHc0llUmJvNjByTEJnZnphS2JTbWJ2ZEpsWHhtRlllUlorbVN5a2Z1ZFNtUkMwVlJZaG84ajZFK2V1RCtOc3l4RG5QeERBNFpzVlJoYXFwM3BKaWFwUk41czA5bU4ySGphdHU1dXczbG5xVjgweGJvQWU3K0szWERLNk5Hck1GVm42d2lEMjYzR0FvQnJwM2xRdDdTejNSRnFjOU9GaWdHUTBFZCt4N3BaYk5pR2lObW9XNEV6K3dPUmcvMUJGbzdvV2xEVTRESVRWakY0SHB4aGRhN3RiMEZqNzJ3V3JqRUpPa2hmQm1hdUJvZmlMbUpvenFwSzNVcWpzbUJDV3dSZXQ0MnJLVk0wNUtrRUdUdnowa3ZKbHZ5bjFNK1FpVThJc1Z1ZnVnNWZ3U3JuRzF5OGhRUk0xK3RMRG5KYmF4NDVOeHU4VlZuNVA1TXRJcnVkOGNOZ09GdmcvRW9Tc094MlpvcXpwTXRUcUkrQ3FuTVFac1IweXl3ZHBWN2JPZGF0ZE15MjlKK2JZTjJSZk9oNnFyTTA0MUZWQUdsUTU5bk4zWDR2eGpUaGhPSWZNcGNWWENmS2RHZGV1NVRUMWltcFEwTVVVTDFlM09vcG1CL082WXN4L0s2bEFpZWxDQ2RpOHFPWWg0RkltdVkxdGdURkZkM0x2RjNWT0Z0Q3JHa1JaZDFKVVVadG5Held2VWFnTS9uRWVFdytobVZHWEdvT2REWWJndjFCODRzY0t2QThhSXo5eUsvemNFSjFrak0yakVEU2RibUdoZWs1emlCNy91Wjl5Z1FMbGU2aVRtS2U3bUYyczFPa0lzS0F4SDhNaWtLeDNxTGk5RFhSbTh6ZmJnK0dvWmpYdkdmUjZHTlY3WndmZStpc2daK1oxaXRvYnM4cDRFVFZ3a0htLzRQSWQwdkhIdFlVRU5taGNWLzdHWFZ0eE96WE9GTGN1QXdLOWVyK3NIZ2w5dU9CVUo3UHRvRFZLNUpuYVA3bG9kMnE2Qy90aEFtUXlUQnlySkxVdXdOanA3WXdRM0daVmZwVnpYUnIvamx3Nkc1aDFad3o1SC9waURJZUwvUytpQ05oYlc4TVY3OVpMRjVpaU1yN3FPNjBjNkt1QzJidEtwbnFqc3Y1M0FIdWZYYXdFQi9ZT2dwR05KRmRIcGh4V0FHVFk2RDJNS2RrbXBrUlFMcWl5OHcybUNTST1zcgAOamF2YS5sYW5nLkxvbmc7i+SQzI8j3wIAAUoABXZhbHVleHIAEGphdmEubGFuZy5OdW1iZXKGrJUdC5TgiwIAAHhwAAABjIvYQ2B1cQB+AAgAAAEAUbvg2sISEWZH6i+Z3u/2IGK1zqlQGfbQ4zbyA+DyWC0QRnscJmNhKZfTSqaVNfwZs8zZg1N7FdWgVqTzcgCJJZkgv9DeDwNF9z1V1v1ODmZYr5jjDZA125Gkws4G6wfsm5baCWxZfAXB9W4F6T9gKhDF1bZQdFU7Gk0TKk0Rg8Rbvi8pNrdqSV4Z0Q5u07nTyuGoCBaOFRRJbVkmYIns1/CyvgfTns9UnlH6DIPFrx6BgnlPJZMiaM6eDgwuDROVzkNvuQItAzUUXq1r7azWK7xL4oC4kL9B6AK7oxHjiwj8g9IgpA08FhNYIKJ6vNFg43Pe/HlQWxfciQkfrrOKVXQADVNIQTI1NndpdGhSU0E=
+================================================================================
+
+
+================================================================================
+From: DataBase, To: Server
+Message: EncryptedAccount: 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
+DecryptedAccount: {"accountHolder":["alice"],"balance":822.22,"currency":"EUR","movements":[{"date":"09/11/2023","value":1000.00,"description":"Salary"},{"date":"15/11/2023","value":-77.78,"description":"Electricity bill"},{"date":"22/11/2023","value":-50.00,"description":"ATM Withdrawal"},{"date":"21/12/2023","value":-50.00,"description":"Electricity bill "}]}
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: resultMovements: 3TgTpv2r/JAK7z2qZKngfqOGePD9Hlms94E/8n0l9ddwOmrMI8UKXfTyVmD0iu16wRfUFl4Hl/Xw4/5JGbl9qyoPiq2PICv35RFiuKdlGDSZyX9ZAGHF8H65UHYa2fuMg8g5LNTrftYLpi396JWwx5fhkSjQMZMYV8DWqXStJ0RGspVyYZ56D5TTgUWg24lNNIT2AgAw2/ngK3IM4jdSSSkilot/hI8ZZUphu4jo5/C2EpY5HiJSHXkmRZF4JB1UbaH3H6bIFJ/vxi+rvT0+8/DRqnrqOrXZ7dbSoD+LBjphCz+zj0Gq+y++lAStHtM7LuaxVg30nHqJTSDI958vCBZscYKAfvL07jdogz/0fqRq17dxAzzDZ5/T8edEX6kB|QjlFqa8FRmd7ZOrsCqn7lc908QLDD/JulOdOOtuKu6TGmRNLx1zhItZbn403MchQl1t5zOZDa2vtR0pqGm760bl/gLFKOQfoKQ2zaTEgt3uyVcBciCFrg+Svtr7CRsaCHKySPG0oBZlMCUQYAsp5wwhpt1grivhHhcllvx5b8ASyPC+5dBkzZK97FFT9rIwMVC83L2R5hgsl93xsGRoN+hfTP+8aDfWJmIPldclGcQjFE0An9NaKhBRURYsOSnPRXe88xsPgLcNB6LsVZ9PVTErAiWl/6hv9Qqm82/id0Gy94THPNkyZhZQvV3UQXto2ZjQ8Tcg/iYOq8BUPoIyf1g==
+================================================================================
+
+
+================================================================================
+From: Server, To: Client
+Message: EncryptedPayload: 3TgTpv2r/JAK7z2qZKngfqOGePD9Hlms94E/8n0l9ddwOmrMI8UKXfTyVmD0iu16wRfUFl4Hl/Xw4/5JGbl9qyoPiq2PICv35RFiuKdlGDSZyX9ZAGHF8H65UHYa2fuMg8g5LNTrftYLpi396JWwx5fhkSjQMZMYV8DWqXStJ0RGspVyYZ56D5TTgUWg24lNNIT2AgAw2/ngK3IM4jdSSSkilot/hI8ZZUphu4jo5/C2EpY5HiJSHXkmRZF4JB1UbaH3H6bIFJ/vxi+rvT0+8/DRqnrqOrXZ7dbSoD+LBjphCz+zj0Gq+y++lAStHtM7LuaxVg30nHqJTSDI958vCBZscYKAfvL07jdogz/0fqRq17dxAzzDZ5/T8edEX6kB|QjlFqa8FRmd7ZOrsCqn7lc908QLDD/JulOdOOtuKu6TGmRNLx1zhItZbn403MchQl1t5zOZDa2vtR0pqGm760bl/gLFKOQfoKQ2zaTEgt3uyVcBciCFrg+Svtr7CRsaCHKySPG0oBZlMCUQYAsp5wwhpt1grivhHhcllvx5b8ASyPC+5dBkzZK97FFT9rIwMVC83L2R5hgsl93xsGRoN+hfTP+8aDfWJmIPldclGcQjFE0An9NaKhBRURYsOSnPRXe88xsPgLcNB6LsVZ9PVTErAiWl/6hv9Qqm82/id0Gy94THPNkyZhZQvV3UQXto2ZjQ8Tcg/iYOq8BUPoIyf1g==
+DecryptedPayload: Movement
+Date: 09/11/2023
+Value: 1000.0
+Description: Salary
+
+Movement
+Date: 15/11/2023
+Value: -77.78
+Description: Electricity bill
+
+Movement
+Date: 22/11/2023
+Value: -50.0
+Description: ATM Withdrawal
+
+Movement
+Date: 21/12/2023
+Value: -50.0
+Description: Electricity bill 
+
+
+================================================================================
+
+
