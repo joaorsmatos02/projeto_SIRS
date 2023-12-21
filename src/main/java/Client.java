@@ -375,7 +375,9 @@ public class Client {
                 " - In order to make a payment, write the following command adding the value, destiny account (alias name) and description make_payment > make_payment <value> <destinyAccount> <description>\n" +
                 " - In order to see your payments, write the following command > payments\n" +
                 " - In order to see your pending payments, write the following command > payments_to_confirm\n" +
-                " - In order to confirm your pending payments, write the following command > confirm_payment <Payment ID>");
+                " - In order to confirm your pending payments, write the following command > confirm_payment <Payment ID>\n" +
+                " - In order to exit the application > exit\n" +
+                "Your command: ");
     }
 
     public static byte[] calculateHMac(SecretKey secretKey, Certificate certificate) throws Exception {
