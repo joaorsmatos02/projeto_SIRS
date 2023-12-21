@@ -62,6 +62,12 @@ This machine runs the main SSL server.
 #### Machine 3
 
 This machine acts as a regular client.
+Run config examples (args needed):
+
+args: ```<userAlias> <password> <newDevice(0-false or 1-true)> <deviceName> <account>```
+- Alice account: `alice alice_iphone 1 iphone alice`
+- Bob account: `bob bob_iphone 1 iphone bob`
+- Alice accessing Alice and Bob's shared account: `alice alice_iphone 1 iphone alice_bob`
 
 ## Demonstration
 

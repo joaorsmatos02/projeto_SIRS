@@ -43,6 +43,7 @@ public class Client {
         }
 
         if (!validUser){
+            System.out.println("You are trying to access an account that is not yours.");
             System.exit(1);
         }
 
