@@ -47,7 +47,7 @@ public class SSLServer {
         SSLSocket dataBaseSocket = null;
         try {
             writeLogFile("Server", "Server", "Connecting to DataBase Server...");
-            dataBaseSocket = (SSLSocket) sf.createSocket("localhost", 54321);
+            dataBaseSocket = (SSLSocket) sf.createSocket("192.168.0.100", 54321);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

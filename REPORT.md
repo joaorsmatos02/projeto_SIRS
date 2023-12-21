@@ -56,6 +56,7 @@ Relativamente ao método unprotect, este, naturalmente, executa o processo rever
 Por fim, será importante abordar o método check, este tem como papel principal verificar a integridade de um dado payload, mais precisamente, verificar a assinatura digital de um SignedObject e validar a TimeStamp associada a esse. Abaixo seguem os detalhes sobre os métodos utilizados, as bibliotecas envolvidas e as justificações para essas escolhas. Utilização de SHA256withRSA por razões relativas à decisão tomada no método protect. Foi utilizada a função verify, chamada no objeto signedObject, pertencente à instância signedObjectDTO, com a chave pública contida no certificado, também pertencente à instância signedObjectDTO. Tal procedimento verifica se a assinatura digital é válida, ou seja, se o payload não foi alterado e se este foi assinado pela entidade correspondente à chave privada associada à chave pública contida no certificado. Se tal se verificar, é ainda realizada uma segunda verificação, esta consiste em, finalmente, utilizar o valor TimeStamp associado ao SecureDocumentDTO, mais exatamente, verifica se o timestamp associado ao documento é válido, ou seja, se não expirou e se não foi anteriormente processado. Ou seja, verifica se esse valor de TimeStamp já ultrapassa dez segundos comparativamente ao instante atual da execução (valor alargado, mas neste é tido em conta possíveis dessincronizações de relógio entre máquinas em comunicação – basicamente trata-se do limite de tempo em que um payload pode demorar a ser comunicado a partir da máquina Cliente até à sua receção na máquina Servidor), se sim, o payload é descartado, caso contrário, é feita uma nova verificação num HashSet, mais precisamente, este é composto pelas entradas recebidas nos últimos dez segundos, ou seja, uma entrada apenas permanece neste Set por dez segundos, tal tem como objetivo suprimir o tempo necessário para realizar esta nova verificação, evitando assim uma possível extensibilidade absurda deste. Esta medida tem como principal fundamento a prevenção de replay attacks.
 No âmbito da implementação da biblioteca criptográfica, destacamos a prática consistente de utilizar o método protect no servidor, ativando a cifra dupla por meio da flag correspondente. Essa prática visa garantir a confidencialidade dos dados ao armazená-los na base de dados, onde a decifra dupla é desativada durante a operação unprotect. Essa abordagem estratégica assegura que a camada interna, contendo informações sensíveis, permaneça opaca para a base de dados, preservando a confidencialidade dos dados cifrados. Um aspeto crucial é a assinatura da cifra exterior, introduzindo um mecanismo robusto de autenticação. A assinatura, realizada durante o processo de proteção, permite a verificação eficaz da autenticidade dos dados. Ao empregar a assinatura digital, criamos uma camada adicional de segurança, assegurando que a integridade e autenticidade dos dados seja verificada, mesmo quando são manipulados em diferentes partes do sistema.
 
+![Diagrama da implementação](img/implementacao.png)
 
 (_Detail the implementation process, including the programming language and cryptographic libraries used._)
 
@@ -82,12 +83,25 @@ Esta estrutura foi usada pois não conseguimos criar uma Base de Dados MongoDB l
 sudo ifconfig eth0 192.168.0.100/24 up
 ```
 
-E foi configurada para usar a VM2 como gateway com os seguintes comandos:
+Foi configurada para usar a VM2 como gateway com os seguintes comandos:
 
 ```sh
 sudo ip route add default via 192.168.0.10
 echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
 ```
+
+E foi adicionada uma firewall:
+
+```shell
+# regras default
+#sudo iptables -P INPUT DROP
+sudo iptables -P FORWARD DROP
+# permitir ligacao ao mongoDB
+sudo iptables -A INPUT -p tcp --dport 27017 -j ACCEPT
+# permitir ligacao ao server
+sudo iptables -A INPUT -p tcp --dport 54321 -s 192.168.0.10 -j ACCEPT
+```
+A primeira regra encontra-se desativada de forma a conseguir aceder a outros serviços externos usados durante o desenvolvimento (e.g. Maven)
 
 --------------------------------------------
 
@@ -107,6 +121,18 @@ sudo iptables -t nat -F
 sudo iptables -t nat -A POSTROUTING  -o eth2 -j MASQUERADE
 ```
 
+Por fim, adicionou-se uma simples firewall:
+
+```shell
+# regras default
+#sudo iptables -P INPUT DROP
+# apenas permitir ligacoes no porto correto
+sudo iptables -A INPUT -p tcp --dport 12345 -j ACCEPT
+# ou da database
+sudo iptables -A INPUT -p tcp -s 192.168.0.100 -j ACCEPT
+```
+Que apenas permite ligações no porto correto. A primeira regra encontra-se desativada de forma a conseguir aceder a outros serviços externos usados durante o desenvolvimento (e.g. Maven)
+
 --------------------------------------------
 
 À VM3 foi atribuído o endereço IP 192.168.1.1, através do comando:
@@ -122,6 +148,7 @@ sudo ip route add default via 192.168.1.254
 echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
 ```
 
+![Diagrama da infraestrutura](img/infraestrutura.png)
 
 (_Provide a brief description of the built infrastructure._)
 
@@ -324,7 +351,9 @@ sudo iptables -P OUTPUT ACCEPT
 sudo iptables -A INPUT -s 192.168.0.10 -j ACCEPT
 ```
 
-Permitindo apenas conexões com origem no servidor SSL.
+Permitindo apenas conexões com origem no servidor SSL. Em seguida encontra-se um diagrama desta infraestrutura ideal:
+
+![Infraestrutura ideal](img/infraestrutura_ideal.png)
 
 
 - Aprimoramento nos Pagamentos Pendentes: uma área que merece atenção adicional é o tratamento de pagamentos pendentes (contas partilhadas). Uma abordagem mais segura seria armazenar esses pagamentos na Base de Dados, em vez de em memória volátil (no Servidor), de forma a garantir a permanência do seu armazenamento, ainda que o Servidor seja desligado.
