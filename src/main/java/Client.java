@@ -178,7 +178,7 @@ public class Client {
             SecureMessageLib secureMessageLib = new SecureMessageLib(passwordStores, keyStorePath,
                     passwordStores, trustStorePath, userAlias + "_" + deviceName, userAlias + "rsa", "serverrsa");
 
-            socket = (SSLSocket) sf.createSocket("localhost", 12345);
+            socket = (SSLSocket) sf.createSocket("192.168.1.254", 12345);
             //iniciar streams
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
