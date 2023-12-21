@@ -54,20 +54,69 @@ Next we have custom instructions for each machine.
 This machine runs a database server that connects to MongoDB.
 Ideally this machine would run MongoDB locally and not have the need to connect to the internet, however we were
 unable to install the database locally, so the network scheme had to be adapted around this.
+ - Once the machine is installed, run the script:
+    ```sh
+    sudo ifconfig eth0 192.168.0.100/24 up
+    sudo ip route add default via 192.168.0.10
+    echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
+    sudo systemctl restart NetworkManager
+   ```
+   with<br>
+   ```sh
+    $ chmod +x cmd.sh
+   ```
+   ```sh
+    $ sudo ./cmd.sh
+   ```
 
 #### Machine 2
 
 This machine runs the main SSL server.
+- Once the machine is installed, run the script:
+    ```sh
+    sudo ifconfig eth0 192.168.0.10/24 up
+    sudo ifconfig eth1 192.168.1.254/24 up
+    sudo sysctl net.ipv4.ip_forward=1
+    sudo iptables -P FORWARD ACCEPT
+    sudo iptables -F FORWARD
+    sudo iptables -t nat -F
+    sudo iptables -t nat -A POSTROUTING  -o eth2 -j MASQUERADE
+    sudo systemctl restart NetworkManager
+   ```
+  with<br>
+   ```sh
+    $ chmod +x cmd.sh
+   ```
+   ```sh
+    $ sudo ./cmd.sh
+   ```
 
 #### Machine 3
 
 This machine acts as a regular client.
-Run config examples (args needed):
+- Once the machine is installed, run the script:
+    ```sh
+    sudo ifconfig eth0 192.168.1.1/24 up
+    sudo ip route add default via 192.168.1.254
+    echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
+    sudo systemctl restart NetworkManager
+   ```
+  with<br>
+   ```sh
+    $ chmod +x cmd.sh
+   ```
+   ```sh
+    $ sudo ./cmd.sh
+   ```
+  <br>
+Client application config examples (args needed):
 
 args: ```<userAlias> <password> <newDevice(0-false or 1-true)> <deviceName> <account>```
 - Alice account: `alice alice_iphone 1 iphone alice`
 - Bob account: `bob bob_iphone 1 iphone bob`
 - Alice accessing Alice and Bob's shared account: `alice alice_iphone 1 iphone alice_bob`
+
+#### <span style="color: yellow;">Note: The application runs with default users (and their associated files) listed in DataBase/initDataBase/plain_text. There you can check the default users and data associated.</span>
 
 ## Demonstration
 
@@ -608,7 +657,17 @@ Value: -100.0
 Description: ChristmasGift
 Destination Account: "alcides"
 ```
+Note that if someone tries to make a movement or payment without enough balance in the account, the requests are discarded and the following message is shown:
+```You dont have balance to make that movement/payment.```
+
 With this we conclude the features demonstration part.
+
+<br><br>
+Now we will demonstrate some defensive mechanisms that we have implemented.<br>
+- If we try to access an account which the user does not belong to the associated account that is trying to log in, the application will send the following message:
+```You are trying to access an account that is not yours.```
+
+- If someone intercepts a payment request payload between Client and Server and tries to perform a replay attack, the Server will detect it and discard the requests. (Explained in the report how)
 
 This concludes the demonstration.
 
@@ -616,19 +675,7 @@ This concludes the demonstration.
 
 ### Links to Used Tools and Libraries
 
-- [Java 11.0.16.1](https://openjdk.java.net/)
-- [Maven 3.9.5](https://maven.apache.org/)
-- ...
-
-### Versioning
-
-We use [SemVer](http://semver.org/) for versioning.  
-
-### License
-
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) for details.
-
-*(switch to another license, or no license, as you see fit)*
-
+- [Java 21.0.1](https://openjdk.java.net/)
+- [Maven 4.0.0](https://maven.apache.org/)
 ----
 END OF README
