@@ -349,131 +349,120 @@ Deste modo, foram adicionadas duas novas funcionalidades, as quais, verificar pa
 
     - Aprimoramento nos Pagamentos Pendentes: uma área que merece atenção adicional é o tratamento de pagamentos pendentes (contas partilhadas). Uma abordagem mais segura seria armazenar esses pagamentos na Base de Dados, em vez de em memória volátil (no Servidor), de forma a garantir a permanência do seu armazenamento, ainda que o Servidor seja desligado.
 
-  - Desenvolvimento de mais features: Inicialmente, estariam planeadas desenvolver features como a capacidade de criação de novas contas, congelamento ou término destas, associação de um gestor de contas, alteração de um gestor de contas, devido a férias, por exemplo, etc. Contudo, dada a limitação de tempo imposta, tal não foi possível desenvolver. Contudo, por exemplo, para o desenvolvimento de um gestor de conta, o planeado teria sido: adicionar um atributo gestor de conta ao documento de cada conta, onde, caso este fizesse um pedido relativo a outra conta que não a do próprio, este novo campo seria verificado e, caso comprovado que o mesmo se tratasse efetivamente de um gestor de conta da conta em questão, o pedido seria processado e, intrinsecamente, o Servidor solicitaria o documento em questão, decifrá-lo-ia com a chave simétrica existente/conhecida apenas entre o mesmo e a Base de Dados e, posteriormente, tornaria a cifrá-lo, agora com a chave simétrica conhecida apenas entre o gestor de contas e Servidor.
+  - Desenvolvimento de mais features: Inicialmente, estariam planeadas desenvolver features como a capacidade de criação de novas contas, congelamento ou término destas, associação de um gestor de contas, alteração de um gestor de contas, devido a férias, por exemplo, etc. Contudo, dada a limitação de tempo imposta, tal não foi possível desenvolver. No entanto, por exemplo, para o desenvolvimento de um gestor de conta, o planeado teria sido: adicionar um atributo gestor de conta ao documento de cada conta, onde, caso este fizesse um pedido de acesso relativo a outra conta que não a do próprio, este novo campo seria verificado e, caso comprovado que o mesmo se tratasse efetivamente de um gestor de conta da conta em questão, o pedido seria processado e, intrinsecamente, o Servidor solicitaria o documento em questão, decifrá-lo-ia com a chave simétrica existente/conhecida apenas entre o mesmo e a Base de Dados e, posteriormente, tornaria a cifrá-lo, agora com a chave simétrica conhecida apenas entre o gestor de contas e Servidor.
+
+  - Também existem claras melhorias a realizar relativamente à infraestrutura ideal. Mais precisamente, a infraestrutura ideal seria composta por 3 máquinas internas, às quais se acresce a máquina do cliente, externa. Estas máquinas seriam:
+
+    - Cliente (VM1)
+    - Firewall (VM2)
+    - Servidor SSL (VM3)
+    - Servidor BD (VM4)
+
+    --------------------------------------------------
+
+    A VM1, por ser controlada pelo Cliente, não possui quaisquer restrições impostas pela aplicação nas suas ligações à rede.
+
+    --------------------------------------------------
+
+    A VM2 serve como fronteira para a rede interna. Está ligada através do switch sw1 á VM3, possuindo o IP 192.168.1.100 neste. Está ligada á internet num segundo adaptador. Este endereço foi atribuído com o comando:
+
+    ```sh
+    sudo ifconfig eth1 192.168.1.100/24 up
+    ```
+
+    Para permitir a redirecção de pacotes da rede interna para a internet executa-se:
+
+    ```sh 
+    sudo sysctl net.ipv4.ip_forward=1
+    ```
+
+    Quaisquer comunicações entre a rede interna e a internet são sujeitas às regras presentes nesta máquina, apresentadas a seguir:
+
+    ```sh
+    # regras default
+    sudo iptables -P INPUT DROP
+    sudo iptables -P FORWARD DROP
+    sudo iptables -P OUTPUT ACCEPT
+
+    # redirecionar para o server
+    sudo iptables -A INPUT -p tcp --dport 12345 -j DNAT --to-destination 192.168.1.10:12345
+    # permitir pacotes de ligações prévias
+    sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+    # permitir que forward de pacotes do server
+    sudo iptables -A FORWARD -p tcp --dport 12345 -d 192.168.1.10 -j ACCEPT
+    ```
+
+    Estas regras permitem que o tráfego proveniente do servidor consiga passar para fora da rede. Por outro lado, no caso de tráfego proveniente da internet, este só pode entrar se for direcionado ao porto 12345, sendo então redirecionado para o IP correto do servidor (192.168.1.10). Ainda na VM2 é executado um script snort:
+
+    ```
+    preprocessor frag3_global
+    preprocessor frag3_engine
+
+    var SSLSERVER 192.168.1.254
+
+    alert tcp any any -> $SSLSERVER 12345 (msg:"5 or more tcp connections from the same client were received in the last 60 seconds"; threshold : type both, track by_src, count 5, seconds 60; sid :10001)
+    ```
+
+    Este script emite um alerta na consola caso sejam recebidas 5 ou mais tentativas de ligação tcp ao servidor num intervalo de 60 segundos, todas provenientes do mesmo cliente, o que pode indicar um ataque DDoS.
+
+    --------------------------------------------------
+
+    Na VM3 executa-se o servidor SSL no porto 12345. Esta máquina tem acesso á internet no switch sw1, mediado pela firewall, de forma a permitir a ligação de clientes remotos. Consegue também abrir ligações à VM4 no switch sw0. O seu IP nestes adaptadores foi atribuído com:
+
+    ```sh
+    sudo ifconfig eth0 192.168.0.10/24 up
+    sudo ifconfig eth1 192.168.1.10/24 up
+    ```
+
+    Foi configurada para usar a VM2 como gateway para a internet com:
+
+    ```sh
+    sudo ip route add default via 192.168.1.100
+    echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
+    ```
+
+    E possui as seguintes regras iptables:
+
+    ```sh
+    # regras default
+    sudo iptables -P INPUT DROP
+    sudo iptables -P FORWARD DROP
+    sudo iptables -P OUTPUT ACCEPT
+
+    # apenas permitir conexões no porto 12345
+    sudo iptables -A INPUT -p tcp --dport 12345 -j ACCEPT
+    ```
+
+    Permitindo apenas conexões no porto 12345.
+
+    --------------------------------------------------
 
 
-A infraestrutura ideal seria composta por 3 máquinas internas, às quais se acresce a máquina do cliente, externa. Estas máquinas seriam:
+    Por fim, a VM4 atua como servidor Base de Dados. Tem uma Base de Dados MongoDB local e apenas consegue comunicar com a VM3, não tendo acesso à internet. O seu IP foi definido com:
 
-- Cliente (VM1)
-- Firewall (VM2)
-- Servidor SSL (VM3)
-- Servidor BD (VM4)
+    ```sh 
+    sudo ifconfig eth0 192.168.0.100/24 up
+    ```
 
---------------------------------------------------
+    E as suas regras são:
 
-A VM1, por ser controlada pelo Cliente, não possui quaisquer restrições impostas pela aplicação nas suas ligações à rede.
+    ```
+    # regras default
+    sudo iptables -P INPUT DROP
+    sudo iptables -P FORWARD DROP
+    sudo iptables -P OUTPUT ACCEPT
 
---------------------------------------------------
+    # apenas permitir conexões do server
+    sudo iptables -A INPUT -s 192.168.0.10 -j ACCEPT
+    ```
 
-A VM2 serve como fronteira para a rede interna. Está ligada através do switch sw1 á VM3, possuindo o IP 192.168.1.100 neste. Está ligada á internet num segundo adaptador. Este endereço foi atribuído com o comando:
-
-```sh
-sudo ifconfig eth1 192.168.1.100/24 up
-```
-
-Para permitir a redirecção de pacotes da rede interna para a internet executa-se:
-
-```sh 
-sudo sysctl net.ipv4.ip_forward=1
-```
-
-Quaisquer comunicações entre a rede interna e a internet são sujeitas às regras presentes nesta máquina, apresentadas a seguir:
-
-```sh
-# regras default
-sudo iptables -P INPUT DROP
-sudo iptables -P FORWARD DROP
-sudo iptables -P OUTPUT ACCEPT
-
-# redirecionar para o server
-sudo iptables -A INPUT -p tcp --dport 12345 -j DNAT --to-destination 192.168.1.10:12345
-# permitir pacotes de ligações prévias
-sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-# permitir que forward de pacotes do server
-sudo iptables -A FORWARD -p tcp --dport 12345 -d 192.168.1.10 -j ACCEPT
-```
-
-Estas regras permitem que o tráfego proveniente do servidor consiga passar para fora da rede. Por outro lado, no caso de tráfego proveniente da internet, este só pode entrar se for direcionado ao porto 12345, sendo então redirecionado para o IP correto do servidor (192.168.1.10). Ainda na VM2 é executado um script snort:
-
-```
-preprocessor frag3_global
-preprocessor frag3_engine
-
-var SSLSERVER 192.168.1.254
-
-alert tcp any any -> $SSLSERVER 12345 (msg:"5 or more tcp connections from the same client were received in the last 60 seconds"; threshold : type both, track by_src, count 5, seconds 60; sid :10001)
-```
-
-Este script emite um alerta na consola caso sejam recebidas 5 ou mais tentativas de ligação tcp ao servidor num intervalo de 60 segundos, todas provenientes do mesmo cliente, o que pode indicar um ataque DDoS.
-
---------------------------------------------------
-
-Na VM3 executa-se o servidor SSL no porto 12345. Esta máquina tem acesso á internet no switch sw1, mediado pela firewall, de forma a permitir a ligação de clientes remotos. Consegue também abrir ligações à VM4 no switch sw0. O seu IP nestes adaptadores foi atribuído com:
-
-```sh
-sudo ifconfig eth0 192.168.0.10/24 up
-sudo ifconfig eth1 192.168.1.10/24 up
-```
-
-Foi configurada para usar a VM2 como gateway para a internet com:
-
-```sh
-sudo ip route add default via 192.168.1.100
-echo 'nameserver 8.8.8.8' >> /etc/resolv.conf
-```
-
-E possui as seguintes regras iptables:
-
-```sh
-# regras default
-sudo iptables -P INPUT DROP
-sudo iptables -P FORWARD DROP
-sudo iptables -P OUTPUT ACCEPT
-
-# apenas permitir conexões no porto 12345
-sudo iptables -A INPUT -p tcp --dport 12345 -j ACCEPT
-```
-
-Permitindo apenas conexões no porto 12345.
-
---------------------------------------------------
-
-
-Por fim, a VM4 atua como servidor Base de Dados. Tem uma Base de Dados MongoDB local e apenas consegue comunicar com a VM3, não tendo acesso à internet. O seu IP foi definido com:
-
-```sh 
-sudo ifconfig eth0 192.168.0.100/24 up
-```
-
-E as suas regras são:
-
-```
-# regras default
-sudo iptables -P INPUT DROP
-sudo iptables -P FORWARD DROP
-sudo iptables -P OUTPUT ACCEPT
-
-# apenas permitir conexões do server
-sudo iptables -A INPUT -s 192.168.0.10 -j ACCEPT
-```
-
-Permitindo apenas conexões com origem no servidor SSL. Em seguida encontra-se um diagrama desta infraestrutura ideal:
+    Permitindo apenas conexões com origem no servidor SSL. Em seguida encontra-se um diagrama desta infraestrutura ideal:
 
 ![Infraestrutura ideal](img/infraestrutura_ideal.png)
-
-
-Ao encerrarmos este projeto, é evidente que a experiência foi enriquecedora, proporcionando uma oportunidade única para explorar os desafios e avanços na implementação de práticas de segurança robustas. A jornada desde a conceção até à concretização do sistema não apenas consolidou conhecimentos, mas também destacou áreas cruciais para o aprimoramento contínuo da segurança informática.
+----
+<br>
+&emsp;Ao encerrarmos este projeto, é evidente que a experiência foi enriquecedora, proporcionando uma oportunidade única para explorar os desafios e avanços na implementação de práticas de segurança robustas. A jornada desde a conceção até à concretização do sistema não apenas consolidou conhecimentos, mas também destacou áreas cruciais para o aprimoramento contínuo da segurança informática.
 O equilíbrio entre os pontos fortes do sistema e as oportunidades de melhoria delineia um caminho claro para futuras iterações que visem elevar ainda mais os padrões de segurança. Este projeto não só representa a aplicação prática de conceitos teóricos, mas também destaca a necessidade constante de adaptação às exigências em constante evolução do cenário de segurança informática. Assim, esta experiência não é apenas um marco na aplicação de conhecimentos, mas também uma base sólida para futuros desenvolvimentos que se alinhem com os mais elevados padrões de segurança.
-
-
-
-(_State the main achievements of your work._)
-
-(_Describe which requirements were satisfied, partially satisfied, or not satisfied; with a brief justification for each one._)
-
-(_Identify possible enhancements in the future._)
-
-(_Offer a concluding statement, emphasizing the value of the project experience._)
 
 ## 4. Bibliography
  - OpenAI, GPT-3.5, OpenAI Platform, Ano: 2023, URL: https://openai.com/chatgpt
